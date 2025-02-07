@@ -1,0 +1,3 @@
+C:/Users/bostj/CLionProjects/GAME/cmake-build-debug/CMakeFiles/GAME.dir
+C:/Users/bostj/CLionProjects/GAME/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/bostj/CLionProjects/GAME/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_modules)
 
 set(SDL2_PATH "C:/Users/bostj/CLionProjects/GAME/cmake-build-debug/SDL2-2.30.12/x86_64-w64-mingw32")
-set(SDL2_image_PATH "C:/Users/eraze/CLionProjects/game/cmake-build-debug" )
+set(SDL2_image_PATH "C:/Users/bostj/CLionProjects/GAME/cmake-build-debug/SDL2_image-2.8.4-win32-x86" )
 
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)

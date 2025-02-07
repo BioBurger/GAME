@@ -1,7 +1,8 @@
-#include "SDL2/SDL.h"
-#include <stdio.h>
 #include <iostream>
 #include <ostream>
+#include <stdio.h>
+#include <SDL_image.h>
+#include "SDL2/SDL.h"
 
 #ifndef Game_h
 #define Game_h

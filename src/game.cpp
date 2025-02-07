@@ -29,8 +29,12 @@ void Game::Init(const char* title, bool fullscreen) {
         isRunning = false;
     }
 
-    std::cout << "NIGGER" << std::endl;
-    std::cout << "NIGGER";
+    SDL_Texture *playerTex;
+    std::cout << "fuck" << std::endl;
+    SDL_Surface *tmpSurface = IMG_Load("/assets/textures/skibidi.png");
+    playerTex = SDL_CreateTextureFromSurface(renderer, tmpSurface);
+    SDL_FreeSurface(tmpSurface);
+
 
 }
 

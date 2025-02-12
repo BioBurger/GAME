@@ -1,12 +1,12 @@
 #include "Game.h"
-#include "GameObject.h"
-#include "Texture_Manager.h"
 Game::Game() :texture_manager(NULL)  {
-
+    texture_manager=NULL;
+    player=NULL;
 }
 
 Game::~Game() {
-
+    delete player;
+    delete texture_manager;
 };
 
 void Game::Init(const char* title, bool fullscreen) {
@@ -23,9 +23,18 @@ void Game::Init(const char* title, bool fullscreen) {
 
         renderer = SDL_CreateRenderer(window, -1, 0);
         if (renderer) {
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-            texture_manager = Texture_Manager(renderer);
-            texture_manager.LoadTexture("assets/textures/skibidi.png", "player");
+            SDL_SetRenderDrawColor(renderer, 50, 0, 0, 0);
+
+            // Inicializiraj textureManager
+            texture_manager = new Texture_Manager(renderer);
+            texture_manager->LoadTexture("assets/textures/skibidi.png", "player");
+
+            // Ustvari player objekt na sredini (primer: 64x64 velikost)
+            int playerWidth = 64;
+            int playerHeight = 64;
+            int centerX = (1920 - playerWidth) / 2;
+            int centerY = (1080 - playerHeight) / 2;
+            player = new GameObject(*texture_manager, "player", centerX, centerY, playerWidth, playerHeight);
         }
         isRunning = true;
     }
@@ -58,7 +67,11 @@ void Game::Update() {
 
 void Game::Render() {
     SDL_RenderClear(renderer);
+    if (player) {
+        player->Render(renderer);
+    }
     SDL_RenderPresent(renderer);
+
 }
 
 bool Game::Running() {
@@ -66,6 +79,8 @@ bool Game::Running() {
 }
 
 void Game::Clean() {
+    delete player;
+    delete texture_manager;
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();

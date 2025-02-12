@@ -1,6 +1,7 @@
 #include "Game.h"
-
-Game::Game() {
+#include "GameObject.h"
+#include "Texture_Manager.h"
+Game::Game() :texture_manager(NULL)  {
 
 }
 
@@ -9,6 +10,7 @@ Game::~Game() {
 };
 
 void Game::Init(const char* title, bool fullscreen) {
+
 
     int flags = 0;
     if (fullscreen) {
@@ -22,6 +24,8 @@ void Game::Init(const char* title, bool fullscreen) {
         renderer = SDL_CreateRenderer(window, -1, 0);
         if (renderer) {
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+            texture_manager = Texture_Manager(renderer);
+            texture_manager.LoadTexture("assets/textures/skibidi.png", "player");
         }
         isRunning = true;
     }
@@ -29,11 +33,6 @@ void Game::Init(const char* title, bool fullscreen) {
         isRunning = false;
     }
 
-    SDL_Texture *playerTex;
-    std::cout << "fuck" << std::endl;
-    SDL_Surface *tmpSurface = IMG_Load("/assets/textures/skibidi.png");
-    playerTex = SDL_CreateTextureFromSurface(renderer, tmpSurface);
-    SDL_FreeSurface(tmpSurface);
 
 
 }

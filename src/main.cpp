@@ -11,10 +11,13 @@ int main(int argumentCount, char *arguments[]){
     game = new Game();
 
     game->Init("GAME", false);
-
+    Uint32 previousTime = SDL_GetTicks();
     while (game->Running()) {
+        Uint32 currentTime = SDL_GetTicks();
+        float deltaTime=(currentTime - previousTime) / 1000.0f;
+        previousTime = currentTime;
         game->HandleEvents();
-        game->Update();
+        game->Update(deltaTime);
         game->Render();
     }
 

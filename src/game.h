@@ -22,7 +22,7 @@ public:
     ~Game();
     void Init(const char* title, bool fullscreen);
     void HandleEvents();
-    void Update();
+    void Update(float deltaTime);
     void Render();
     void Clean();
     bool Running();

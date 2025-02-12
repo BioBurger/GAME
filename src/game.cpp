@@ -1,4 +1,6 @@
 #include "Game.h"
+#include <SDL2/SDL_keyboard.h>
+
 Game::Game() :texture_manager(NULL)  {
     texture_manager=NULL;
     player=NULL;
@@ -47,22 +49,40 @@ void Game::Init(const char* title, bool fullscreen) {
 }
 
 void Game::HandleEvents() {
+    SDL_PumpEvents();
     SDL_Event event;
-    SDL_PollEvent(&event);
-
-    switch (event.type) {
-        case SDL_QUIT:
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) {
             isRunning = false;
-        break;
-
-        default:
-            break;
+        }
     }
-
 }
 
-void Game::Update() {
+void Game::Update(float deltaTime) {
+    if (player) {
+        const Uint8* keystate = SDL_GetKeyboardState(NULL);
+        float hitrost = 500.0f;
+        float vx = 0, vy = 0;
 
+        if (keystate[SDL_SCANCODE_W]) vy = -hitrost;
+        if (keystate[SDL_SCANCODE_S]) vy = hitrost;
+        if (keystate[SDL_SCANCODE_A]) vx = -hitrost;
+        if (keystate[SDL_SCANCODE_D]) vx = hitrost;
+
+        if (vx != 0 || vy != 0) {
+            float dolzina = sqrt(vx * vx + vy * vy);
+            vx = (vx / dolzina) * hitrost;
+            vy = (vy / dolzina) * hitrost;
+        }
+        SDL_Log("W: %d, A: %d, S: %d, D: %d",
+                keystate[SDL_SCANCODE_W],
+                keystate[SDL_SCANCODE_A],
+                keystate[SDL_SCANCODE_S],
+                keystate[SDL_SCANCODE_D]);
+
+        player->SetVelocity(vx, vy);
+        player->Update(deltaTime);
+    }
 }
 
 void Game::Render() {

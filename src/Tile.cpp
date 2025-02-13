@@ -1,10 +1,10 @@
 #include "Tile.h"
 
-Tile::Tile(int x, int y, SDL_Texture *tex): texture(tex) {
+Tile::Tile(int x, int y, SDL_Texture *tex, int tileSize): texture(tex) {
     position.x = x;
     position.y = y;
-    position.w = 64;//tile širina/višina
-    position.h = 64;
+    position.w = tileSize;//tile širina/višina
+    position.h = tileSize;
 }
 
 void Tile::Render(SDL_Renderer *renderer, const SDL_Rect &camera) {

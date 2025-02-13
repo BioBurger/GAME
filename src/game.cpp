@@ -30,9 +30,8 @@ void Game::Init(const char* title, bool fullscreen) {
             // Inicializira textureManager
             texture_manager = new Texture_Manager(renderer);
             texture_manager->LoadTexture("assets/textures/Player/skibidi.png", "player");
-            texture_manager->LoadTexture("assets/textures/Tiles/green.png", "green");
-            texture_manager->LoadTexture("assets/textures/Tiles/blue.png", "blue");
-            texture_manager->LoadTexture("assets/textures/Tiles/brown.png", "brown");
+            texture_manager->LoadTexture("assets/textures/Tiles/water1.png", "water1");
+            texture_manager->LoadTexture("assets/textures/Tiles/water2.png", "water2");
             //Inicializiram camero in tileMap
             camera = new Camera(1920, 1080);
             tileMap = new TileMap(*texture_manager, *camera);
@@ -70,7 +69,7 @@ void Game::Update(float deltaTime) {
         camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2);
         tileMap->Update();
         const Uint8* keystate = SDL_GetKeyboardState(NULL);
-        float hitrost = 500.0f;
+        float hitrost = 200.0f;
         float vx = 0, vy = 0;
 
         if (keystate[SDL_SCANCODE_W]) vy = -hitrost;

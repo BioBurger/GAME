@@ -19,6 +19,6 @@ void Camera::Update(int targetX, int targetY) {
     viewport.y=std::max(0, std::min(viewport.y, mapHeight - viewport.h));
 }
 void Camera::WorldToScreen(int &x, int &y) {
-    x -= viewport.x;
-    y -=viewport.y;
+    x -= viewport.x*5;
+    y -=viewport.y*5;
 }

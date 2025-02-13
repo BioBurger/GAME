@@ -9,8 +9,8 @@ void TileMap::Update() {
     SDL_Rect viewport = camera.GetViewport();
     int startX = (viewport.x / tileSize) * tileSize;
     int startY = (viewport.y / tileSize) * tileSize;
-    int endX = startX + viewport.w + tileSize;
-    int endY = startY + viewport.h + tileSize;
+    int endX = startX + viewport.w + tileSize * 2;
+    int endY = startY + viewport.h + tileSize * 2;
 
     //Load tile
     for (int y = startY; y < endY; y+=tileSize) {
@@ -19,20 +19,17 @@ void TileMap::Update() {
             if (loadedTiles.find(key) == loadedTiles.end()) {
                 //loadanje sproti
                 std::string textureID;
-                int randtmp=rand()%(3);
+                int randtmp=rand()%(2);
                 switch (randtmp) {
                     case 0:
-                        textureID = "blue";
+                        textureID = "water1";
                     break;
                     case 1:
-                        textureID = "green";
-                    break;
-                    case 2:
-                        textureID = "brown";
+                        textureID = "water2";
                     break;
                 }
                 SDL_Texture *tex = textureManager.GetTexture(textureID);
-                loadedTiles[key] = new Tile(x,y,tex);
+                loadedTiles[key] = new Tile(x,y,tex,tileSize);
             }
         }
     }

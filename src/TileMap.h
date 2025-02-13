@@ -8,7 +8,7 @@ class TileMap {
     std::unordered_map<std::string, Tile*> loadedTiles;//naložen tile
     Texture_Manager& textureManager;
     Camera& camera;
-    int tileSize = 64;//velikost
+    int tileSize = 16;//velikost
     public:
     TileMap(Texture_Manager& tm, Camera& cam);
     void Update();

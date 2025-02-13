@@ -1,9 +1,15 @@
 #include "GameObject.h"
 
-GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name , int x, int y, int w, int h)
+GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name , int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed)
     : manager(manager),
         texture(manager.GetTexture(texture_name)),
-        positionrect{x,y,w,h},velocityX(0),velocityY(0),positionX(static_cast<float>(x)),positionY(static_cast<float>(y)) {
+        positionrect{x,y,w,h},velocityX(0),velocityY(0),positionX(static_cast<float>(x)),positionY(static_cast<float>(y)),
+        frameWidth(frameWidth), frameHeight(frameHeight),
+        currentFrameIndex(0), totalFrames(totalFrames),
+        animationSpeed(animationSpeed), animationTimer(0.0f),
+        isAnimated(totalFrames > 1) {
+    texture = manager.GetTexture(texture_name);
+    currentFrame = {0,0, frameWidth,frameHeight};
     if (!texture) {
         SDL_Log("TEXTURA '%s' NI NALOZENA", texture_name.c_str());
     }
@@ -11,10 +17,8 @@ GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name
 
 GameObject::~GameObject() {}
 void GameObject::Update(float deltaTime) {
-    // Debugging izpis (preveri hitrost in deltaTime)
-    SDL_Log("Premik: velocityX=%.2f, velocityY=%.2f, deltaTime=%.4f", velocityX, velocityY, deltaTime);
 
-    // Posodobi pozicijo s plavajočo vejico
+    // Posodobi pozicijo
     positionX += velocityX * deltaTime;
     positionY += velocityY * deltaTime;
 
@@ -22,12 +26,26 @@ void GameObject::Update(float deltaTime) {
     positionrect.x = static_cast<int>(positionX);
     positionrect.y = static_cast<int>(positionY);
 
-    // Debugging izpis (preveri končno pozicijo)
-    SDL_Log("Nova pozicija: posX=%.2f, posY=%.2f, rect.x=%d, rect.y=%d",
-            positionX, positionY, positionrect.x, positionrect.y);
+    if (isAnimated) {
+        animationTimer += deltaTime;
+        if (animationTimer >= animationSpeed) {
+            currentFrameIndex = (currentFrameIndex + 1) % totalFrames;
+            currentFrame.x = currentFrameIndex * frameWidth; //premik po sprite sheetu
+
+            animationTimer = 0.0f;
+        }
+    }
+
 }
 void GameObject::Render(SDL_Renderer* renderer) {
-    SDL_RenderCopy(renderer, texture, NULL, &positionrect);
+    SDL_Rect destRect = {
+    static_cast<int>(positionX),
+        static_cast<int>(positionY),
+        positionrect.w,
+        positionrect.h
+    };
+    SDL_RenderCopy(renderer, texture, &currentFrame, &destRect);
+
 }
 void GameObject::SetPosition(int x, int y) {
     positionrect.x=x;

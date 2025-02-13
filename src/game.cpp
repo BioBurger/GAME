@@ -26,22 +26,24 @@ void Game::Init(const char* title, bool fullscreen) {
         renderer = SDL_CreateRenderer(window, -1, 0);
         if (renderer) {
             SDL_SetRenderDrawColor(renderer, 50, 0, 0, 0);
-
             // Inicializira textureManager
             texture_manager = new Texture_Manager(renderer);
-            texture_manager->LoadTexture("assets/textures/Player/skibidi.png", "player");
-            texture_manager->LoadTexture("assets/textures/Tiles/water1.png", "water1");
-            texture_manager->LoadTexture("assets/textures/Tiles/water2.png", "water2");
+            texture_manager->LoadTexture("assets/textures/Player/Player.png", "player");
+            texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
             //Inicializiram camero in tileMap
             camera = new Camera(1920, 1080);
             tileMap = new TileMap(*texture_manager, *camera);
-
-            // Ustvarim player objekt na sredini (primer: 64x64 velikost)
+            //Nastavim FrameRate za sprite sheet
             int playerWidth = 64;
             int playerHeight = 64;
+            int frameWidth = 16;
+            int frameHeight = 15;
+            int totalFrames = 5;
+            float animationSpeed = 0.2f;
+            // Ustvarim player objekt na sredini
             int centerX = (1920 - playerWidth) / 2;
             int centerY = (1080 - playerHeight) / 2;
-            player = new GameObject(*texture_manager, "player", centerX, centerY, playerWidth, playerHeight);
+            player = new GameObject(*texture_manager, "player", centerX, centerY, playerWidth, playerHeight, frameWidth, frameHeight, totalFrames, animationSpeed);
         }
         isRunning = true;
     }
@@ -65,9 +67,6 @@ void Game::HandleEvents() {
 
 void Game::Update(float deltaTime) {
     if (player) {
-        SDL_Rect playerPos = player->GetPosition();
-        camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2);
-        tileMap->Update();
         const Uint8* keystate = SDL_GetKeyboardState(NULL);
         float hitrost = 200.0f;
         float vx = 0, vy = 0;
@@ -82,7 +81,9 @@ void Game::Update(float deltaTime) {
             vx = (vx / dolzina) * hitrost;
             vy = (vy / dolzina) * hitrost;
         }
-
+        SDL_Rect playerPos = player->GetPosition();
+        camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2);
+        tileMap->Update(deltaTime);
         player->SetVelocity(vx, vy);
         player->Update(deltaTime);
     }

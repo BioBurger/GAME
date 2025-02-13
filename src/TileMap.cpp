@@ -4,7 +4,8 @@
 
 TileMap::TileMap(Texture_Manager &tm, Camera &cam) : textureManager(tm), camera(cam){}
 
-void TileMap::Update() {
+void TileMap::Update(float deltaTime) {
+    globalAnimationTimer += deltaTime;//posodobim globalni čas
     //V oknu
     SDL_Rect viewport = camera.GetViewport();
     int startX = (viewport.x / tileSize) * tileSize;
@@ -16,20 +17,26 @@ void TileMap::Update() {
     for (int y = startY; y < endY; y+=tileSize) {
         for (int x = startX; x < endX; x+=tileSize) {
             std::string key = std::to_string(x) + "," + std::to_string(y);
+
             if (loadedTiles.find(key) == loadedTiles.end()) {
                 //loadanje sproti
                 std::string textureID;
-                int randtmp=rand()%(2);
+
+                int randtmp=0;
                 switch (randtmp) {
                     case 0:
-                        textureID = "water1";
-                    break;
-                    case 1:
-                        textureID = "water2";
+                        textureID = "water";
                     break;
                 }
+
+                bool isAnimated = (textureID == "water");
+                int frames = 3;
+                float speed = 0.5f;
+                int frameWidth = 16;
+                int frameHeight = 16;
+
                 SDL_Texture *tex = textureManager.GetTexture(textureID);
-                loadedTiles[key] = new Tile(x,y,tex,tileSize);
+                loadedTiles[key] = new Tile(x,y,tex,tileSize, isAnimated, frames, speed, frameWidth, frameHeight);
             }
         }
     }
@@ -45,6 +52,9 @@ void TileMap::Update() {
         }else {
             ++it;
         }
+    }
+    for (auto& pair : loadedTiles) {
+        pair.second->Update(globalAnimationTimer);
     }
 }
 

@@ -11,9 +11,19 @@ class GameObject {
         SDL_Rect positionrect;
         float velocityX;
         float velocityY;
+        SDL_Rect currentFrame;
+        int frameWidth;
+        int frameHeight;
+        int currentFrameIndex;
+        int totalFrames;
+        float animationSpeed;
+        float animationTimer;
+        bool isAnimated;
+
+
 
     public:
-    GameObject(Texture_Manager& manager, const std::string& textureID, int x, int y, int w, int h);
+    GameObject(Texture_Manager& manager, const std::string& textureID, int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed);
     ~GameObject();
     void Update(float deltaTime);
     void Render(SDL_Renderer* renderer);

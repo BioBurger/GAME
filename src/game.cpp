@@ -27,11 +27,17 @@ void Game::Init(const char* title, bool fullscreen) {
         if (renderer) {
             SDL_SetRenderDrawColor(renderer, 50, 0, 0, 0);
 
-            // Inicializiraj textureManager
+            // Inicializira textureManager
             texture_manager = new Texture_Manager(renderer);
-            texture_manager->LoadTexture("assets/textures/skibidi.png", "player");
+            texture_manager->LoadTexture("assets/textures/Player/skibidi.png", "player");
+            texture_manager->LoadTexture("assets/textures/Tiles/green.png", "green");
+            texture_manager->LoadTexture("assets/textures/Tiles/blue.png", "blue");
+            texture_manager->LoadTexture("assets/textures/Tiles/brown.png", "brown");
+            //Inicializiram camero in tileMap
+            camera = new Camera(1920, 1080);
+            tileMap = new TileMap(*texture_manager, *camera);
 
-            // Ustvari player objekt na sredini (primer: 64x64 velikost)
+            // Ustvarim player objekt na sredini (primer: 64x64 velikost)
             int playerWidth = 64;
             int playerHeight = 64;
             int centerX = (1920 - playerWidth) / 2;
@@ -60,6 +66,9 @@ void Game::HandleEvents() {
 
 void Game::Update(float deltaTime) {
     if (player) {
+        SDL_Rect playerPos = player->GetPosition();
+        camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2);
+        tileMap->Update();
         const Uint8* keystate = SDL_GetKeyboardState(NULL);
         float hitrost = 500.0f;
         float vx = 0, vy = 0;
@@ -74,11 +83,6 @@ void Game::Update(float deltaTime) {
             vx = (vx / dolzina) * hitrost;
             vy = (vy / dolzina) * hitrost;
         }
-        SDL_Log("W: %d, A: %d, S: %d, D: %d",
-                keystate[SDL_SCANCODE_W],
-                keystate[SDL_SCANCODE_A],
-                keystate[SDL_SCANCODE_S],
-                keystate[SDL_SCANCODE_D]);
 
         player->SetVelocity(vx, vy);
         player->Update(deltaTime);
@@ -87,8 +91,9 @@ void Game::Update(float deltaTime) {
 
 void Game::Render() {
     SDL_RenderClear(renderer);
+    tileMap->Render((renderer));//Rendera ozadje
     if (player) {
-        player->Render(renderer);
+        player->Render(renderer);//rendera playerja
     }
     SDL_RenderPresent(renderer);
 

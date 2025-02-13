@@ -1,0 +1,24 @@
+#include "Camera.h"
+
+Camera::Camera(int screenWidth, int screenHeight) {
+    viewport.w=screenWidth;
+    viewport.h=screenHeight;
+    viewport.x=0;
+    viewport.y=0;
+    mapWidth=INT_MAX;
+    mapHeight=INT_MAX;
+}
+
+void Camera::Update(int targetX, int targetY) {
+    // Središče kamere na igralcu
+    viewport.x=targetX-viewport.w /2;
+    viewport.y=targetY-viewport.h /2;
+
+    // Omeji kamero na meje mape
+    viewport.x=std::max(0, std::min(viewport.x, mapWidth - viewport.w));
+    viewport.y=std::max(0, std::min(viewport.y, mapHeight - viewport.h));
+}
+void Camera::WorldToScreen(int &x, int &y) {
+    x -= viewport.x;
+    y -=viewport.y;
+}

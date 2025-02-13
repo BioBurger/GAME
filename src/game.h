@@ -5,6 +5,8 @@
 #include "GameObject.h"
 #include "SDL2/SDL.h"
 #include "Texture_Manager.h"
+#include "Camera.h"
+#include "TileMap.h"
 #ifndef Game_h
 #define Game_h
 
@@ -15,6 +17,8 @@ private:
     SDL_Window *window;
     SDL_Renderer *renderer;
     GameObject *player;
+    Camera *camera;
+    TileMap *tileMap;
 
 
 public:

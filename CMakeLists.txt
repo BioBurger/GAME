@@ -21,6 +21,12 @@ add_executable(GAME src/main.cpp
         src/Texture_Manager.h
         src/Texture_Manager.cpp
         src/GameObject.h
-        src/GameObject.cpp)
+        src/GameObject.cpp
+        src/Camera.h
+        src/Camera.cpp
+        src/Tile.h
+        src/Tile.cpp
+        src/TileMap.h
+        src/TileMap.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES})

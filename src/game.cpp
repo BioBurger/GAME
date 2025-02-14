@@ -28,7 +28,7 @@ void Game::Init(const char* title, bool fullscreen) {
             SDL_SetRenderDrawColor(renderer, 50, 0, 0, 0);
             // Inicializira textureManager
             texture_manager = new Texture_Manager(renderer);
-            texture_manager->LoadTexture("assets/textures/Player/Player.png", "player");
+            texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");
             texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
             //Inicializiram camero in tileMap
             camera = new Camera(1920, 1080);
@@ -37,9 +37,9 @@ void Game::Init(const char* title, bool fullscreen) {
             int playerWidth = 64;
             int playerHeight = 64;
             int frameWidth = 16;
-            int frameHeight = 15;
-            int totalFrames = 5;
-            float animationSpeed = 0.2f;
+            int frameHeight = 16;
+            int totalFrames = 8;
+            float animationSpeed = 0.1f;
             // Ustvarim player objekt na sredini
             int centerX = (1920 - playerWidth) / 2;
             int centerY = (1080 - playerHeight) / 2;

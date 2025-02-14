@@ -7,36 +7,85 @@ GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name
         frameWidth(frameWidth), frameHeight(frameHeight),
         currentFrameIndex(0), totalFrames(totalFrames),
         animationSpeed(animationSpeed), animationTimer(0.0f),
-        isAnimated(totalFrames > 1) {
+        isAnimated(totalFrames > 1),
+        idleAnimationSpeed(animationSpeed * 2.0f),
+        moveAnimationSpeed(animationSpeed){
     texture = manager.GetTexture(texture_name);
     currentFrame = {0,0, frameWidth,frameHeight};
     if (!texture) {
         SDL_Log("TEXTURA '%s' NI NALOZENA", texture_name.c_str());
     }
+    currentState = State::IDLE;
+    currentDirection = Direction::DOWN;
+    flipType = SDL_FLIP_NONE;
+    animationRow = 0;
 }
 
 GameObject::~GameObject() {}
 void GameObject::Update(float deltaTime) {
-
     // Posodobi pozicijo
     positionX += velocityX * deltaTime;
     positionY += velocityY * deltaTime;
 
-    // Pretvori v int za SDL_Rect
+    // Posodobi SDL_Rect za renderiranje
     positionrect.x = static_cast<int>(positionX);
     positionrect.y = static_cast<int>(positionY);
 
-    if (isAnimated) {
-        animationTimer += deltaTime;
-        if (animationTimer >= animationSpeed) {
-            currentFrameIndex = (currentFrameIndex + 1) % totalFrames;
-            currentFrame.x = currentFrameIndex * frameWidth; //premik po sprite sheetu
+    // Določi stanje in smer glede na hitrost
+    if (velocityX != 0 || velocityY != 0) {
+        currentState = State::MOVING;
 
-            animationTimer = 0.0f;
+        if (abs(velocityX) > abs(velocityY)) {
+            currentDirection = (velocityX > 0) ? Direction::RIGHT : Direction::LEFT;
+        } else {
+            currentDirection = (velocityY > 0) ? Direction::DOWN : Direction::UP;
         }
+    } else {
+        currentState = State::IDLE;
     }
 
+    // Nastavi animacijsko vrstico in število frame-ov
+    switch (currentState) {
+        case State::IDLE:
+            if (currentDirection == Direction::LEFT) {
+                animationRow = 1;  // Uporabi idle right + flip
+                flipType = SDL_FLIP_HORIZONTAL;
+            } else {
+                animationRow = static_cast<int>(currentDirection);
+                flipType = SDL_FLIP_NONE;
+            }
+        totalFrames = 5; // Število frame-ov za idle
+        break;
+
+        case State::MOVING:
+            if (currentDirection == Direction::DOWN) {
+                animationRow = 3;  // Premik dol je v vrstici 3
+            } else if (currentDirection == Direction::UP) {
+                animationRow = 5;  // Premik gor je v vrstici 5
+            } else if (currentDirection == Direction::RIGHT) {
+                animationRow = 4;  // Premik desno je v vrstici 4
+            } else {  // LEFT
+                animationRow = 4; // Uporabi premik desno + flip
+                flipType = SDL_FLIP_HORIZONTAL;
+            }
+        totalFrames = 8; // Število frame-ov za premikanje
+        break;
+    }
+
+    // **Animacija**
+    float actualSpeed = ( currentState == State::IDLE) ? idleAnimationSpeed : moveAnimationSpeed;
+    if (isAnimated) {
+        animationTimer += deltaTime;
+        if (animationTimer >= actualSpeed) {
+            currentFrameIndex = (currentFrameIndex + 1) % totalFrames;  // Premik na naslednji frame
+            currentFrame.x = currentFrameIndex * frameWidth;  // Spreminjanje X glede na frame index
+            currentFrame.y = animationRow * frameHeight;  // Spreminjanje Y glede na vrstico animacije
+
+            animationTimer = 0.0f;  // Resetiraj timer
+        }
+    }
 }
+
 void GameObject::Render(SDL_Renderer* renderer) {
     SDL_Rect destRect = {
     static_cast<int>(positionX),
@@ -44,7 +93,7 @@ void GameObject::Render(SDL_Renderer* renderer) {
         positionrect.w,
         positionrect.h
     };
-    SDL_RenderCopy(renderer, texture, &currentFrame, &destRect);
+    SDL_RenderCopyEx(renderer, texture, &currentFrame, &destRect, 0.0, nullptr, flipType);
 
 }
 void GameObject::SetPosition(int x, int y) {
@@ -55,31 +104,5 @@ void GameObject::SetVelocity(float vx, float vy) {
     velocityX = vx;
     velocityY = vy;
 }
-/*
-#include "GameObject.h"
 
-int main() {
-// Inicializacija SDL, rendererja, itd.
-SDL_Texture* playerTexture = ...; // Naloži teksturo z IMG_LoadTexture()
-
-// Ustvari GameObject
-GameObject player(playerTexture, 100, 100, 64, 64);
-player.SetVelocity(200.0f, 0.0f); // Premikanje desno
-
-// Glavna zanka
-bool isRunning = true;
-while (isRunning) {
-float deltaTime = ...; // Izračunaj deltaTime
-
-// Posodobi logiko
-player.Update(deltaTime);
-
-// Renderiranje
-SDL_RenderClear(renderer);
-player.Render(renderer);
-SDL_RenderPresent(renderer);
-}
-
-return 0;
-}*/
 

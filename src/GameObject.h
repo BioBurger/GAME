@@ -4,14 +4,14 @@
 
 class GameObject {
     private:
-        Texture_Manager& manager;
+        Texture_Manager& manager;//texture
         SDL_Texture* texture;
-        float positionX;
+        float positionX;//lokacija
         float positionY;
         SDL_Rect positionrect;
         float velocityX;
         float velocityY;
-        SDL_Rect currentFrame;
+        SDL_Rect currentFrame;//animacija
         int frameWidth;
         int frameHeight;
         int currentFrameIndex;
@@ -19,6 +19,16 @@ class GameObject {
         float animationSpeed;
         float animationTimer;
         bool isAnimated;
+        enum class State {IDLE, MOVING};//stanja animacije (popravek od učer)
+        enum class Direction {LEFT, RIGHT, UP, DOWN};
+        State currentState;
+        Direction currentDirection;
+        SDL_RendererFlip flipType;//za levo(i hate not fliped sprites)
+        int animationRow;//1. idle front||2. idle right||3. idle front(ignoreamo)||4. idle back||5. moving front||6. moving back||7. moving right ||8. death
+        float idleAnimationSpeed;
+        float moveAnimationSpeed;
+
+
 
 
 

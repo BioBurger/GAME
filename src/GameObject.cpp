@@ -25,6 +25,11 @@ GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name
 
 GameObject::~GameObject() {}
 void GameObject::Update(float deltaTime) {
+    if (!IsAlive()) {
+        currentState = State::DEAD;
+        PlayDeathAnimation();
+        return;
+    }
     // Posodobi pozicijo
     positionX += velocityX * deltaTime;
     positionY += velocityY * deltaTime;
@@ -95,6 +100,10 @@ void GameObject::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) 
         positionrect.w,
         positionrect.h
     };
+    //Za death animacijo
+    if (!IsAlive()) {
+        currentFrame.y = animationRow * frameHeight;
+    }
     SDL_RenderCopyEx(renderer, texture, &currentFrame, &destRect, 0.0, nullptr, flipType);
 }
 void GameObject::SetPosition(int x, int y) {
@@ -117,4 +126,13 @@ GameObject::Direction GameObject::GetDirection()const {
 void GameObject::TakeDamage(int damage) {
     health -= damage;
     if (health < 0) health = 0;
+}
+void GameObject::PlayDeathAnimation() {
+    isAnimated = true;
+    totalFrames = 1;
+    animationRow = 0;
+    animationSpeed = 0.15f;
+    currentFrameIndex = 0;
+    velocityX = 0;
+    velocityY = 0;
 }

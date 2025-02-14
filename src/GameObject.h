@@ -8,7 +8,7 @@ class GameObject {
 public:
     GameObject(Texture_Manager& manager, const std::string& textureID, int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed, int startHealth = 100);
     ~GameObject();
-    enum class State {IDLE, MOVING};//stanja animacije (popravek od učer)
+    enum class State {IDLE, MOVING, DEAD};//stanja animacije + ani je mrtev
     enum class Direction {LEFT, RIGHT, UP, DOWN};
     virtual void Update(float deltaTime);
     void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport);
@@ -20,6 +20,7 @@ public:
     int GetHealt() const{return health;}
     void TakeDamage(int damage);
     bool IsAlive() const { return health > 0; }
+    void PlayDeathAnimation();
 protected:
     int health;
     int maxHealth;

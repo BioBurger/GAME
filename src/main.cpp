@@ -17,6 +17,9 @@ int main(int argumentCount, char *arguments[]){
         float deltaTime=(currentTime - previousTime) / 1000.0f;
         previousTime = currentTime;
         game->HandleEvents();
+        if (!game->IsGameOver()) {
+            game->Update(deltaTime);
+        }
         game->Update(deltaTime);
         game->Render();
     }

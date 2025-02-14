@@ -34,6 +34,8 @@ void Game::Init(const char* title, bool fullscreen) {
             texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");
             texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
             texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy");
+            texture_manager->LoadTexture("assets/textures/Screens/GameOver.png", "game_over");
+            gameOverTexture = texture_manager->GetTexture("game_over");
             //Inicializiram camero in tileMap
             camera = new Camera(1920, 1080);
             tileMap = new TileMap(*texture_manager, *camera);
@@ -60,16 +62,21 @@ void Game::Init(const char* title, bool fullscreen) {
 }
 
 void Game::HandleEvents() {
-    SDL_PumpEvents();
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            isRunning = false;
+    while(SDL_PollEvent(&event)) {
+        if(event.type == SDL_QUIT) isRunning = false;
+
+        if(gameOver && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_r) {
+            RestartGame();
         }
     }
 }
 
 void Game::Update(float deltaTime) {
+    if (gameOver || !player->IsAlive()) {
+        std::cout<<"igralec je dead";
+        return;
+    };
     if (player) {
         const Uint8* keystate = SDL_GetKeyboardState(NULL);
         float hitrost = 200.0f;
@@ -102,14 +109,12 @@ void Game::Update(float deltaTime) {
         //spawn enemy
         spawnTimer += deltaTime;
         if (spawnTimer >= SPAWN_INTERVAL) {
-            std::cout <<"Spawn enemy"<<std::endl;
             SpawnEnemy();
             spawnTimer = 0.0f;
         }
         //update enemy
         for (auto it = enemies.begin(); it != enemies.end();) {
             if (!(*it)->IsAlive()){
-                std::cout<<"Enemy died"<<std::endl;
                 delete *it;
                 it = enemies.erase(it);
             }else {
@@ -123,6 +128,11 @@ void Game::Update(float deltaTime) {
                 enemy->TakeDamage(50);
             }
         }
+        if (!player->IsAlive()) {
+                std::cout<<"igralec je dead, gameover start";
+            gameOver = true;
+            return;
+        }
     }
 }
 bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
@@ -132,15 +142,20 @@ bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
 void Game::Render() {
     SDL_RenderClear(renderer);
 
-    // Podaj kamero vsem elementom
-    SDL_Rect cameraViewport = camera->GetViewport();
-    tileMap->Render(renderer, cameraViewport);
-    player->Render(renderer, cameraViewport);
+    if( !gameOver ) {
+        // Podaj kamero vsem elementom
+        SDL_Rect cameraViewport = camera->GetViewport();
+        tileMap->Render(renderer, cameraViewport);
+        player->Render(renderer, cameraViewport);
 
-    for (auto& enemy : enemies) {
-        enemy->Render(renderer, cameraViewport);
+        for (auto& enemy : enemies) {
+            enemy->Render(renderer, cameraViewport);
+        }
+    }else {
+        //gameover
+        SDL_Rect screenRect = {0, 0, 1920, 1080};
+        SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
     }
-
     // Health bar (ostane na fiksnem mestu)
     SDL_Rect healthBar = {50, 50, player->GetHealt() * 2, 20};
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
@@ -191,7 +206,13 @@ void Game::SpawnEnemy() {
             spawnY = viewport.y + viewport.h + SPAWN_OFFSET;
         break;
     }
-    std::cout<<"Enemy spawn: "<<spawnX<<","<<spawnY<<std::endl;
 
     enemies.push_back(new Enemy(*texture_manager, "enemy", spawnX, spawnY, player, 50));
+}
+void Game::RestartGame() {
+    delete player;
+    player = new GameObject(*texture_manager, "player", centerX, centerY, playerWidth, playerHeight, frameWidth, frameHeight, totalFrames, animationSpeed);
+    enemies.clear();
+    gameOver = false;
+    spawnTimer = 0.0f;
 }

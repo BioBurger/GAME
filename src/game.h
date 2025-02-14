@@ -23,6 +23,16 @@ private:
     std::vector<Enemy*> enemies;
     float spawnTimer = 0.0f;
     const float SPAWN_INTERVAL = 0.5f;
+    bool gameOver = false;
+    SDL_Texture* gameOverTexture;
+    int centerX;
+    int centerY;
+    int playerWidth = 64;
+    int playerHeight = 64;
+    int frameWidth = 16;
+    int frameHeight = 16;
+    int totalFrames = 8;
+    float animationSpeed = 0.1f;
 
 
 public:
@@ -36,6 +46,8 @@ public:
     bool Running();
     void SpawnEnemy();
     bool CheckCollision(const SDL_Rect& a, const SDL_Rect& b);
+    void RestartGame();
+    bool IsGameOver() const { return gameOver; }
 
 };
 

@@ -80,6 +80,12 @@ void Game::Update(float deltaTime) {
             float dolzina = sqrt(vx * vx + vy * vy);
             vx = (vx / dolzina) * hitrost;
             vy = (vy / dolzina) * hitrost;
+
+            if (abs(vx) > abs(vy)) {
+                player->SetDirection(vx > 0 ? GameObject::Direction::RIGHT : GameObject::Direction::LEFT);
+            }else {
+                player->SetDirection(vy > 0 ?  GameObject::Direction::DOWN : GameObject::Direction::UP);
+            }
         }
         SDL_Rect playerPos = player->GetPosition();
         camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2);

@@ -3,6 +3,18 @@
 #include <string>
 
 class GameObject {
+    public:
+        GameObject(Texture_Manager& manager, const std::string& textureID, int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed);
+        ~GameObject();
+        enum class State {IDLE, MOVING};//stanja animacije (popravek od učer)
+        enum class Direction {LEFT, RIGHT, UP, DOWN};
+        void Update(float deltaTime);
+        void Render(SDL_Renderer* renderer);
+        SDL_Rect GetPosition()  const {return positionrect;}
+        void SetPosition(int x, int y);;
+        void SetVelocity(float vx, float vy);
+        void SetDirection(Direction newDir);
+        Direction GetDirection()const;
     private:
         Texture_Manager& manager;//texture
         SDL_Texture* texture;
@@ -19,8 +31,6 @@ class GameObject {
         float animationSpeed;
         float animationTimer;
         bool isAnimated;
-        enum class State {IDLE, MOVING};//stanja animacije (popravek od učer)
-        enum class Direction {LEFT, RIGHT, UP, DOWN};
         State currentState;
         Direction currentDirection;
         SDL_RendererFlip flipType;//za levo(i hate not fliped sprites)
@@ -32,12 +42,5 @@ class GameObject {
 
 
 
-    public:
-    GameObject(Texture_Manager& manager, const std::string& textureID, int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed);
-    ~GameObject();
-    void Update(float deltaTime);
-    void Render(SDL_Renderer* renderer);
-    SDL_Rect GetPosition()  const {return positionrect;}
-    void SetPosition(int x, int y);;
-    void SetVelocity(float vx, float vy);
+
 };

@@ -104,5 +104,15 @@ void GameObject::SetVelocity(float vx, float vy) {
     velocityX = vx;
     velocityY = vy;
 }
+void GameObject::SetDirection(Direction newDir) {
+    if (currentDirection != newDir) {
+        currentDirection = newDir;
+        flipType = (newDir == Direction::LEFT) ?  SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    }
+}
+GameObject::Direction GameObject::GetDirection()const {
+    return currentDirection;
+}
+
 
 

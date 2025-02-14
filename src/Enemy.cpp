@@ -19,4 +19,3 @@ void Enemy::Update(float deltaTime) {
 
     GameObject::Update(deltaTime);
 }
-

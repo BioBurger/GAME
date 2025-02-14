@@ -58,9 +58,18 @@ void TileMap::Update(float deltaTime) {
     }
 }
 
-void TileMap::Render(SDL_Renderer* renderer) {
+void TileMap::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
     for (auto& pair : loadedTiles) {
-        pair.second->Render(renderer, camera.GetViewport());
+        SDL_Rect tilePos = pair.second->GetPosition();
+
+        // Preveri če je tile viden
+        if (tilePos.x + tilePos.w < cameraViewport.x ||
+            tilePos.x > cameraViewport.x + cameraViewport.w ||
+            tilePos.y + tilePos.h < cameraViewport.y ||
+            tilePos.y > cameraViewport.y + cameraViewport.h) {
+            continue;
+            }
+
+        pair.second->Render(renderer, cameraViewport);
     }
 }
-

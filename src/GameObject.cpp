@@ -88,15 +88,14 @@ void GameObject::Update(float deltaTime) {
     }
 }
 
-void GameObject::Render(SDL_Renderer* renderer) {
+void GameObject::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
     SDL_Rect destRect = {
-    static_cast<int>(positionX),
-        static_cast<int>(positionY),
+        positionrect.x - cameraViewport.x, // Korekcija za kamero
+        positionrect.y - cameraViewport.y,
         positionrect.w,
         positionrect.h
     };
     SDL_RenderCopyEx(renderer, texture, &currentFrame, &destRect, 0.0, nullptr, flipType);
-
 }
 void GameObject::SetPosition(int x, int y) {
     positionrect.x=x;
@@ -119,9 +118,3 @@ void GameObject::TakeDamage(int damage) {
     health -= damage;
     if (health < 0) health = 0;
 }
-
-
-
-
-
-

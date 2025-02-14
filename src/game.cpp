@@ -92,7 +92,9 @@ void Game::Update(float deltaTime) {
             }
         }
         SDL_Rect playerPos = player->GetPosition();
-        camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2, deltaTime);
+        int playerCenterX = playerPos.x + playerPos.w / 2;
+        int playerCenterY = playerPos.y + playerPos.h / 2;
+        camera->Update(playerCenterX, playerCenterY);
         tileMap->Update(deltaTime);
         player->SetVelocity(vx, vy);
         player->Update(deltaTime);
@@ -129,17 +131,21 @@ bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
 
 void Game::Render() {
     SDL_RenderClear(renderer);
-    tileMap->Render((renderer));//Rendera ozadje
-    if (player) {
-        player->Render(renderer);//rendera playerja
+
+    // Podaj kamero vsem elementom
+    SDL_Rect cameraViewport = camera->GetViewport();
+    tileMap->Render(renderer, cameraViewport);
+    player->Render(renderer, cameraViewport);
+
+    for (auto& enemy : enemies) {
+        enemy->Render(renderer, cameraViewport);
     }
+
+    // Health bar (ostane na fiksnem mestu)
     SDL_Rect healthBar = {50, 50, player->GetHealt() * 2, 20};
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderFillRect(renderer, &healthBar);
 
-    for (auto& enemy : enemies) {
-        enemy->Render(renderer);
-    }
     SDL_RenderPresent(renderer);
 }
 
@@ -166,22 +172,23 @@ void Game::SpawnEnemy() {
     int side = sideDist(gen);
 
     int spawnX, spawnY;
+    const int SPAWN_OFFSET = 500;
     switch (side) {
         case 0://levo
-                spawnX = viewport.x - 500;
-                spawnY = viewport.y - (rand() % viewport.h);
+                spawnX = viewport.x - SPAWN_OFFSET;
+                spawnY = viewport.y + (rand() % viewport.h);
         break;
         case 1://desno
-            spawnX = viewport.x + 500;
-            spawnY = viewport.y - (rand() % viewport.h);
+            spawnX = viewport.x + viewport.w + SPAWN_OFFSET;
+            spawnY = viewport.y + (rand() % viewport.h);
         break;
         case 2://zgoraj
-            spawnY = viewport.y - 500;
-            spawnX = viewport.x - (rand() % viewport.w);
+            spawnX = viewport.x + (rand() % viewport.w);
+            spawnY = viewport.y - SPAWN_OFFSET;
         break;
         case 3://spodaj
-            spawnX = viewport.y + 500;
-            spawnY = viewport.x - (rand() % viewport.w);
+            spawnX = viewport.x + (rand() % viewport.w);
+            spawnY = viewport.y + viewport.h + SPAWN_OFFSET;
         break;
     }
     std::cout<<"Enemy spawn: "<<spawnX<<","<<spawnY<<std::endl;

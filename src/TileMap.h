@@ -10,8 +10,8 @@ class TileMap {
     Camera& camera;
     float globalAnimationTimer = 0.0f;
     int tileSize = 64;//velikost
-    public:
+public:
     TileMap(Texture_Manager& tm, Camera& cam);
     void Update(float deltaTime);
-    void Render(SDL_Renderer* renderer);
+    void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport);
 };

@@ -1,5 +1,8 @@
 #include "Game.h"
 #include <SDL2/SDL_keyboard.h>
+#include <random>
+
+#include "Enemy.h"
 
 Game::Game() :texture_manager(NULL)  {
     texture_manager=NULL;
@@ -30,6 +33,7 @@ void Game::Init(const char* title, bool fullscreen) {
             texture_manager = new Texture_Manager(renderer);
             texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");
             texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
+            texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy");
             //Inicializiram camero in tileMap
             camera = new Camera(1920, 1080);
             tileMap = new TileMap(*texture_manager, *camera);
@@ -88,11 +92,39 @@ void Game::Update(float deltaTime) {
             }
         }
         SDL_Rect playerPos = player->GetPosition();
-        camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2);
+        camera->Update(playerPos.x + playerPos.w / 2, playerPos.y + playerPos.h / 2, deltaTime);
         tileMap->Update(deltaTime);
         player->SetVelocity(vx, vy);
         player->Update(deltaTime);
+
+        //spawn enemy
+        spawnTimer += deltaTime;
+        if (spawnTimer >= SPAWN_INTERVAL) {
+            std::cout <<"Spawn enemy"<<std::endl;
+            SpawnEnemy();
+            spawnTimer = 0.0f;
+        }
+        //update enemy
+        for (auto it = enemies.begin(); it != enemies.end();) {
+            if (!(*it)->IsAlive()){
+                std::cout<<"Enemy died"<<std::endl;
+                delete *it;
+                it = enemies.erase(it);
+            }else {
+                (*it)->Update(deltaTime);
+                ++it;
+            }
+        }
+        for (auto& enemy : enemies) {
+            if (CheckCollision(player->GetPosition(), enemy->GetPosition())) {
+                player->TakeDamage(5);
+                enemy->TakeDamage(50);
+            }
+        }
     }
+}
+bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
+    return (a.x < b.x + b.w && a.x < a.w + b.x && a.y < b.y + b.h && a.y + a.h > b.y);
 }
 
 void Game::Render() {
@@ -101,8 +133,14 @@ void Game::Render() {
     if (player) {
         player->Render(renderer);//rendera playerja
     }
-    SDL_RenderPresent(renderer);
+    SDL_Rect healthBar = {50, 50, player->GetHealt() * 2, 20};
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(renderer, &healthBar);
 
+    for (auto& enemy : enemies) {
+        enemy->Render(renderer);
+    }
+    SDL_RenderPresent(renderer);
 }
 
 bool Game::Running() {
@@ -116,4 +154,37 @@ void Game::Clean() {
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
     std::cout << "Game cleaned" << std::endl;
+}
+void Game::SpawnEnemy() {
+    //izven kamere
+    SDL_Rect viewport = camera->GetViewport();
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    //random stran
+    std::uniform_real_distribution<> sideDist(0, 3);
+    int side = sideDist(gen);
+
+    int spawnX, spawnY;
+    switch (side) {
+        case 0://levo
+                spawnX = viewport.x - 500;
+                spawnY = viewport.y - (rand() % viewport.h);
+        break;
+        case 1://desno
+            spawnX = viewport.x + 500;
+            spawnY = viewport.y - (rand() % viewport.h);
+        break;
+        case 2://zgoraj
+            spawnY = viewport.y - 500;
+            spawnX = viewport.x - (rand() % viewport.w);
+        break;
+        case 3://spodaj
+            spawnX = viewport.y + 500;
+            spawnY = viewport.x - (rand() % viewport.w);
+        break;
+    }
+    std::cout<<"Enemy spawn: "<<spawnX<<","<<spawnY<<std::endl;
+
+    enemies.push_back(new Enemy(*texture_manager, "enemy", spawnX, spawnY, player, 50));
 }

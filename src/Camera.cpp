@@ -9,14 +9,11 @@ Camera::Camera(int screenWidth, int screenHeight) {
     mapHeight=INT_MAX;
 }
 
-void Camera::Update(int targetX, int targetY) {
-    SDL_Log("Kamera: &d , &d | Igralec: &d , &d", viewport.x,viewport.y,targetX,targetY);
+void Camera::Update(int targetX, int targetY, float delatTime) {
+    float speedFactor = smoothSpeed * delatTime * 60;
     // Središče kamere na igralcu
-    int targetCenterX = targetX - viewport.w /2;
-    int targetCenterY = targetY-viewport.h /2;
-    //za za enakometren premik
-    viewport.x +=static_cast<int>((targetCenterX-viewport.x) * smoothSpeed);
-    viewport.y +=static_cast<int>((targetCenterY-viewport.y) * smoothSpeed);
+    viewport.x += static_cast<int>((targetX-viewport.w / 2 - viewport.x) * speedFactor);
+    viewport.y += static_cast<int>((targetY-viewport.h / 2 - viewport.y) * speedFactor);
 
     // Omeji kamero na meje mape
     viewport.x=std::max(0, std::min(viewport.x, mapWidth - viewport.w));

@@ -1,6 +1,6 @@
 #include "GameObject.h"
 
-GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name , int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed)
+GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name , int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed, int startHealth)
     : manager(manager),
         texture(manager.GetTexture(texture_name)),
         positionrect{x,y,w,h},velocityX(0),velocityY(0),positionX(static_cast<float>(x)),positionY(static_cast<float>(y)),
@@ -9,7 +9,9 @@ GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name
         animationSpeed(animationSpeed), animationTimer(0.0f),
         isAnimated(totalFrames > 1),
         idleAnimationSpeed(animationSpeed * 2.0f),
-        moveAnimationSpeed(animationSpeed){
+        moveAnimationSpeed(animationSpeed),
+        health(startHealth),
+        maxHealth(startHealth){
     texture = manager.GetTexture(texture_name);
     currentFrame = {0,0, frameWidth,frameHeight};
     if (!texture) {
@@ -113,6 +115,13 @@ void GameObject::SetDirection(Direction newDir) {
 GameObject::Direction GameObject::GetDirection()const {
     return currentDirection;
 }
+void GameObject::TakeDamage(int damage) {
+    health -= damage;
+    if (health < 0) health = 0;
+}
+
+
+
 
 
 

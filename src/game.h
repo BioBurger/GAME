@@ -9,6 +9,7 @@
 #include "TileMap.h"
 #ifndef Game_h
 #define Game_h
+class Enemy;
 
 class Game {
 private:
@@ -19,6 +20,9 @@ private:
     GameObject *player;
     Camera *camera;
     TileMap *tileMap;
+    std::vector<Enemy*> enemies;
+    float spawnTimer = 0.0f;
+    const float SPAWN_INTERVAL = 0.5f;
 
 
 public:
@@ -30,6 +34,8 @@ public:
     void Render();
     void Clean();
     bool Running();
+    void SpawnEnemy();
+    bool CheckCollision(const SDL_Rect& a, const SDL_Rect& b);
 
 };
 

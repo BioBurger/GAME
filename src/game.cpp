@@ -42,16 +42,8 @@ void Game::Init(const char* title, bool fullscreen) {
             camera = new Camera(1920, 1080);
             tileMap = new TileMap(*texture_manager, *camera);
             //Nastavim FrameRate za sprite sheet
-            int playerWidth = 64;
-            int playerHeight = 64;
-            int frameWidth = 16;
-            int frameHeight = 16;
-            int totalFrames = 8;
-            float animationSpeed = 0.1f;
             // Ustvarim player objekt na sredini
-            int centerX = (1920 - playerWidth) / 2;
-            int centerY = (1080 - playerHeight) / 2;
-            player = new GameObject(*texture_manager, "player", centerX, centerY, playerWidth, playerHeight, frameWidth, frameHeight, totalFrames, animationSpeed);
+            player = new GameObject(*texture_manager, "player", PLAYER_SPAWN_X, PLAYER_SPAWN_Y, playerWidth, playerHeight, frameWidth, frameHeight, totalFrames, animationSpeed);
         }
         isRunning = true;
     }
@@ -182,7 +174,6 @@ void Game::Render() {
         }
 
         if (currentHealth <= 20 && i== fullHearts -1 ) {
-            std::cout<<"UTRIPANJE"<<std::endl;
             srcRect.x = (SDL_GetTicks() % 400 < 200) ? 0: destHeartSize;
         }
 
@@ -257,7 +248,8 @@ void Game::SpawnEnemy() {
 }
 void Game::RestartGame() {
     delete player;
-    player = new GameObject(*texture_manager, "player", centerX, centerY, playerWidth, playerHeight, frameWidth, frameHeight, totalFrames, animationSpeed);
+    player = new GameObject(*texture_manager, "player", PLAYER_SPAWN_X, PLAYER_SPAWN_Y, playerWidth, playerHeight, frameWidth, frameHeight, totalFrames, animationSpeed);
+    camera->Update(PLAYER_SPAWN_X + playerWidth/2, PLAYER_SPAWN_Y + playerHeight/2);
     enemies.clear();
     gameOver = false;
     spawnTimer = 0.0f;

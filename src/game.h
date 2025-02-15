@@ -26,10 +26,8 @@ private:
     const float SPAWN_INTERVAL = 0.5f;
     bool gameOver = false;
     SDL_Texture* gameOverTexture;
-    int centerX;
-    int centerY;
-    int playerWidth = 64;
-    int playerHeight = 64;
+    int playerWidth = 80;
+    int playerHeight = 80;
     int frameWidth = 16;
     int frameHeight = 16;
     int totalFrames = 8;
@@ -37,6 +35,8 @@ private:
     int srcHeartSize = 16;
     int destHeartSize = 64;
     int maxHearts = 5;
+    const int PLAYER_SPAWN_X = 10000;
+    const int PLAYER_SPAWN_Y = 10000;
 
 
 public:

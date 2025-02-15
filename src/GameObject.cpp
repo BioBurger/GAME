@@ -107,6 +107,9 @@ void GameObject::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) 
     SDL_RenderCopyEx(renderer, texture, &currentFrame, &destRect, 0.0, nullptr, flipType);
 }
 void GameObject::SetPosition(int x, int y) {
+    x = std::max(0, std::min(x, 1920 - positionrect.w));
+    y = std::max(0, std::min(y, 1080 - positionrect.h));
+
     positionrect.x=x;
     positionrect.y=y;
 }

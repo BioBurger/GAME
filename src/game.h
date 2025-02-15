@@ -17,6 +17,7 @@ private:
     bool isRunning;
     SDL_Window *window;
     SDL_Renderer *renderer;
+    SDL_Texture *heartTexture;
     GameObject *player;
     Camera *camera;
     TileMap *tileMap;
@@ -33,6 +34,9 @@ private:
     int frameHeight = 16;
     int totalFrames = 8;
     float animationSpeed = 0.1f;
+    int srcHeartSize = 16;
+    int destHeartSize = 64;
+    int maxHearts = 5;
 
 
 public:

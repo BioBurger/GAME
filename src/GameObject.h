@@ -17,10 +17,11 @@ public:
     void SetVelocity(float vx, float vy);
     void SetDirection(Direction newDir);
     Direction GetDirection()const;
-    int GetHealt() const{return health;}
+    int GetHealth() const{return health;}
     void TakeDamage(int damage);
     bool IsAlive() const { return health > 0; }
     void PlayDeathAnimation();
+    SDL_Rect GetCollisionBox() const;
 protected:
     int health;
     int maxHealth;
@@ -45,6 +46,10 @@ protected:
     int animationRow;//1. idle front||2. idle right||3. idle front(ignoreamo)||4. idle back||5. moving front||6. moving back||7. moving right ||8. death
     float idleAnimationSpeed;
     float moveAnimationSpeed;
+    int collisionOffsetX = 4;//za sredinski hit box
+    int collisionOffsetY = 4;
+    int collisionWidth = 8;
+    int collisionHeight = 8;
 
 
 

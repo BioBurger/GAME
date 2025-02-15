@@ -136,3 +136,11 @@ void GameObject::PlayDeathAnimation() {
     velocityX = 0;
     velocityY = 0;
 }
+SDL_Rect GameObject::GetCollisionBox() const {
+    return {
+        positionrect.x + collisionOffsetX,
+        positionrect.y + collisionOffsetY,
+        collisionWidth,
+        collisionHeight
+    };
+}

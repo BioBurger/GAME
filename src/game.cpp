@@ -35,6 +35,8 @@ void Game::Init(const char* title, bool fullscreen) {
             texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
             texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy");
             texture_manager->LoadTexture("assets/textures/Screens/GameOver.png", "game_over");
+            texture_manager->LoadTexture("assets/textures/Extra/Heart.png", "heart");
+            heartTexture = texture_manager->GetTexture("heart");
             gameOverTexture = texture_manager->GetTexture("game_over");
             //Inicializiram camero in tileMap
             camera = new Camera(1920, 1080);
@@ -74,7 +76,6 @@ void Game::HandleEvents() {
 
 void Game::Update(float deltaTime) {
     if (gameOver || !player->IsAlive()) {
-        std::cout<<"igralec je dead";
         return;
     };
     if (player) {
@@ -123,24 +124,30 @@ void Game::Update(float deltaTime) {
             }
         }
         for (auto& enemy : enemies) {
-            if (CheckCollision(player->GetPosition(), enemy->GetPosition())) {
+            if (CheckCollision(
+                player->GetCollisionBox(),
+                enemy->GetCollisionBox()
+            )) {
                 player->TakeDamage(5);
                 enemy->TakeDamage(50);
             }
         }
         if (!player->IsAlive()) {
-                std::cout<<"igralec je dead, gameover start";
             gameOver = true;
             return;
         }
     }
 }
 bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
-    return (a.x < b.x + b.w && a.x < a.w + b.x && a.y < b.y + b.h && a.y + a.h > b.y);
+    bool xOverlap = (a.x <b.x + b.w) && (a.x + a.w > b.x);
+    bool yOverlap = (a.y <b.y + b.h) && (a.y + a.h > b.y);
+
+    return xOverlap && yOverlap;
 }
 
 void Game::Render() {
     SDL_RenderClear(renderer);
+
 
     if( !gameOver ) {
         // Podaj kamero vsem elementom
@@ -156,10 +163,49 @@ void Game::Render() {
         SDL_Rect screenRect = {0, 0, 1920, 1080};
         SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
     }
-    // Health bar (ostane na fiksnem mestu)
-    SDL_Rect healthBar = {50, 50, player->GetHealt() * 2, 20};
+    // Health bar
+    int currentHealth = player->GetHealth();
+    int fullHearts = currentHealth / 20;//hp na srček
+    //kje so hearti + utripanje
+    int startX = 50;
+    int startY= 50;
+    int spacing = 10;
+
+    Uint32 currentTicks = SDL_GetTicks();
+
+    for (int i= 0; i< maxHearts; i++ ) {
+        SDL_Rect destRect = { startX + ( destHeartSize + spacing ) * i, startY, destHeartSize, destHeartSize};
+        SDL_Rect srcRect = {0, 0, srcHeartSize, srcHeartSize};
+
+        if (i >= fullHearts) {
+            srcRect.x = srcHeartSize;
+        }
+
+        if (currentHealth <= 20 && i== fullHearts -1 ) {
+            std::cout<<"UTRIPANJE"<<std::endl;
+            srcRect.x = (SDL_GetTicks() % 400 < 200) ? 0: destHeartSize;
+        }
+
+        SDL_SetTextureColorMod(heartTexture, 255, 255, 255);
+        SDL_RenderCopy(renderer, heartTexture, &srcRect, &destRect);
+    }
+    // DEBUG: Prikaz kolizijskih okvirjev (prilagojeno za kamero)
+    SDL_Rect cameraViewport = camera->GetViewport();
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_RenderFillRect(renderer, &healthBar);
+
+    // Igralec
+    SDL_Rect playerBox = player->GetCollisionBox();
+    playerBox.x -= cameraViewport.x; // Prilagodi za kamero
+    playerBox.y -= cameraViewport.y;
+    SDL_RenderDrawRect(renderer, &playerBox);
+
+    // Sovražniki
+    for(auto& enemy : enemies) {
+        SDL_Rect enemyBox = enemy->GetCollisionBox();
+        enemyBox.x -= cameraViewport.x; // Prilagodi za kamero
+        enemyBox.y -= cameraViewport.y;
+        SDL_RenderDrawRect(renderer, &enemyBox);
+    }
 
     SDL_RenderPresent(renderer);
 }
@@ -216,3 +262,4 @@ void Game::RestartGame() {
     gameOver = false;
     spawnTimer = 0.0f;
 }
+

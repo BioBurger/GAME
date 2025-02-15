@@ -31,7 +31,7 @@
 
 ```sh
 # KLONIRAJ repozitorij
-$ git clone https://github.com/tvojrepo/zvelvapokalipsa.git
+$ git clone https://github.com/BioBurger/GAME.git
 
 # VSTOPI V KAOS
 $ cd zvelvapokalipsa

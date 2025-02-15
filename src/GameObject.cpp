@@ -33,8 +33,8 @@ void GameObject::Update(float deltaTime) {
         return;
     }
     // Posodobi pozicijo
-    positionX += velocityX * deltaTime;
-    positionY += velocityY * deltaTime;
+    positionX += velocityX * deltaTime * speedMultiplier;
+    positionY += velocityY * deltaTime * speedMultiplier;
 
     // Posodobi SDL_Rect za renderiranje
     positionrect.x = static_cast<int>(positionX);
@@ -109,11 +109,10 @@ void GameObject::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) 
     SDL_RenderCopyEx(renderer, texture, &currentFrame, &destRect, 0.0, nullptr, flipType);
 }
 void GameObject::SetPosition(int x, int y) {
-    x = std::max(0, std::min(x, 1920 - positionrect.w));
-    y = std::max(0, std::min(y, 1080 - positionrect.h));
-
-    positionrect.x=x;
-    positionrect.y=y;
+    positionrect.x = x;
+    positionrect.y = y;
+    positionX = static_cast<float>(x);
+    positionY = static_cast<float>(y);
 }
 void GameObject::SetVelocity(float vx, float vy) {
     velocityX = vx;
@@ -132,9 +131,8 @@ void GameObject::TakeDamage(int damage) {
     health -= damage;
     if (health < 0) health = 0;
 }
-void GameObject::GetHealth(int x) {
-    health += x;
-    health = std::clamp(health, 0, maxHealth);
+void GameObject::GetHealth(int healAmount) {
+    health = std::min(maxHealth, health + healAmount);
 }
 void GameObject::PlayDeathAnimation() {
     isAnimated = true;

@@ -5,26 +5,32 @@
 
 Game *game = nullptr;
 
-int main(int argumentCount, char *arguments[]){
-    srand(time(NULL));
+int main(int argc, char* args[]) {
+    srand(static_cast<unsigned>(time(nullptr))); // Zagon random generatorja
 
     game = new Game();
-
     game->Init("GAME", false);
+
     Uint32 previousTime = SDL_GetTicks();
-    while (game->Running()) {
+    while(game->Running()) {
         Uint32 currentTime = SDL_GetTicks();
-        float deltaTime=(currentTime - previousTime) / 1000.0f;
+        float deltaTime = (currentTime - previousTime) / 1000.0f;
         previousTime = currentTime;
+
         game->HandleEvents();
-        if (!game->IsGameOver()) {
-            game->Update(deltaTime);
-        }
         game->Update(deltaTime);
         game->Render();
     }
 
     game->Clean();
-
     return 0;
 }
+//    F1: Vključi debug način
+
+//    F2: Nov wave
+
+//    KP+: Povecanje hitrosti
+
+//    KP-: Zmanšanje hitrosti
+
+

@@ -6,7 +6,14 @@ class Enemy : public GameObject {
 private:
     GameObject* target;//na playerja
     float moveSpeed = 100.0f;
+    bool isActive = false;
 public:
     Enemy(Texture_Manager& manager, const std::string& texture_name, int x, int y, GameObject* playerTarget, int health = 50);
     void Update(float deltaTime) override;
+    void Revive(int x, int y);
+    void SetSpeed(float speed) { moveSpeed = speed; }
+    float GetSpeed() const { return moveSpeed; }
+    bool IsActive() const { return isActive; }
+    void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) override;
+    void SetTarget(GameObject* newTarget);
 };

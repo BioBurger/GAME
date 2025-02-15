@@ -13,4 +13,5 @@ public:
     SDL_Texture* GetTexture(const std::string& texture_name);
     void UnloadTexture(const std::string& texture_name);
     void ClearTextures();
+    bool HasTexture(const std::string& texture_name) const;
 };

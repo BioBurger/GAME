@@ -11,7 +11,7 @@ public:
     enum class State {IDLE, MOVING, DEAD};//stanja animacije + ani je mrtev
     enum class Direction {LEFT, RIGHT, UP, DOWN};
     virtual void Update(float deltaTime);
-    void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport);
+    virtual void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport);
     SDL_Rect GetPosition()  const {return positionrect;}
     void SetPosition(int x, int y);;
     void SetVelocity(float vx, float vy);
@@ -23,7 +23,13 @@ public:
     void PlayDeathAnimation();
     SDL_Rect GetCollisionBox() const;
     int GetMaxHealth() const {return maxHealth;}
-    void GetHealth(int x);
+    void GetHealth(int healAmount);
+    void SetSpeedMultiplier(float mult) { speedMultiplier = mult; }
+    float GetVelocityX() const { return velocityX; }
+    float GetVelocityY() const { return velocityY; }
+    float GetDamageCooldown() const { return damageCooldown; }
+    void SetDamageCooldown(float time) { damageCooldown = time; }
+    float GetDamageCooldownTime() const { return DAMAGE_COOLDOWN_TIME; }
 protected:
     int health;
     int maxHealth;
@@ -48,11 +54,12 @@ protected:
     int animationRow;//1. idle front||2. idle right||3. idle front(ignoreamo)||4. idle back||5. moving front||6. moving back||7. moving right ||8. death
     float idleAnimationSpeed;
     float moveAnimationSpeed;
-    int collisionOffsetX = 16;//za sredinski hit box
-    int collisionOffsetY = 16;
-    int collisionWidth = 32;
-    int collisionHeight = 32;
-
-
-
+    int collisionOffsetX = 24;//za sredinski hit box
+    int collisionOffsetY = 24;
+    int collisionWidth = 16;
+    int collisionHeight = 16;
+    float speedMultiplier = 1.0f;
+private:
+    float damageCooldown = 0.0f;
+    const float DAMAGE_COOLDOWN_TIME = 1.0f;
 };

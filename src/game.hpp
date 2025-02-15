@@ -37,9 +37,23 @@ private:
     int maxHearts = 4;
     static constexpr int HEART_PHASES = 7;
     static constexpr int HEALTH_PER_HEART = 25;
-    const int PLAYER_SPAWN_X = 10000;
-    const int PLAYER_SPAWN_Y = 10000;
-
+    const int PLAYER_SPAWN_X = 5000;
+    const int PLAYER_SPAWN_Y = 5000;
+    SDL_Texture* waveTextTexture = nullptr;
+    SDL_Texture* numbersTexture = nullptr;
+    const int NUMBER_WIDTH = 16;
+    const int NUMBER_HEIGHT = 16;
+    int currentWave = 0;
+    int enemiesPerWave = 20;
+    int enemiesRemaining = 0;
+    float waveTimer = 0.0f;
+    float waveStartDelay = 5.0f;
+    bool betweenWaves = true;
+    std::vector<Enemy*> enemyPool;
+    SDL_Texture* cachedWaveTexture = nullptr;
+    int cachedWaveNumber = -1;
+    bool debugMode = false;
+    const int SPAWN_OFFSET = 200;
 
 public:
     Game();
@@ -54,6 +68,15 @@ public:
     bool CheckCollision(const SDL_Rect& a, const SDL_Rect& b);
     void RestartGame();
     bool IsGameOver() const { return gameOver; }
+    void RenderWaveNumber();
+    void StartNewWave();
+    Enemy* GetPooledEnemy();
+    void InitializeEnemyPool(int initialSize);
+    void ProcessInput();
+    void UpdatePlayer(float deltaTime);
+    void UpdateEnemies(float deltaTime);
+    void UpdateWave(float deltaTime);
+    SDL_Texture* CreateWaveNumberTexture();
 
 };
 

@@ -10,6 +10,7 @@ class TileMap {
     Camera& camera;
     float globalAnimationTimer = 0.0f;
     int tileSize = 64;//velikost
+    std::vector<std::vector<Tile*>> tileGrid;
 public:
     TileMap(Texture_Manager& tm, Camera& cam);
     void Update(float deltaTime);

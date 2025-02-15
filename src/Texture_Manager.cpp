@@ -44,11 +44,6 @@ void Texture_Manager::ClearTextures() {
         }
         textures.clear();
 }
-/*SDL_Renderer* renderer = ...; // Pridobi iz SDL_CreateRenderer()
-TextureManager textureManager(renderer);
-// Naloži teksturo in ji dodeli ID "player"
-SDL_Texture* playerTex = textureManager.LoadTexture("assets/player.png", "player");
-GameObject player(textureManager.GetTexture("player"), x, y, w, h);
-textureManager.UnloadTexture("player");  // Posamezna tekstura
-textureManager.ClearTextures();          // Vse teksture
-*/
+bool Texture_Manager::HasTexture(const std::string& texture_name) const {
+    return textures.find(texture_name) != textures.end();
+}

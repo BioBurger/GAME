@@ -1,4 +1,5 @@
 "C:\Program Files\JetBrains\CLion 2024.3.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2024.3.2/bin/ninja/win/x64/ninja.exe" -DCMAKE_TOOLCHAIN_FILE=C:\Users\bostj\.vcpkg-clion\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -G Ninja -S C:\Users\bostj\CLionProjects\GAME -B C:\Users\bostj\CLionProjects\GAME\cmake-build-debug
+-- Found PkgConfig: C:/msys64/ucrt64/bin/pkg-config.exe (found version "2.3.0")
 -- Configuring done (0.2s)
--- Generating done (0.1s)
+-- Generating done (0.0s)
 -- Build files have been written to: C:/Users/bostj/CLionProjects/GAME/cmake-build-debug

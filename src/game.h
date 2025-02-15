@@ -34,7 +34,9 @@ private:
     float animationSpeed = 0.1f;
     int srcHeartSize = 16;
     int destHeartSize = 64;
-    int maxHearts = 5;
+    int maxHearts = 4;
+    static constexpr int HEART_PHASES = 7;
+    static constexpr int HEALTH_PER_HEART = 25;
     const int PLAYER_SPAWN_X = 10000;
     const int PLAYER_SPAWN_Y = 10000;
 

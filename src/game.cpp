@@ -35,7 +35,7 @@ void Game::Init(const char* title, bool fullscreen) {
             texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
             texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy");
             texture_manager->LoadTexture("assets/textures/Screens/GameOver.png", "game_over");
-            texture_manager->LoadTexture("assets/textures/Extra/Heart.png", "heart");
+            texture_manager->LoadTexture("assets/textures/Extra/Heart2.png", "heart");
             heartTexture = texture_manager->GetTexture("heart");
             gameOverTexture = texture_manager->GetTexture("game_over");
             //Inicializiram camero in tileMap
@@ -124,6 +124,7 @@ void Game::Update(float deltaTime) {
                 enemy->TakeDamage(50);
             }
         }
+
         if (!player->IsAlive()) {
             gameOver = true;
             return;
@@ -156,30 +157,38 @@ void Game::Render() {
         SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
     }
     // Health bar
-    int currentHealth = player->GetHealth();
-    int fullHearts = currentHealth / 20;//hp na srček
-    //kje so hearti + utripanje
     int startX = 50;
-    int startY= 50;
+    int startY = 50;
     int spacing = 10;
+    int currentHealth = player->GetHealth();
+    int maxHearts = player->GetMaxHealth() / HEALTH_PER_HEART;
 
-    Uint32 currentTicks = SDL_GetTicks();
+    for (int i = 0; i < maxHearts; i++) {
+        //health na srček
+        float healthInHeart = currentHealth - (i * HEALTH_PER_HEART);
+        healthInHeart = std::clamp(healthInHeart, 0.0f, static_cast<float>(HEALTH_PER_HEART));
 
-    for (int i= 0; i< maxHearts; i++ ) {
-        SDL_Rect destRect = { startX + ( destHeartSize + spacing ) * i, startY, destHeartSize, destHeartSize};
-        SDL_Rect srcRect = {0, 0, srcHeartSize, srcHeartSize};
+        //kera faza
+        int phase = std::round((healthInHeart / HEALTH_PER_HEART) * (HEART_PHASES - 1));//static_cast je retardiran
+        phase = std::clamp(HEART_PHASES - phase - 1, 0, HEART_PHASES - 1);
 
-        if (i >= fullHearts) {
-            srcRect.x = srcHeartSize;
-        }
 
-        if (currentHealth <= 20 && i== fullHearts -1 ) {
-            srcRect.x = (SDL_GetTicks() % 400 < 200) ? 0: destHeartSize;
-        }
+        //textura
+        SDL_Rect srcRect = {phase  * (112 / HEART_PHASES), 0, 112 / HEART_PHASES, srcHeartSize};//112 je dolžina sprite sheeta
 
-        SDL_SetTextureColorMod(heartTexture, 255, 255, 255);
+        //kje na zaslonu
+        SDL_Rect destRect = {startX + (destHeartSize + spacing) * i, startY, destHeartSize, destHeartSize};
+
         SDL_RenderCopy(renderer, heartTexture, &srcRect, &destRect);
     }
+
+
+
+
+
+
+
+
     // DEBUG: Prikaz kolizijskih okvirjev (prilagojeno za kamero)
     SDL_Rect cameraViewport = camera->GetViewport();
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);

@@ -1,5 +1,7 @@
 #include "GameObject.h"
 
+#include <bits/stl_algo.h>
+
 GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name , int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed, int startHealth)
     : manager(manager),
         texture(manager.GetTexture(texture_name)),
@@ -129,6 +131,10 @@ GameObject::Direction GameObject::GetDirection()const {
 void GameObject::TakeDamage(int damage) {
     health -= damage;
     if (health < 0) health = 0;
+}
+void GameObject::GetHealth(int x) {
+    health += x;
+    health = std::clamp(health, 0, maxHealth);
 }
 void GameObject::PlayDeathAnimation() {
     isAnimated = true;

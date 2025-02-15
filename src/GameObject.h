@@ -22,6 +22,8 @@ public:
     bool IsAlive() const { return health > 0; }
     void PlayDeathAnimation();
     SDL_Rect GetCollisionBox() const;
+    int GetMaxHealth() const {return maxHealth;}
+    void GetHealth(int x);
 protected:
     int health;
     int maxHealth;
@@ -48,8 +50,8 @@ protected:
     float moveAnimationSpeed;
     int collisionOffsetX = 16;//za sredinski hit box
     int collisionOffsetY = 16;
-    int collisionWidth = 64;
-    int collisionHeight = 64;
+    int collisionWidth = 32;
+    int collisionHeight = 32;
 
 
 

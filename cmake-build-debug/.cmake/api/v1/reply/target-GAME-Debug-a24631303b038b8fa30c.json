@@ -190,12 +190,12 @@
 		},
 		{
 			"backtrace" : 2,
-			"path" : "src/game.h",
+			"path" : "src/game.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 2,
-			"path" : "src/Texture_Manager.h",
+			"path" : "src/Texture_Manager.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{
@@ -206,7 +206,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"path" : "src/GameObject.h",
+			"path" : "src/GameObject.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{
@@ -217,7 +217,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"path" : "src/Camera.h",
+			"path" : "src/Camera.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{
@@ -228,7 +228,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"path" : "src/Tile.h",
+			"path" : "src/Tile.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{
@@ -239,7 +239,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"path" : "src/TileMap.h",
+			"path" : "src/TileMap.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{
@@ -250,7 +250,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"path" : "src/Enemy.h",
+			"path" : "src/Enemy.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{

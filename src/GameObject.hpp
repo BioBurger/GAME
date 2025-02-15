@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL_render.h>
-#include "Texture_Manager.h"
+#include "Texture_Manager.hpp"
 #include <string>
 #include <SDL.h>
 

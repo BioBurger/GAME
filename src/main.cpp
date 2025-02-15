@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 #include <cstdlib>
 #include <time.h>
-#include "game.h"
+#include "game.hpp"
 
 Game *game = nullptr;
 

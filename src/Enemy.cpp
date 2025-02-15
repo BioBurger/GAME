@@ -1,4 +1,4 @@
-#include "Enemy.h"
+#include "Enemy.hpp"
 
 Enemy::Enemy(Texture_Manager &manager, const std::string &texture_name, int x, int y, GameObject* playerTarget, int health) : GameObject(manager, texture_name, x, y, 64, 64, 16, 16, 1, 0.2f, health), target(playerTarget){}
 

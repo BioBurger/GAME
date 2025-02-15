@@ -1,8 +1,8 @@
-#include "Game.h"
+#include "Game.hpp"
 #include <SDL2/SDL_keyboard.h>
 #include <random>
 
-#include "Enemy.h"
+#include "Enemy.hpp"
 
 Game::Game() :texture_manager(NULL)  {
     texture_manager=NULL;

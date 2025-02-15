@@ -17,18 +17,18 @@ include_directories(${SLD2_INCLUDE_DIR})
 
 add_executable(GAME src/main.cpp
         src/game.cpp
-        src/game.h
-        src/Texture_Manager.h
+        src/game.hpp
+        src/Texture_Manager.hpp
         src/Texture_Manager.cpp
-        src/GameObject.h
+        src/GameObject.hpp
         src/GameObject.cpp
-        src/Camera.h
+        src/Camera.hpp
         src/Camera.cpp
-        src/Tile.h
+        src/Tile.hpp
         src/Tile.cpp
-        src/TileMap.h
+        src/TileMap.hpp
         src/TileMap.cpp
-        src/Enemy.h
+        src/Enemy.hpp
         src/Enemy.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES})

@@ -37,7 +37,7 @@ $ git clone https://github.com/BioBurger/GAME.git
 $ cd zvelvapokalipsa
 
 # POŽENI IGRICO
-$ python start.py  # (če rabiš kakšne knjižnice... pač si jih namesti, ALI PA TE NAMESTIJO ONI?!)
+$ skibidi GAME.exe  # (če rabiš kakšne knjižnice... pač si jih namesti, ALI PA TE NAMESTIJO ONI?!)
 ```
 
 ---

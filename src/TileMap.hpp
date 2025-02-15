@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
-#include "Tile.h"
-#include "Camera.h"
+#include "Tile.hpp"
+#include "Camera.hpp"
 
 class TileMap {
     std::unordered_map<std::string, Tile*> loadedTiles;//naložen tile

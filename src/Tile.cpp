@@ -1,4 +1,4 @@
-#include "Tile.h"
+#include "Tile.hpp"
 
 Tile::Tile(int x, int y, SDL_Texture *tex, int tileSize, bool animated, int frames, float speed, int Width, int Height) :
     texture(tex),

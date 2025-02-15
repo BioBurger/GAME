@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL.h>
-#include "Texture_Manager.h"
+#include "Texture_Manager.hpp"
 
 class Tile {
     SDL_Rect position;//world cordinate

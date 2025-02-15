@@ -2,11 +2,11 @@
 #include <ostream>
 #include <stdio.h>
 #include <SDL_image.h>
-#include "GameObject.h"
+#include "GameObject.hpp"
 #include "SDL2/SDL.h"
-#include "Texture_Manager.h"
-#include "Camera.h"
-#include "TileMap.h"
+#include "Texture_Manager.hpp"
+#include "Camera.hpp"
+#include "TileMap.hpp"
 #ifndef Game_h
 #define Game_h
 class Enemy;

@@ -57,8 +57,20 @@ void Game::Init(const char* title, bool fullscreen) {
             }
             // Enemys
             if (!texture_manager->HasTexture("enemy")) {
-                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy")) {
+                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy1")) {
                     SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("enemy2")) {
+                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy2.png", "enemy2")) {
+                    SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE 2!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("enemy3")) {
+                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy3.png", "enemy3")) {
+                    SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE 3!");
                     exit(1);
                 }
             }
@@ -75,7 +87,7 @@ void Game::Init(const char* title, bool fullscreen) {
                     SDL_Log("MANJKA HEART TEKSTURA!");
                     exit(1);
                 }
-            }
+            }// Bullet
             if (!texture_manager->HasTexture("bullet")) {
                 if (!texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet")) {
                     SDL_Log("MANJKA METEK TEKSTURA!");
@@ -302,28 +314,37 @@ void Game::Clean() {
 }
 
 void Game::SpawnEnemy() {
-    const int MIN_SPAWN_DISTANCE = 500;  // Odaljenost spawna
+    const int MIN_SPAWN_DISTANCE = 500;
     const int MAX_SPAWN_DISTANCE = 800;
 
     SDL_Rect playerPos = player->GetPosition();
 
-    // Random kot
+    // Generiraj naključno spawn pozicijo
     float angle = static_cast<float>(rand() % 360) * (M_PI / 180.0f);
-
-    // Random odaljenost
     float distance = MIN_SPAWN_DISTANCE + static_cast<float>(rand()) / RAND_MAX * (MAX_SPAWN_DISTANCE - MIN_SPAWN_DISTANCE);
 
     int spawnX = playerPos.x + static_cast<int>(cos(angle) * distance);
     int spawnY = playerPos.y + static_cast<int>(sin(angle) * distance);
 
-    // Znotraj mape
+    // Omeji na meje mape
     spawnX = std::clamp(spawnX, 0, 20000);
     spawnY = std::clamp(spawnY, 0, 20000);
 
-    // Ga damo v vektor
+    // Določi nivo sovražnika glede na val
+    int level = 1;
+    if(currentWave >= 5) {
+        level = 3;
+    }
+    else if(currentWave >= 3) {
+
+        level = (rand() % 100 < 60) ? 2 : 3;
+    }
+    else if(currentWave >= 1) {
+        level = (rand() % 100 < 70) ? 1 : 2;
+    }
+
     Enemy* e = GetPooledEnemy();
-    e->Revive(spawnX, spawnY);
-    e->GetHealth(50);
+    e->Revive(spawnX, spawnY, level); // Posodobljena metoda Revive
     enemies.push_back(e);
 }
 void Game::RestartGame() {
@@ -335,7 +356,7 @@ void Game::RestartGame() {
     enemies.clear();
     for (auto& e : enemyPool) {
         e->SetTarget(player);
-        e->Revive(-1000, -1000); // Move off-screen instead of TakeDamage
+        e->Revive(-1000, -1000, 1); // Move off-screen instead of TakeDamage
     }
 
     // Reset camera + state + wave
@@ -352,7 +373,7 @@ void Game::StartNewWave() {
 
     // Ohranjam enemyje
     for (auto& e : enemyPool) {
-        e->Revive(-1000, -1000); // Začasno skrij
+        e->Revive(-1000, -1000, 1); // Začasno skrij
     }
 
     // Debug
@@ -385,12 +406,12 @@ void Game::InitializeEnemyPool(int initialSize) {
     for (int i = 0; i < initialSize; ++i) {
         Enemy* e = new Enemy(
             *texture_manager,
-            "enemy",
+            "enemy1", // Privzeta tekstura za pool
             0, 0,
             player,
             50
         );
-        e->Revive(-1000, -1000); // Izven screna
+        e->Revive(-1000, -1000, 1); // level 1
         enemyPool.push_back(e);
     }
 }
@@ -398,7 +419,7 @@ void Game::InitializeEnemyPool(int initialSize) {
 Enemy* Game::GetPooledEnemy() {
     for (auto& e : enemyPool) {
         if (!e->IsAlive()) {
-            e->Revive(0, 0);
+            e->Revive(0, 0, 1);
             e->SetTarget(player);
             return e;
         }
@@ -445,7 +466,20 @@ void Game::UpdateEnemies(float deltaTime) {
         if (CheckCollision(enemy->GetCollisionBox(), player->GetCollisionBox())) {
             // Damage player
             if (player->GetDamageCooldown() <= 0.0f) {
-                player->TakeDamage(5);
+                int lvl = enemy->GetLevel();
+                int damage;
+                switch (lvl) {
+                    case 1:
+                        damage = 5;
+                    break;
+                    case 2:
+                        damage = 10;
+                    break;
+                    case 3:
+                        damage = 20;
+                    break;
+                }
+                player->TakeDamage(damage);
                 player->SetDamageCooldown(player->GetDamageCooldownTime());
             }
 

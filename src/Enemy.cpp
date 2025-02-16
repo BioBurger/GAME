@@ -32,10 +32,32 @@ void Enemy::Update(float deltaTime) {
     GameObject::Update(deltaTime);
 }
 // revivam iz poola
-void Enemy::Revive(int x, int y) {
+void Enemy::Revive(int x, int y, int level) {
+    this->level = level;
     SetPosition(x, y);
-    health = maxHealth;
     isActive = true;
+
+    switch (level) {
+        case 1:
+            maxHealth = 50;
+        moveSpeed = 200.0f;
+        break;
+        case 2:
+            maxHealth = 75;
+        moveSpeed = 120.0f;
+        break;
+        case 3:
+            maxHealth = 101;
+        moveSpeed = 140.0f;
+        break;
+        default:
+            maxHealth = 50;
+        moveSpeed = 100.0f;
+    }
+    health = maxHealth;
+
+    std::string textureID = "enemy" + std::to_string(level);
+    texture = manager.GetTexture(textureID);
 }
 void Enemy::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
     SDL_Rect destRect = {

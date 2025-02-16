@@ -152,5 +152,6 @@ SDL_Rect GameObject::GetCollisionBox() const {
     };
 }
 Vector2f GameObject::GetCenterPosition() const {
-    return position;
+    return Vector2f(positionrect.x + positionrect.w / 2.0f,
+                positionrect.y + positionrect.h / 2.0f);
 }

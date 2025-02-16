@@ -81,7 +81,7 @@ void GameObject::Update(float deltaTime) {
         break;
     }
 
-    // **Animacija**
+    // Animacija
     float actualSpeed = ( currentState == State::IDLE) ? idleAnimationSpeed : moveAnimationSpeed;
     if (isAnimated) {
         animationTimer += deltaTime;
@@ -150,4 +150,7 @@ SDL_Rect GameObject::GetCollisionBox() const {
         collisionWidth,
         collisionHeight
     };
+}
+Vector2f GameObject::GetCenterPosition() const {
+    return position;
 }

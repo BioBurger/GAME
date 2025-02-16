@@ -3,6 +3,7 @@
 #include "Texture_Manager.hpp"
 #include <string>
 #include <SDL.h>
+#include "Vector2f.hpp"
 
 class GameObject {
 public:
@@ -30,6 +31,8 @@ public:
     float GetDamageCooldown() const { return damageCooldown; }
     void SetDamageCooldown(float time) { damageCooldown = time; }
     float GetDamageCooldownTime() const { return DAMAGE_COOLDOWN_TIME; }
+    Vector2f GetCenterPosition() const;
+    Vector2f position;
 protected:
     int health;
     int maxHealth;
@@ -54,12 +57,12 @@ protected:
     int animationRow;//1. idle front||2. idle right||3. idle front(ignoreamo)||4. idle back||5. moving front||6. moving back||7. moving right ||8. death
     float idleAnimationSpeed;
     float moveAnimationSpeed;
-    int collisionOffsetX = 24;//za sredinski hit box
-    int collisionOffsetY = 24;
-    int collisionWidth = 16;
-    int collisionHeight = 16;
+    int collisionOffsetX = 16;//za sredinski hit box
+    int collisionOffsetY = 16;
+    int collisionWidth = 48;
+    int collisionHeight = 48;
     float speedMultiplier = 1.0f;
 private:
     float damageCooldown = 0.0f;
-    const float DAMAGE_COOLDOWN_TIME = 1.0f;
+    const float DAMAGE_COOLDOWN_TIME = 0.0f;
 };

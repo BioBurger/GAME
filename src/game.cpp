@@ -1,7 +1,7 @@
 #include "Game.hpp"
 #include <SDL2/SDL_keyboard.h>
 #include <random>
-
+#include "Projectile.hpp"
 #include "Enemy.hpp"
 
 Game::Game() :texture_manager(NULL)  {
@@ -18,8 +18,13 @@ Game::~Game() {
     delete texture_manager;
     delete camera;
     delete tileMap;
+    for (auto& p : projectiles) {
+        delete p;
+    }
+    projectiles.clear();
     SDL_DestroyTexture(waveTextTexture);
     SDL_DestroyTexture(numbersTexture);
+
 };
 
 void Game::Init(const char* title, bool fullscreen) {
@@ -52,7 +57,7 @@ void Game::Init(const char* title, bool fullscreen) {
             }
             // Enemys
             if (!texture_manager->HasTexture("enemy")) {
-                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy2.png", "enemy")) {
+                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy")) {
                     SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE!");
                     exit(1);
                 }
@@ -68,6 +73,12 @@ void Game::Init(const char* title, bool fullscreen) {
             if (!texture_manager->HasTexture("heart")) {
                 if(!texture_manager->LoadTexture("assets/textures/ui/Heart.png", "heart")) {
                     SDL_Log("MANJKA HEART TEKSTURA!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("bullet")) {
+                if (!texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet")) {
+                    SDL_Log("MANJKA METEK TEKSTURA!");
                     exit(1);
                 }
             }
@@ -157,6 +168,25 @@ void Game::Update(float deltaTime) {
     UpdatePlayer(deltaTime);
     UpdateEnemies(deltaTime);
 
+    // Update metki
+    for (auto it = projectiles.begin(); it != projectiles.end();) {
+        (*it)->Update(deltaTime);
+
+        // Check for hits
+        if (CheckCollision((*it)->GetCollisionBox(),(*it)->GetTarget()->GetCollisionBox())) {
+            (*it)->GetTarget()->TakeDamage(PROJECTILE_DAMAGE);
+            delete *it;
+            it = projectiles.erase(it);
+                          }
+        else if ((*it)->ShouldRemove()) {
+            delete *it;
+            it = projectiles.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
     if (!player->IsAlive()) {
         gameOver = true;
     }
@@ -191,6 +221,10 @@ void Game::Render() {
         //gameover
         SDL_Rect screenRect = {0, 0, 1920, 1080};
         SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
+    }
+    // Render metki
+    for (auto& projectile : projectiles) {
+        projectile->Render(renderer, camera->GetViewport());
     }
     // RENDER WAVE ŠTEVILKE
     if (!gameOver && !betweenWaves) {
@@ -360,7 +394,7 @@ void Game::InitializeEnemyPool(int initialSize) {
         enemyPool.push_back(e);
     }
 }
-// Vzemanje iz polla
+// Vzemanje iz poola
 Enemy* Game::GetPooledEnemy() {
     for (auto& e : enemyPool) {
         if (!e->IsAlive()) {
@@ -411,12 +445,12 @@ void Game::UpdateEnemies(float deltaTime) {
         if (CheckCollision(enemy->GetCollisionBox(), player->GetCollisionBox())) {
             // Damage player
             if (player->GetDamageCooldown() <= 0.0f) {
-                player->TakeDamage(10);
+                player->TakeDamage(5);
                 player->SetDamageCooldown(player->GetDamageCooldownTime());
             }
 
             // Dmg enemy
-            enemy->TakeDamage(10);
+            enemy->TakeDamage(50);
         }
 
         // Odstrani a ne izbriše
@@ -457,8 +491,57 @@ void Game::UpdatePlayer(float deltaTime) {
 
         // Posodobi tilemapo
         tileMap->Update(deltaTime);
+
+        // Streljanje
+        fireTimer += deltaTime;
+        if (fireTimer >= 1.0f/FIRE_RATE) {
+            Enemy* nearest = FindNearestEnemy();
+            if (nearest && DistanceToPlayer(nearest) <= PISTOL_RANGE) {
+                ShootProjectile(nearest);
+            }
+            fireTimer = 0.0f;
+        }
     }
 }
+Enemy* Game::FindNearestEnemy() {
+    Enemy* nearest = nullptr;
+    float minDistance = FLT_MAX;
+    Vector2f playerPos = player->GetCenterPosition();
+    SDL_Log("Total enemies: %zu", enemies.size());
+
+    for (auto& enemy : enemies) {
+        Vector2f enemyPos = enemy->GetCenterPosition();
+        float distance = sqrt(pow(enemyPos.x - playerPos.x, 2) +
+                            pow(enemyPos.y - playerPos.y, 2));
+        SDL_Log("Checking enemy at (%f, %f), Player at (%f, %f), Distance: %f",
+enemyPos.x, enemyPos.y, playerPos.x, playerPos.y, distance);
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearest = enemy;
+
+
+        }
+    }
+
+
+    return nearest;
+}
+void Game::ShootProjectile(Enemy* target) {
+    if (!target) return; // Ensure target is valid
+
+    float startX = player->GetPosition().x;
+    float startY = player->GetPosition().y;
+
+    float projectileSpeed = 800.0f; // Adjust speed for faster bullets
+    int projectileDamage = 10;
+    float maxDistance = 500.0f;
+    if(target) {
+        SDL_Log("Buttle fired");
+    }
+    projectiles.push_back(new Projectile(*texture_manager, target, startX, startY, projectileSpeed, projectileDamage, maxDistance));
+}
+
+
 // Premikanje
 void Game::ProcessInput() {
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -528,4 +611,15 @@ SDL_Texture* Game::CreateWaveNumberTexture() {
     SDL_FreeSurface(combinedSurface);
 
     return result;
+}
+float Game::DistanceToPlayer(Enemy* enemy) {
+    if (!player || !enemy) return FLT_MAX;
+
+    Vector2f playerPos = player->GetCenterPosition();
+    Vector2f enemyPos = enemy->GetCenterPosition();
+
+    float dx = playerPos.x - enemyPos.x;
+    float dy = playerPos.y - enemyPos.y;
+
+    return sqrt(dx * dx + dy * dy);
 }

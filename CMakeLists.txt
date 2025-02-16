@@ -29,6 +29,9 @@ add_executable(GAME src/main.cpp
         src/TileMap.hpp
         src/TileMap.cpp
         src/Enemy.hpp
-        src/Enemy.cpp)
+        src/Enemy.cpp
+        src/Projectile.hpp
+        src/Projectile.cpp
+        src/Vector2f.hpp)
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES})

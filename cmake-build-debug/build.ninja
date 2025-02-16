@@ -105,6 +105,13 @@ build CMakeFiles/GAME.dir/src/Enemy.cpp.obj: CXX_COMPILER__GAME_unscanned_Debug 
   OBJECT_DIR = CMakeFiles\GAME.dir
   OBJECT_FILE_DIR = CMakeFiles\GAME.dir\src
 
+build CMakeFiles/GAME.dir/src/Projectile.cpp.obj: CXX_COMPILER__GAME_unscanned_Debug C$:/Users/bostj/CLionProjects/GAME/src/Projectile.cpp || cmake_object_order_depends_target_GAME
+  DEP_FILE = CMakeFiles\GAME.dir\src\Projectile.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/include/SDL2
+  OBJECT_DIR = CMakeFiles\GAME.dir
+  OBJECT_FILE_DIR = CMakeFiles\GAME.dir\src
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target GAME
@@ -113,7 +120,7 @@ build CMakeFiles/GAME.dir/src/Enemy.cpp.obj: CXX_COMPILER__GAME_unscanned_Debug 
 #############################################
 # Link the executable GAME.exe
 
-build GAME.exe: CXX_EXECUTABLE_LINKER__GAME_Debug CMakeFiles/GAME.dir/src/main.cpp.obj CMakeFiles/GAME.dir/src/game.cpp.obj CMakeFiles/GAME.dir/src/Texture_Manager.cpp.obj CMakeFiles/GAME.dir/src/GameObject.cpp.obj CMakeFiles/GAME.dir/src/Camera.cpp.obj CMakeFiles/GAME.dir/src/Tile.cpp.obj CMakeFiles/GAME.dir/src/TileMap.cpp.obj CMakeFiles/GAME.dir/src/Enemy.cpp.obj | C$:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a C$:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a C$:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a
+build GAME.exe: CXX_EXECUTABLE_LINKER__GAME_Debug CMakeFiles/GAME.dir/src/main.cpp.obj CMakeFiles/GAME.dir/src/game.cpp.obj CMakeFiles/GAME.dir/src/Texture_Manager.cpp.obj CMakeFiles/GAME.dir/src/GameObject.cpp.obj CMakeFiles/GAME.dir/src/Camera.cpp.obj CMakeFiles/GAME.dir/src/Tile.cpp.obj CMakeFiles/GAME.dir/src/TileMap.cpp.obj CMakeFiles/GAME.dir/src/Enemy.cpp.obj CMakeFiles/GAME.dir/src/Projectile.cpp.obj | C$:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a C$:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a C$:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a
   FLAGS = -g
   LINK_LIBRARIES = -lmingw32  -mwindows  C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a  C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a  C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2_image.dll.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\GAME.dir

@@ -7,9 +7,12 @@
 #include "Texture_Manager.hpp"
 #include "Camera.hpp"
 #include "TileMap.hpp"
+#include "Projectile.hpp"
+#include "Enemy.hpp"
 #ifndef Game_h
 #define Game_h
 class Enemy;
+class Projectile;
 
 class Game {
 private:
@@ -54,6 +57,12 @@ private:
     int cachedWaveNumber = -1;
     bool debugMode = false;
     const int SPAWN_OFFSET = 200;
+    std::vector<Projectile*> projectiles;
+    float fireTimer = 0.0f;
+    const float FIRE_RATE = 0.5f;  // Shots per second
+    const float PISTOL_RANGE = 500.0f;
+    const float PROJECTILE_SPEED = 600.0f;
+    const int PROJECTILE_DAMAGE = 50;
 
 public:
     Game();
@@ -77,6 +86,9 @@ public:
     void UpdateEnemies(float deltaTime);
     void UpdateWave(float deltaTime);
     SDL_Texture* CreateWaveNumberTexture();
+    Enemy* FindNearestEnemy();
+    void ShootProjectile(Enemy* target);
+    float DistanceToPlayer(Enemy* enemy);
 
 };
 

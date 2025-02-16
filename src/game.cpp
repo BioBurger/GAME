@@ -532,13 +532,11 @@ void Game::ShootProjectile(Enemy* target) {
     float startX = player->GetPosition().x;
     float startY = player->GetPosition().y;
 
-    float projectileSpeed = 800.0f; // Adjust speed for faster bullets
-    int projectileDamage = 10;
-    float maxDistance = 500.0f;
+
     if(target) {
         SDL_Log("Buttle fired");
     }
-    projectiles.push_back(new Projectile(*texture_manager, target, startX, startY, projectileSpeed, projectileDamage, maxDistance));
+    projectiles.push_back(new Projectile(*texture_manager, target, startX, startY, PROJECTILE_SPEED, PROJECTILE_SPEED, PISTOL_RANGE));
 }
 
 

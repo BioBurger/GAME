@@ -59,9 +59,9 @@ private:
     const int SPAWN_OFFSET = 200;
     std::vector<Projectile*> projectiles;
     float fireTimer = 0.0f;
-    const float FIRE_RATE = 0.5f;  // Shots per second
-    const float PISTOL_RANGE = 500.0f;
-    const float PROJECTILE_SPEED = 600.0f;
+    const float FIRE_RATE = 1.0f;  // Shots per second
+    const float PISTOL_RANGE = 700.0f;
+    const float PROJECTILE_SPEED = 800.0f;
     const int PROJECTILE_DAMAGE = 50;
 
 public:

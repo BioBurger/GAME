@@ -43,12 +43,12 @@ void Enemy::Revive(int x, int y, int level) {
         moveSpeed = 200.0f;
         break;
         case 2:
-            maxHealth = 75;
+            maxHealth = 99;
         moveSpeed = 120.0f;
         break;
         case 3:
-            maxHealth = 101;
-        moveSpeed = 140.0f;
+            maxHealth = 199;
+        moveSpeed = 90.0f;
         break;
         default:
             maxHealth = 50;

@@ -337,14 +337,14 @@ void Game::SpawnEnemy() {
     }
     else if(currentWave >= 3) {
 
-        level = (rand() % 100 < 60) ? 2 : 3;
+        level = (rand() % 100 < 80) ? 2 : 3;
     }
     else if(currentWave >= 1) {
-        level = (rand() % 100 < 70) ? 1 : 2;
+        level = (rand() % 100 < 80) ? 1 : 2;
     }
 
     Enemy* e = GetPooledEnemy();
-    e->Revive(spawnX, spawnY, level); // Posodobljena metoda Revive
+    e->Revive(spawnX, spawnY, level); // Respawn z lvl odvisn na wave
     enemies.push_back(e);
 }
 void Game::RestartGame() {
@@ -393,8 +393,8 @@ void Game::RenderWaveNumber() {
         int texWidth, texHeight;
         SDL_QueryTexture(cachedWaveTexture, NULL, NULL, &texWidth, &texHeight);
         SDL_Rect destRect = {
-            1920 - texWidth - 50, // X pozicija (zaslon širina - tekstura širina - rob)
-            50,                   // Y pozicija
+            1920 - texWidth - 50, // X
+            50,                   // Y
             texWidth,             // Širina
             texHeight             // Višina
         };

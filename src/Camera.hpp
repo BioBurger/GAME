@@ -3,7 +3,7 @@
 #include <algorithm>
 
 class Camera {
-    SDL_Rect viewport;  // viewport.x in .y se nastavita iz float spremenljivk
+    SDL_Rect viewport;
     float x, y;         // Decimalke za smoothh
     int mapWidth = INT_MAX;
     int mapHeight = INT_MAX;

@@ -59,10 +59,18 @@ private:
     const int SPAWN_OFFSET = 200;
     std::vector<Projectile*> projectiles;
     float fireTimer = 0.0f;
-    const float FIRE_RATE = 1.0f;  // Shots per second
-    const float PISTOL_RANGE = 700.0f;
+    float FIRE_RATE = 1.0f;  // Shots per second
+    float PISTOL_RANGE = 700.0f;
     const float PROJECTILE_SPEED = 800.0f;
-    const int PROJECTILE_DAMAGE = 50;
+    int PROJECTILE_DAMAGE = 50;
+    int enemiesKilledThisWave = 0;
+    bool isChoosingUpgrade = false;
+    std::vector<std::string> upgradeOptions;
+    int selectedUpgrade = 0;
+    SDL_Texture* upgradeMenuTexture = nullptr;
+    SDL_Texture* upgradeFireTexture;
+    SDL_Texture* upgradeDamageTexture;
+    SDL_Texture* upgradeRangeTexture;
 
 public:
     Game();
@@ -89,6 +97,7 @@ public:
     Enemy* FindNearestEnemy();
     void ShootProjectile(Enemy* target);
     float DistanceToPlayer(Enemy* enemy);
+    void ApplyUpgrade(int choice);
 
 };
 

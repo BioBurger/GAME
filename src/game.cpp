@@ -108,11 +108,31 @@ void Game::Init(const char* title, bool fullscreen) {
                     exit(1);
                 }
             }
+            // Upgradi
+            if (!texture_manager->HasTexture("upgrade_menu")) {
+                texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu");
+            }
+            if (!texture_manager->HasTexture("upgrade_fire_rate")) {
+                texture_manager->LoadTexture("assets/textures/ui/upgrade_fire.png", "upgrade_fire_rate");
+            }
+            if (!texture_manager->HasTexture("upgrade_damage")) {
+                texture_manager->LoadTexture("assets/textures/ui/upgrade_damage.png", "upgrade_damage");
+            }
+            if (!texture_manager->HasTexture("upgrade_range")) {
+                texture_manager->LoadTexture("assets/textures/ui/upgrade_range.png", "upgrade_range");
+            }
+            if (!texture_manager->HasTexture("arrow")) {
+                texture_manager->LoadTexture("assets/textures/ui/arrow.png", "arrow");
+            }
             // Reference v mapi
+            upgradeMenuTexture = texture_manager->GetTexture("upgrade_menu");
             heartTexture = texture_manager->GetTexture("heart");
             numbersTexture = texture_manager->GetTexture("numbers");
             waveTextTexture = texture_manager->GetTexture("wave_text");
             gameOverTexture = texture_manager->GetTexture("game_over");
+            upgradeFireTexture = texture_manager->GetTexture("upgrade_fire_rate");
+            upgradeDamageTexture = texture_manager->GetTexture("upgrade_damage");
+            upgradeRangeTexture = texture_manager->GetTexture("upgrade_range");
 
             betweenWaves = true;  // settingi za wave
             waveTimer = 0.0f;
@@ -145,6 +165,22 @@ void Game::HandleEvents() {
         if(gameOver && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_r) {
             RestartGame();
         }
+        if (isChoosingUpgrade) {
+            if (event.type == SDL_KEYDOWN) {
+                switch(event.key.keysym.sym) {
+                    case SDLK_LEFT:
+                        selectedUpgrade = (selectedUpgrade - 1 + 3) % 3;
+                    break;
+                    case SDLK_RIGHT:
+                        selectedUpgrade = (selectedUpgrade + 1) % 3;
+                    break;
+                    case SDLK_RETURN:
+                        ApplyUpgrade(selectedUpgrade);
+                    isChoosingUpgrade = false;
+                    break;
+                }
+            }
+        }
         if (event.type == SDL_KEYDOWN) {
             switch(event.key.keysym.sym) {
                 case SDLK_F1:
@@ -165,9 +201,8 @@ void Game::HandleEvents() {
 }
 
 void Game::Update(float deltaTime) {
-    if (gameOver || !player->IsAlive()) {
-        return;
-    }
+    if (gameOver || !player->IsAlive()) {return;}
+    if (isChoosingUpgrade) return;
 
     // Updajtanje dmg cooldowna
     if (player->GetDamageCooldown() > 0.0f) {
@@ -202,6 +237,15 @@ void Game::Update(float deltaTime) {
     if (!player->IsAlive()) {
         gameOver = true;
     }
+    if (enemiesKilledThisWave >= 5) {
+        isChoosingUpgrade = true;
+        enemiesKilledThisWave = 0;
+        upgradeOptions = {"Fire Rate +20%", "Damage +10", "Range +100"};
+        selectedUpgrade = 0;
+    }
+
+    SDL_Log("FIRE_RATE AT: (%f, %f), DAMAGE AT: (%f, %f), RANGE AT:: %f",
+FIRE_RATE,PROJECTILE_DAMAGE,PISTOL_RANGE);
 }
 // Collisoni
 bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
@@ -214,13 +258,11 @@ bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
 void Game::Render() {
     SDL_RenderClear(renderer);
     for (auto& enemy : enemies) {
-        SDL_Rect pos = enemy->GetPosition();
-        SDL_Log("Enemy position: [%d, %d]", pos.x, pos.y);
         SDL_Rect cameraViewport = camera->GetViewport();
         enemy->Render(renderer, cameraViewport);
     }
 
-    if( !gameOver ) {
+    if( !gameOver && !isChoosingUpgrade ) {
         // Podaj kamero vsem elementom
         SDL_Rect cameraViewport = camera->GetViewport();
         tileMap->Render(renderer, cameraViewport);
@@ -228,6 +270,55 @@ void Game::Render() {
 
         for (auto& enemy : enemies) {
             enemy->Render(renderer, cameraViewport);
+        }
+    }else if (isChoosingUpgrade) {
+        // Render menu
+ SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
+        SDL_Rect overlay = {0, 0, 1920, 1080};
+        SDL_RenderCopy(renderer,upgradeMenuTexture,NULL, &overlay);
+
+
+        const int OPTION_WIDTH = 300;
+        const int OPTION_HEIGHT = 400;
+        const int SPACING = 50;
+        const int BASE_Y = 300;
+
+        // Fire Rate
+        SDL_Rect fireRect = {
+            640 - OPTION_WIDTH - SPACING + (selectedUpgrade == 0 ? -10 : 0),
+            BASE_Y + (selectedUpgrade == 0 ? -10 : 0),
+            OPTION_WIDTH + (selectedUpgrade == 0 ? 20 : 0),
+            OPTION_HEIGHT + (selectedUpgrade == 0 ? 20 : 0)
+        };
+
+        // Damage
+        SDL_Rect damageRect = {
+            960 - OPTION_WIDTH/2 + (selectedUpgrade == 1 ? -10 : 0),
+            BASE_Y + (selectedUpgrade == 1 ? -10 : 0),
+            OPTION_WIDTH + (selectedUpgrade == 1 ? 20 : 0),
+            OPTION_HEIGHT + (selectedUpgrade == 1 ? 20 : 0)
+        };
+
+        // Range
+        SDL_Rect rangeRect = {
+            1280 + SPACING + (selectedUpgrade == 2 ? -10 : 0),
+            BASE_Y + (selectedUpgrade == 2 ? -10 : 0),
+            OPTION_WIDTH + (selectedUpgrade == 2 ? 20 : 0),
+            OPTION_HEIGHT + (selectedUpgrade == 2 ? 20 : 0)
+        };
+
+        // Render za effect
+        SDL_RenderCopy(renderer, upgradeFireTexture, NULL, &fireRect);
+        SDL_RenderCopy(renderer, upgradeDamageTexture, NULL, &damageRect);
+        SDL_RenderCopy(renderer, upgradeRangeTexture, NULL, &rangeRect);
+
+        // Arrowsi
+        if(texture_manager->HasTexture("arrow")) {
+            SDL_Texture* arrowTex = texture_manager->GetTexture("arrow");
+            SDL_Rect leftArrow = {fireRect.x - 50, BASE_Y + 150, 40, 40};
+            SDL_Rect rightArrow = {rangeRect.x + rangeRect.w + 10, BASE_Y + 150, 40, 40};
+            SDL_RenderCopyEx(renderer, arrowTex, NULL, &leftArrow, 180, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopy(renderer, arrowTex, NULL, &rightArrow);
         }
     }else {
         //gameover
@@ -271,9 +362,6 @@ void Game::Render() {
         SDL_Rect destRect = {startX + (destHeartSize + spacing) * i,startY,destHeartSize,destHeartSize};
 
         SDL_RenderCopy(renderer, heartTexture, &srcRect, &destRect);
-        if (debugMode) {
-            SDL_Log("Debug info - Sovražniki: %d, Val: %d", enemies.size(), currentWave);
-        }
     }
 
 
@@ -356,7 +444,7 @@ void Game::RestartGame() {
     enemies.clear();
     for (auto& e : enemyPool) {
         e->SetTarget(player);
-        e->Revive(-1000, -1000, 1); // Move off-screen instead of TakeDamage
+        e->Revive(-1000, -1000, 1); // Skri namesto delete
     }
 
     // Reset camera + state + wave
@@ -376,8 +464,6 @@ void Game::StartNewWave() {
         e->Revive(-1000, -1000, 1); // Začasno skrij
     }
 
-    // Debug
-    SDL_Log("----- ZAČETEK VALA %d -----", currentWave);
 }
 void Game::RenderWaveNumber() {
     if (!waveTextTexture || !numbersTexture) return;
@@ -434,7 +520,6 @@ void Game::UpdateWave(float deltaTime) {
     // Delay med wavi
     if (betweenWaves) {
         waveTimer += deltaTime;
-        SDL_Log("Čakanje na val... Timer: %.1f/%.1f", waveTimer, waveStartDelay); // Debug
 
         if (waveTimer >= waveStartDelay) {
             StartNewWave();
@@ -490,6 +575,7 @@ void Game::UpdateEnemies(float deltaTime) {
         // Odstrani a ne izbriše
         if (!enemy->IsAlive()) {
             it = enemies.erase(it);
+            enemiesKilledThisWave++;
         } else {
             ++it;
         }
@@ -541,14 +627,12 @@ Enemy* Game::FindNearestEnemy() {
     Enemy* nearest = nullptr;
     float minDistance = FLT_MAX;
     Vector2f playerPos = player->GetCenterPosition();
-    SDL_Log("Total enemies: %zu", enemies.size());
+
 
     for (auto& enemy : enemies) {
         Vector2f enemyPos = enemy->GetCenterPosition();
         float distance = sqrt(pow(enemyPos.x - playerPos.x, 2) +
                             pow(enemyPos.y - playerPos.y, 2));
-        SDL_Log("Checking enemy at (%f, %f), Player at (%f, %f), Distance: %f",
-enemyPos.x, enemyPos.y, playerPos.x, playerPos.y, distance);
         if (distance < minDistance) {
             minDistance = distance;
             nearest = enemy;
@@ -561,16 +645,16 @@ enemyPos.x, enemyPos.y, playerPos.x, playerPos.y, distance);
     return nearest;
 }
 void Game::ShootProjectile(Enemy* target) {
-    if (!target) return; // Ensure target is valid
-
-    float startX = player->GetPosition().x;
-    float startY = player->GetPosition().y;
-
-
-    if(target) {
-        SDL_Log("Buttle fired");
-    }
-    projectiles.push_back(new Projectile(*texture_manager, target, startX, startY, PROJECTILE_SPEED, PROJECTILE_SPEED, PISTOL_RANGE));
+    projectiles.push_back(new Projectile(
+        *texture_manager,
+        target,
+        player->GetPosition().x,
+        player->GetPosition().y,
+        PROJECTILE_SPEED,
+        PROJECTILE_DAMAGE,
+        PISTOL_RANGE
+    ));
+    fireTimer = 0.0f;
 }
 
 
@@ -654,4 +738,18 @@ float Game::DistanceToPlayer(Enemy* enemy) {
     float dy = playerPos.y - enemyPos.y;
 
     return sqrt(dx * dx + dy * dy);
+}
+
+void Game::ApplyUpgrade(int choice) {
+    switch(choice) {
+        case 0: // Fire Rate
+            FIRE_RATE *= 0.8f;
+        break;
+        case 1: // Damage
+            PROJECTILE_DAMAGE += 10;
+        break;
+        case 2: // Range
+            PISTOL_RANGE += 100.0f;
+        break;
+    }
 }

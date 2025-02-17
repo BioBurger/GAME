@@ -24,9 +24,6 @@ void Enemy::Update(float deltaTime) {
         velocityY = (dy / distance) * moveSpeed;
     }
 
-    // Debug:
-    SDL_Log("Enemy velocity: X=%.1f, Y=%.1f | Target: %d,%d",
-           velocityX, velocityY, targetPos.x, targetPos.y);
 
     // Premik
     GameObject::Update(deltaTime);

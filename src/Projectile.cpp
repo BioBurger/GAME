@@ -10,7 +10,7 @@ maxDistance(maxDistance),
 startPosition(x, y){}
 
 void Projectile::Update(float deltaTime) {
-    if (!target || !target->IsAlive()) return;  // Ensure the target is valid
+    if (!target || !target->IsAlive()) return;  // Ali je živ
 
     float dx = target->GetPosition().x - positionrect.x;
     float dy = target->GetPosition().y - positionrect.y;

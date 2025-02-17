@@ -14,4 +14,8 @@ public:
     SDL_Rect GetViewport() const { return viewport; }
     void SetMapBounds(int width, int height);
     void Reset(int targetCenterX, int targetCenterY);
+    void UpdateDimensions(int width, int height) {
+        viewport.w = width;
+        viewport.h = height;
+    }
 };

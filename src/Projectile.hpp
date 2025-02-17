@@ -14,4 +14,5 @@ public:
     void Update(float deltaTime) override;
     bool ShouldRemove() const;
     GameObject* GetTarget() const {return target;};
+    void ReloadTexture(Texture_Manager& tm, const std::string& textureID);
 };

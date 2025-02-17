@@ -30,4 +30,10 @@ bool Projectile::ShouldRemove() const {
     float traveled = sqrt(pow(positionrect.x - positionrect.x, 2) + pow(positionrect.y - positionrect.y, 2));
     return traveled > maxDistance || !target->IsAlive();
 }
+void Projectile::ReloadTexture(Texture_Manager& tm, const std::string& textureID) {
+    texture = tm.GetTexture(textureID);
+    if (!texture) {
+        SDL_Log("Failed to reload projectile texture");
+    }
+}
 

@@ -44,7 +44,7 @@ void Enemy::Revive(int x, int y, int level) {
         moveSpeed = 120.0f;
         break;
         case 3:
-            maxHealth = 199;
+            maxHealth = 151;
         moveSpeed = 90.0f;
         break;
         default:
@@ -75,4 +75,10 @@ void Enemy::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
 }
 void Enemy::SetTarget(GameObject* newTarget) {
     target = newTarget;
+}
+void Enemy::ReloadTexture(Texture_Manager& tm, const std::string& baseTexture) {
+    std::string texName = baseTexture;
+    if (level == 2) texName = "enemy2";
+    if (level == 3) texName = "enemy3";
+    GameObject::ReloadTexture(tm, texName);
 }

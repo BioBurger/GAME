@@ -44,6 +44,25 @@ void Game::Init(const char* title, bool fullscreen) {
             SDL_RenderPresent(renderer);
             texture_manager = new Texture_Manager(renderer);
 
+            // Menu
+            if (!texture_manager->HasTexture("menu_bg")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/background.png", "menu_bg")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("button")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/button.png", "button")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("button_hover")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/button_hover.png", "button_hover")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
             // Player
             if (!texture_manager->HasTexture("player")) {
                 if(!texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player")) {
@@ -133,6 +152,12 @@ void Game::Init(const char* title, bool fullscreen) {
             upgradeFireTexture = texture_manager->GetTexture("upgrade_fire_rate");
             upgradeDamageTexture = texture_manager->GetTexture("upgrade_damage");
             upgradeRangeTexture = texture_manager->GetTexture("upgrade_range");
+            menuBackground = texture_manager->GetTexture("menu_bg");
+            buttonTexture = texture_manager->GetTexture("button");
+            buttonHoverTexture = texture_manager->GetTexture("button_hover");
+
+            SDL_SetWindowSize(window, windowWidth, windowHeight);
+            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
             betweenWaves = true;  // settingi za wave
             waveTimer = 0.0f;
@@ -149,6 +174,9 @@ void Game::Init(const char* title, bool fullscreen) {
 
             InitializeEnemyPool(20);//Koliko enemijev na wave
             isRunning = true;
+            CreateMenuLayout();
+            SDL_SetWindowSize(window, windowWidth, windowHeight);
+            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
     } else {
         isRunning = false;
@@ -161,41 +189,56 @@ void Game::Init(const char* title, bool fullscreen) {
 void Game::HandleEvents() {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
-        if(event.type == SDL_QUIT) isRunning = false;
-        if(gameOver && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_r) {
-            RestartGame();
-        }
-        if (isChoosingUpgrade) {
-            if (event.type == SDL_KEYDOWN) {
-                switch(event.key.keysym.sym) {
-                    case SDLK_LEFT:
-                        selectedUpgrade = (selectedUpgrade - 1 + 3) % 3;
-                    break;
-                    case SDLK_RIGHT:
-                        selectedUpgrade = (selectedUpgrade + 1) % 3;
-                    break;
-                    case SDLK_RETURN:
-                        ApplyUpgrade(selectedUpgrade);
-                    isChoosingUpgrade = false;
-                    break;
+        switch(event.type) {
+            case SDL_QUIT:
+                isRunning = false;
+                break;
+
+            case SDL_MOUSEMOTION:
+                if (currentState == GameState::MAIN_MENU) {
+                    UpdateButtonHover(event.motion.x, event.motion.y);
                 }
-            }
-        }
-        if (event.type == SDL_KEYDOWN) {
-            switch(event.key.keysym.sym) {
-                case SDLK_F1:
-                    debugMode = !debugMode;
                 break;
-                case SDLK_F2:
-                    StartNewWave();
+
+            case SDL_MOUSEBUTTONDOWN:
+                if (currentState == GameState::MAIN_MENU && event.button.button == SDL_BUTTON_LEFT) {
+                    HandleMenuClick(event.button.x, event.button.y);
+                }
                 break;
-                case SDLK_KP_PLUS:
-                    player->SetSpeedMultiplier(1.5f);
+
+            case SDL_KEYDOWN:  // Fixed: Moved into switch
+                if(gameOver && event.key.keysym.sym == SDLK_r) {
+                    RestartGame();
+                }
+                if (isChoosingUpgrade) {
+                    switch(event.key.keysym.sym) {
+                        case SDLK_LEFT:
+                            selectedUpgrade = (selectedUpgrade - 1 + 3) % 3;
+                            break;
+                        case SDLK_RIGHT:
+                            selectedUpgrade = (selectedUpgrade + 1) % 3;
+                            break;
+                        case SDLK_RETURN:
+                            ApplyUpgrade(selectedUpgrade);
+                            isChoosingUpgrade = false;
+                            break;
+                    }
+                }
+                switch(event.key.keysym.sym) {
+                    case SDLK_F1:
+                        debugMode = !debugMode;
+                        break;
+                    case SDLK_F2:
+                        StartNewWave();
+                        break;
+                    case SDLK_KP_PLUS:
+                        player->SetSpeedMultiplier(1.5f);
+                        break;
+                    case SDLK_KP_MINUS:
+                        player->SetSpeedMultiplier(0.75f);
+                        break;
+                }
                 break;
-                case SDLK_KP_MINUS:
-                    player->SetSpeedMultiplier(0.75f);
-                break;
-            }
         }
     }
 }
@@ -257,134 +300,154 @@ bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
 
 void Game::Render() {
     SDL_RenderClear(renderer);
-    for (auto& enemy : enemies) {
-        SDL_Rect cameraViewport = camera->GetViewport();
-        enemy->Render(renderer, cameraViewport);
-    }
+    if(currentState == GameState::MAIN_MENU) {
+        // Render background
+        SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
-    if( !gameOver && !isChoosingUpgrade ) {
-        // Podaj kamero vsem elementom
-        SDL_Rect cameraViewport = camera->GetViewport();
-        tileMap->Render(renderer, cameraViewport);
-        player->Render(renderer, cameraViewport);
+        // Render buttons
+        for(size_t i = 0; i < menuButtons.size(); i++) {
+            SDL_Texture* tex = (hoveredButton == static_cast<int>(i)) ?
+                buttonHoverTexture : buttonTexture;
 
+            SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i]);
+
+            if (debugMode) {
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                for(auto& btn : menuButtons) {
+                    SDL_RenderDrawRect(renderer, &btn);
+                }
+            }
+        }
+    }else if (currentState == GameState::PLAYING) {
         for (auto& enemy : enemies) {
+            SDL_Rect cameraViewport = camera->GetViewport();
             enemy->Render(renderer, cameraViewport);
         }
-    }else if (isChoosingUpgrade) {
-        // Render menu
- SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-        SDL_Rect overlay = {0, 0, 1920, 1080};
-        SDL_RenderCopy(renderer,upgradeMenuTexture,NULL, &overlay);
+
+        if( !gameOver && !isChoosingUpgrade ) {
+            // Podaj kamero vsem elementom
+            SDL_Rect cameraViewport = camera->GetViewport();
+            tileMap->Render(renderer, cameraViewport);
+            player->Render(renderer, cameraViewport);
+
+            for (auto& enemy : enemies) {
+                enemy->Render(renderer, cameraViewport);
+            }
+        }else if (isChoosingUpgrade) {
+            // Render menu
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
+            SDL_Rect overlay = {0, 0, 1920, 1080};
+            SDL_RenderCopy(renderer,upgradeMenuTexture,NULL, &overlay);
 
 
-        const int OPTION_WIDTH = 300;
-        const int OPTION_HEIGHT = 400;
-        const int SPACING = 50;
-        const int BASE_Y = 300;
+            const int OPTION_WIDTH = 300;
+            const int OPTION_HEIGHT = 400;
+            const int SPACING = 50;
+            const int BASE_Y = 300;
 
-        // Fire Rate
-        SDL_Rect fireRect = {
-            640 - OPTION_WIDTH - SPACING + (selectedUpgrade == 0 ? -10 : 0),
-            BASE_Y + (selectedUpgrade == 0 ? -10 : 0),
-            OPTION_WIDTH + (selectedUpgrade == 0 ? 20 : 0),
-            OPTION_HEIGHT + (selectedUpgrade == 0 ? 20 : 0)
-        };
+            // Fire Rate
+            SDL_Rect fireRect = {
+                640 - OPTION_WIDTH - SPACING + (selectedUpgrade == 0 ? -10 : 0),
+                BASE_Y + (selectedUpgrade == 0 ? -10 : 0),
+                OPTION_WIDTH + (selectedUpgrade == 0 ? 20 : 0),
+                OPTION_HEIGHT + (selectedUpgrade == 0 ? 20 : 0)
+            };
 
-        // Damage
-        SDL_Rect damageRect = {
-            960 - OPTION_WIDTH/2 + (selectedUpgrade == 1 ? -10 : 0),
-            BASE_Y + (selectedUpgrade == 1 ? -10 : 0),
-            OPTION_WIDTH + (selectedUpgrade == 1 ? 20 : 0),
-            OPTION_HEIGHT + (selectedUpgrade == 1 ? 20 : 0)
-        };
+            // Damage
+            SDL_Rect damageRect = {
+                960 - OPTION_WIDTH/2 + (selectedUpgrade == 1 ? -10 : 0),
+                BASE_Y + (selectedUpgrade == 1 ? -10 : 0),
+                OPTION_WIDTH + (selectedUpgrade == 1 ? 20 : 0),
+                OPTION_HEIGHT + (selectedUpgrade == 1 ? 20 : 0)
+            };
 
-        // Range
-        SDL_Rect rangeRect = {
-            1280 + SPACING + (selectedUpgrade == 2 ? -10 : 0),
-            BASE_Y + (selectedUpgrade == 2 ? -10 : 0),
-            OPTION_WIDTH + (selectedUpgrade == 2 ? 20 : 0),
-            OPTION_HEIGHT + (selectedUpgrade == 2 ? 20 : 0)
-        };
+            // Range
+            SDL_Rect rangeRect = {
+                1280 + SPACING + (selectedUpgrade == 2 ? -10 : 0),
+                BASE_Y + (selectedUpgrade == 2 ? -10 : 0),
+                OPTION_WIDTH + (selectedUpgrade == 2 ? 20 : 0),
+                OPTION_HEIGHT + (selectedUpgrade == 2 ? 20 : 0)
+            };
 
-        // Render za effect
-        SDL_RenderCopy(renderer, upgradeFireTexture, NULL, &fireRect);
-        SDL_RenderCopy(renderer, upgradeDamageTexture, NULL, &damageRect);
-        SDL_RenderCopy(renderer, upgradeRangeTexture, NULL, &rangeRect);
+            // Render za effect
+            SDL_RenderCopy(renderer, upgradeFireTexture, NULL, &fireRect);
+            SDL_RenderCopy(renderer, upgradeDamageTexture, NULL, &damageRect);
+            SDL_RenderCopy(renderer, upgradeRangeTexture, NULL, &rangeRect);
 
-        // Arrowsi
-        if(texture_manager->HasTexture("arrow")) {
-            SDL_Texture* arrowTex = texture_manager->GetTexture("arrow");
-            SDL_Rect leftArrow = {fireRect.x - 50, BASE_Y + 150, 40, 40};
-            SDL_Rect rightArrow = {rangeRect.x + rangeRect.w + 10, BASE_Y + 150, 40, 40};
-            SDL_RenderCopyEx(renderer, arrowTex, NULL, &leftArrow, 180, NULL, SDL_FLIP_NONE);
-            SDL_RenderCopy(renderer, arrowTex, NULL, &rightArrow);
+            // Arrowsi
+            if(texture_manager->HasTexture("arrow")) {
+                SDL_Texture* arrowTex = texture_manager->GetTexture("arrow");
+                SDL_Rect leftArrow = {fireRect.x - 50, BASE_Y + 150, 40, 40};
+                SDL_Rect rightArrow = {rangeRect.x + rangeRect.w + 10, BASE_Y + 150, 40, 40};
+                SDL_RenderCopyEx(renderer, arrowTex, NULL, &leftArrow, 180, NULL, SDL_FLIP_NONE);
+                SDL_RenderCopy(renderer, arrowTex, NULL, &rightArrow);
+            }
+        }else {
+            //gameover
+            SDL_Rect screenRect = {0, 0, 1920, 1080};
+            SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
         }
-    }else {
-        //gameover
-        SDL_Rect screenRect = {0, 0, 1920, 1080};
-        SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
-    }
-    // Render metki
-    for (auto& projectile : projectiles) {
-        projectile->Render(renderer, camera->GetViewport());
-    }
-    // RENDER WAVE ŠTEVILKE
-    if (!gameOver && !betweenWaves) {
-        RenderWaveNumber();
-    }
-    // Health bar
-    int startX = 50;
-    int startY = 50;
-    int spacing = 10;
-    int currentHealth = player->GetHealth();
-    int maxHearts = player->GetMaxHealth() / HEALTH_PER_HEART;
+        // Render metki
+        for (auto& projectile : projectiles) {
+            projectile->Render(renderer, camera->GetViewport());
+        }
+        // RENDER WAVE ŠTEVILKE
+        if (!gameOver && !betweenWaves) {
+            RenderWaveNumber();
+        }
+        // Health bar
+        int startX = 50;
+        int startY = 50;
+        int spacing = 10;
+        int currentHealth = player->GetHealth();
+        int maxHearts = player->GetMaxHealth() / HEALTH_PER_HEART;
 
-    int fullHearts = currentHealth / HEALTH_PER_HEART;
-    int remainder = currentHealth % HEALTH_PER_HEART;
+        int fullHearts = currentHealth / HEALTH_PER_HEART;
+        int remainder = currentHealth % HEALTH_PER_HEART;
 
-    for (int i = 0; i < maxHearts; ++i) {
-        int phase;
+        for (int i = 0; i < maxHearts; ++i) {
+            int phase;
 
-        if (i < fullHearts) {
-            phase = 0; // Polno srce
-        } else if (i == fullHearts && remainder > 0) {
-            // Delno srce z zaokroževanjem
-            float ratio = static_cast<float>(remainder) / HEALTH_PER_HEART;
-            int originalPhase = static_cast<int>(std::round(ratio * (HEART_PHASES - 1)));
-            phase = HEART_PHASES - 1 - originalPhase;
-        } else {
-            phase = HEART_PHASES - 1; // Prazno srce
+            if (i < fullHearts) {
+                phase = 0; // Polno srce
+            } else if (i == fullHearts && remainder > 0) {
+                // Delno srce z zaokroževanjem
+                float ratio = static_cast<float>(remainder) / HEALTH_PER_HEART;
+                int originalPhase = static_cast<int>(std::round(ratio * (HEART_PHASES - 1)));
+                phase = HEART_PHASES - 1 - originalPhase;
+            } else {
+                phase = HEART_PHASES - 1; // Prazno srce
+            }
+
+            SDL_Rect srcRect = {phase * (112 / HEART_PHASES),0,112 / HEART_PHASES,srcHeartSize};
+
+            SDL_Rect destRect = {startX + (destHeartSize + spacing) * i,startY,destHeartSize,destHeartSize};
+
+            SDL_RenderCopy(renderer, heartTexture, &srcRect, &destRect);
         }
 
-        SDL_Rect srcRect = {phase * (112 / HEART_PHASES),0,112 / HEART_PHASES,srcHeartSize};
 
-        SDL_Rect destRect = {startX + (destHeartSize + spacing) * i,startY,destHeartSize,destHeartSize};
+        if (debugMode) {
+            // DEBUG:
+            SDL_Rect cameraViewport = camera->GetViewport();
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 
-        SDL_RenderCopy(renderer, heartTexture, &srcRect, &destRect);
-    }
+            // Igralec
+            SDL_Rect playerBox = player->GetCollisionBox();
+            playerBox.x -= cameraViewport.x;
+            playerBox.y -= cameraViewport.y;
+            SDL_RenderDrawRect(renderer, &playerBox);
 
-
-    if (debugMode) {
-        // DEBUG:
-        SDL_Rect cameraViewport = camera->GetViewport();
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-
-        // Igralec
-        SDL_Rect playerBox = player->GetCollisionBox();
-        playerBox.x -= cameraViewport.x;
-        playerBox.y -= cameraViewport.y;
-        SDL_RenderDrawRect(renderer, &playerBox);
-
-        // Sovražniki
-        for(auto& enemy : enemies) {
-            SDL_Rect enemyBox = enemy->GetCollisionBox();
-            enemyBox.x -= cameraViewport.x;
-            enemyBox.y -= cameraViewport.y;
-            SDL_RenderDrawRect(renderer, &enemyBox);
+            // Sovražniki
+            for(auto& enemy : enemies) {
+                SDL_Rect enemyBox = enemy->GetCollisionBox();
+                enemyBox.x -= cameraViewport.x;
+                enemyBox.y -= cameraViewport.y;
+                SDL_RenderDrawRect(renderer, &enemyBox);
+            }
         }
     }
-    SDL_RenderPresent(renderer);
+        SDL_RenderPresent(renderer);
 
 }
 
@@ -743,13 +806,155 @@ float Game::DistanceToPlayer(Enemy* enemy) {
 void Game::ApplyUpgrade(int choice) {
     switch(choice) {
         case 0: // Fire Rate
-            FIRE_RATE *= 0.8f;
+            FIRE_RATE *= 1.2f;
         break;
         case 1: // Damage
-            PROJECTILE_DAMAGE += 10;
+            PROJECTILE_DAMAGE +=100;
         break;
         case 2: // Range
-            PISTOL_RANGE += 100.0f;
+            PISTOL_RANGE +=1.2f;
         break;
+    }
+}
+void Game::CreateMenuLayout() {
+    menuButtons.clear();
+
+    const int BUTTON_WIDTH = 400;
+    const int BUTTON_HEIGHT = 100;
+    const int SPACING = 50;
+
+
+    int startY = static_cast<int>(windowHeight/2) -
+                static_cast<int>((resolutions.size() * (BUTTON_HEIGHT + SPACING))/2);
+
+    // Resolution gumbi
+    for(size_t i = 0; i < resolutions.size(); i++) {
+        SDL_Rect btnRect = {
+            static_cast<int>(windowWidth/2 - BUTTON_WIDTH/2),
+            startY + static_cast<int>(i) * (BUTTON_HEIGHT + SPACING),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT
+        };
+        menuButtons.push_back(btnRect);
+    }
+
+    // Exit gumb
+    SDL_Rect exitBtn = {
+        static_cast<int>(windowWidth/2 - BUTTON_WIDTH/2),
+        startY + static_cast<int>(resolutions.size()) * (BUTTON_HEIGHT + SPACING),
+        BUTTON_WIDTH,
+        BUTTON_HEIGHT
+    };
+    menuButtons.push_back(exitBtn);
+}
+
+void Game::UpdateButtonHover(int mouseX, int mouseY) {
+    hoveredButton = -1;
+    SDL_Point mousePos = {mouseX, mouseY};
+    for(size_t i = 0; i < menuButtons.size(); i++) {
+        if(SDL_PointInRect(&mousePos, &menuButtons[i])) {
+            hoveredButton = static_cast<int>(i);
+            break;
+        }
+    }
+}
+
+void Game::HandleMenuClick(int mouseX, int mouseY) {
+    SDL_Point mousePos = {mouseX, mouseY};
+    for(size_t i = 0; i < menuButtons.size(); i++) {
+        if(SDL_PointInRect(&mousePos, &menuButtons[i])) {
+            if(i < resolutions.size()) {
+                ChangeResolution(resolutions[i].first, resolutions[i].second);
+            }
+            else if(i == menuButtons.size()-1) {
+                isRunning = false;
+            }
+
+            if(i != menuButtons.size()-1) {
+                currentState = GameState::PLAYING;
+                CreateMenuLayout();
+            }
+        }
+    }
+}
+
+void Game::ChangeResolution(int width, int height) {
+    windowWidth = width;
+    windowHeight = height;
+    SDL_SetWindowSize(window, width, height);
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+
+    // Destroy old renderer and create new one
+    SDL_DestroyRenderer(renderer);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    // Update renderer in texture manager and reload textures
+    texture_manager->UpdateRenderer(renderer);
+    ReloadAllTextures(); // Add this function
+
+    // Update camera dimensions
+    camera->UpdateDimensions(width, height);
+
+    // Recreate menu layout
+    CreateMenuLayout();
+}
+void Game::ReloadAllTextures() {
+    // Clear existing textures
+    texture_manager->ClearTextures();
+
+    // Menu textures
+    texture_manager->LoadTexture("assets/textures/menu/background.png", "menu_bg");
+    texture_manager->LoadTexture("assets/textures/menu/button.png", "button");
+    texture_manager->LoadTexture("assets/textures/menu/button_hover.png", "button_hover");
+
+    // Player
+    texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");
+
+    // Environment
+    texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
+
+    // Enemies
+    texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy1");
+    texture_manager->LoadTexture("assets/textures/Enemys/Enemy2.png", "enemy2");
+    texture_manager->LoadTexture("assets/textures/Enemys/Enemy3.png", "enemy3");
+
+    // UI Elements
+    texture_manager->LoadTexture("assets/textures/Screens/GameOver.png", "game_over");
+    texture_manager->LoadTexture("assets/textures/ui/Heart.png", "heart");
+    texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet");
+    texture_manager->LoadTexture("assets/textures/ui/numbers.png", "numbers");
+    texture_manager->LoadTexture("assets/textures/ui/wave.png", "wave_text");
+
+    // Upgrades
+    texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu");
+    texture_manager->LoadTexture("assets/textures/ui/upgrade_fire.png", "upgrade_fire_rate");
+    texture_manager->LoadTexture("assets/textures/ui/upgrade_damage.png", "upgrade_damage");
+    texture_manager->LoadTexture("assets/textures/ui/upgrade_range.png", "upgrade_range");
+    texture_manager->LoadTexture("assets/textures/ui/arrow.png", "arrow");
+
+    // Reassign texture pointers
+    upgradeMenuTexture = texture_manager->GetTexture("upgrade_menu");
+    heartTexture = texture_manager->GetTexture("heart");
+    numbersTexture = texture_manager->GetTexture("numbers");
+    waveTextTexture = texture_manager->GetTexture("wave_text");
+    gameOverTexture = texture_manager->GetTexture("game_over");
+    upgradeFireTexture = texture_manager->GetTexture("upgrade_fire_rate");
+    upgradeDamageTexture = texture_manager->GetTexture("upgrade_damage");
+    upgradeRangeTexture = texture_manager->GetTexture("upgrade_range");
+    menuBackground = texture_manager->GetTexture("menu_bg");
+    buttonTexture = texture_manager->GetTexture("button");
+    buttonHoverTexture = texture_manager->GetTexture("button_hover");
+
+    // Player texture needs special handling if animated
+    player->ReloadTexture(*texture_manager, "player");
+
+    // Reload enemy textures
+    for (auto& enemy : enemyPool) {
+        enemy->ReloadTexture(*texture_manager, "enemy1"); // Base enemy type
+    }
+
+    // Reload projectiles
+    for (auto& projectile : projectiles) {
+        projectile->ReloadTexture(*texture_manager, "bullet");
     }
 }

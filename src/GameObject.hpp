@@ -33,6 +33,7 @@ public:
     float GetDamageCooldownTime() const { return DAMAGE_COOLDOWN_TIME; }
     Vector2f GetCenterPosition() const;
     Vector2f position;
+    void ReloadTexture(Texture_Manager& tm, const std::string& textureID);
 protected:
     int health;
     int maxHealth;

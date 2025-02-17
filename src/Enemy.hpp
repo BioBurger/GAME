@@ -18,4 +18,5 @@ public:
     void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) override;
     void SetTarget(GameObject* newTarget);
     int GetLevel() const {return level;}
+    void ReloadTexture(Texture_Manager& tm, const std::string& baseTexture);
 };

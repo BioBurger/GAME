@@ -14,4 +14,7 @@ public:
     void UnloadTexture(const std::string& texture_name);
     void ClearTextures();
     bool HasTexture(const std::string& texture_name) const;
+    void UpdateRenderer(SDL_Renderer* newRenderer) {
+        renderer = newRenderer;
+    }
 };

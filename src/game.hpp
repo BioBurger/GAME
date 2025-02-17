@@ -14,8 +14,11 @@
 class Enemy;
 class Projectile;
 
+enum class GameState { MAIN_MENU, PLAYING, EXIT };
+
 class Game {
 private:
+    GameState currentState = GameState::MAIN_MENU;
     Texture_Manager *texture_manager;
     bool isRunning;
     SDL_Window *window;
@@ -71,6 +74,22 @@ private:
     SDL_Texture* upgradeFireTexture;
     SDL_Texture* upgradeDamageTexture;
     SDL_Texture* upgradeRangeTexture;
+    SDL_Texture* menuBackground = nullptr;
+    SDL_Texture* buttonTexture = nullptr;
+    SDL_Texture* buttonHoverTexture = nullptr;
+    std::vector<SDL_Rect> menuButtons;
+    int hoveredButton = -1;
+    const std::vector<std::pair<int, int>> resolutions = {
+        {2560, 1440},  // 1440p
+        {1920, 1080},  // 1080p
+        {1280, 720}    // 720p
+    };
+    int windowWidth = 1920;
+    int windowHeight = 1080;
+    void UpdateButtonHover(int mouseX, int mouseY);
+    void HandleMenuClick(int mouseX, int mouseY);
+    void CreateMenuLayout();
+    void ChangeResolution(int width, int height);
 
 public:
     Game();
@@ -98,7 +117,7 @@ public:
     void ShootProjectile(Enemy* target);
     float DistanceToPlayer(Enemy* enemy);
     void ApplyUpgrade(int choice);
-
+    void ReloadAllTextures();
 };
 
 #endif //GAME_H

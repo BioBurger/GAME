@@ -155,3 +155,9 @@ Vector2f GameObject::GetCenterPosition() const {
     return Vector2f(positionrect.x + positionrect.w / 2.0f,
                 positionrect.y + positionrect.h / 2.0f);
 }
+void GameObject::ReloadTexture(Texture_Manager& tm, const std::string& textureID) {
+    texture = tm.GetTexture(textureID);
+    if (!texture) {
+        SDL_Log("Failed to reload texture: %s", textureID.c_str());
+    }
+}

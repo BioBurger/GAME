@@ -68,7 +68,6 @@ private:
     int PROJECTILE_DAMAGE = 50;
     int enemiesKilledThisWave = 0;
     bool isChoosingUpgrade = false;
-    std::vector<std::string> upgradeOptions;
     int selectedUpgrade = 0;
     SDL_Texture* upgradeMenuTexture = nullptr;
     SDL_Texture* upgradeFireTexture;
@@ -90,6 +89,11 @@ private:
     void HandleMenuClick(int mouseX, int mouseY);
     void CreateMenuLayout();
     void ChangeResolution(int width, int height);
+    int CalculateHeartPhase(int index, int currentHealth) const;
+    int ScaleX(int original) const;
+    int ScaleY(int original) const;
+    const float WAVE_SCALE = 2.0f;
+    const float NUMBER_SCALE = 2.0f;
 
 public:
     Game();

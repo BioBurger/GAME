@@ -206,7 +206,7 @@ void Game::HandleEvents() {
                 }
                 break;
 
-            case SDL_KEYDOWN:  // Fixed: Moved into switch
+            case SDL_KEYDOWN:
                 if(gameOver && event.key.keysym.sym == SDLK_r) {
                     RestartGame();
                 }
@@ -280,10 +280,9 @@ void Game::Update(float deltaTime) {
     if (!player->IsAlive()) {
         gameOver = true;
     }
-    if (enemiesKilledThisWave >= 5) {
+    if (enemiesKilledThisWave >= 10) {
         isChoosingUpgrade = true;
         enemiesKilledThisWave = 0;
-        upgradeOptions = {"Fire Rate +20%", "Damage +10", "Range +100"};
         selectedUpgrade = 0;
     }
 
@@ -298,145 +297,158 @@ bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
 
 void Game::Render() {
     SDL_RenderClear(renderer);
+
+
     if(currentState == GameState::MAIN_MENU) {
-        // Render background
+        // Render menu
         SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
         // Render buttons
         for(size_t i = 0; i < menuButtons.size(); i++) {
-            SDL_Texture* tex = (hoveredButton == static_cast<int>(i)) ?
-                buttonHoverTexture : buttonTexture;
-
+            SDL_Texture* tex = (hoveredButton == static_cast<int>(i))
+                ? buttonHoverTexture : buttonTexture;
             SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i]);
-
-            if (debugMode) {
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                for(auto& btn : menuButtons) {
-                    SDL_RenderDrawRect(renderer, &btn);
-                }
-            }
         }
-    }else if (currentState == GameState::PLAYING) {
-        for (auto& enemy : enemies) {
-            SDL_Rect cameraViewport = camera->GetViewport();
-            enemy->Render(renderer, cameraViewport);
-        }
+    }
+    else if (currentState == GameState::PLAYING) {
+        // Render game
+        SDL_Rect cameraViewport = camera->GetViewport();
 
-        if( !gameOver && !isChoosingUpgrade ) {
-            // Podaj kamero vsem elementom
-            SDL_Rect cameraViewport = camera->GetViewport();
+        if(!gameOver && !isChoosingUpgrade) {
             tileMap->Render(renderer, cameraViewport);
             player->Render(renderer, cameraViewport);
 
-            for (auto& enemy : enemies) {
+            for(auto& enemy : enemies) {
                 enemy->Render(renderer, cameraViewport);
             }
-        }else if (isChoosingUpgrade) {
-            // Render menu
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-            SDL_Rect overlay = {0, 0, 1920, 1080};
-            SDL_RenderCopy(renderer,upgradeMenuTexture,NULL, &overlay);
 
-
-            const int OPTION_WIDTH = 300;
-            const int OPTION_HEIGHT = 400;
-            const int SPACING = 50;
-            const int BASE_Y = 300;
-
-            // Fire Rate
-            SDL_Rect fireRect = {
-                640 - OPTION_WIDTH - SPACING + (selectedUpgrade == 0 ? -10 : 0),
-                BASE_Y + (selectedUpgrade == 0 ? -10 : 0),
-                OPTION_WIDTH + (selectedUpgrade == 0 ? 20 : 0),
-                OPTION_HEIGHT + (selectedUpgrade == 0 ? 20 : 0)
-            };
-
-            // Damage
-            SDL_Rect damageRect = {
-                960 - OPTION_WIDTH/2 + (selectedUpgrade == 1 ? -10 : 0),
-                BASE_Y + (selectedUpgrade == 1 ? -10 : 0),
-                OPTION_WIDTH + (selectedUpgrade == 1 ? 20 : 0),
-                OPTION_HEIGHT + (selectedUpgrade == 1 ? 20 : 0)
-            };
-
-            // Range
-            SDL_Rect rangeRect = {
-                1280 + SPACING + (selectedUpgrade == 2 ? -10 : 0),
-                BASE_Y + (selectedUpgrade == 2 ? -10 : 0),
-                OPTION_WIDTH + (selectedUpgrade == 2 ? 20 : 0),
-                OPTION_HEIGHT + (selectedUpgrade == 2 ? 20 : 0)
-            };
-
-            // Render za effect
-            SDL_RenderCopy(renderer, upgradeFireTexture, NULL, &fireRect);
-            SDL_RenderCopy(renderer, upgradeDamageTexture, NULL, &damageRect);
-            SDL_RenderCopy(renderer, upgradeRangeTexture, NULL, &rangeRect);
-
-            // Arrowsi
-            if(texture_manager->HasTexture("arrow")) {
-                SDL_Texture* arrowTex = texture_manager->GetTexture("arrow");
-                SDL_Rect leftArrow = {fireRect.x - 50, BASE_Y + 150, 40, 40};
-                SDL_Rect rightArrow = {rangeRect.x + rangeRect.w + 10, BASE_Y + 150, 40, 40};
-                SDL_RenderCopyEx(renderer, arrowTex, NULL, &leftArrow, 180, NULL, SDL_FLIP_NONE);
-                SDL_RenderCopy(renderer, arrowTex, NULL, &rightArrow);
+            // Render metkni
+            for(auto& projectile : projectiles) {
+                projectile->Render(renderer, cameraViewport);
             }
-        }else {
-            //gameover
-            SDL_Rect screenRect = {0, 0, 1920, 1080};
+        }
+
+        // UI Elements
+        else if (isChoosingUpgrade) {
+    // Upgrade menu bg
+    SDL_Rect overlay = {0, 0, windowWidth, windowHeight};
+    SDL_RenderCopy(renderer, upgradeMenuTexture, NULL, &overlay);
+
+    // Zračuna mere
+    const int OPTION_WIDTH = ScaleX(300);
+    const int OPTION_HEIGHT = ScaleY(400);
+    const int SPACING = ScaleX(80);
+    const int BASE_Y = ScaleY(300);
+    const int TOTAL_WIDTH = (OPTION_WIDTH * 3) + (SPACING * 2);
+    const int START_X = (windowWidth - TOTAL_WIDTH) / 2;
+
+    // Pop up effect za upgrade
+    const int HOVER_OFFSET = ScaleY(15);
+    const int HOVER_SIZE_INCREASE = ScaleY(30);
+
+    // Fire Rate
+    SDL_Rect fireRect = {
+        START_X + (selectedUpgrade == 0 ? -HOVER_OFFSET : 0),
+        BASE_Y + (selectedUpgrade == 0 ? -HOVER_OFFSET : 0),
+        OPTION_WIDTH + (selectedUpgrade == 0 ? HOVER_SIZE_INCREASE : 0),
+        OPTION_HEIGHT + (selectedUpgrade == 0 ? HOVER_SIZE_INCREASE : 0)
+    };
+
+    // Damage
+    SDL_Rect damageRect = {
+        START_X + OPTION_WIDTH + SPACING + (selectedUpgrade == 1 ? -HOVER_OFFSET : 0),
+        BASE_Y + (selectedUpgrade == 1 ? -HOVER_OFFSET : 0),
+        OPTION_WIDTH + (selectedUpgrade == 1 ? HOVER_SIZE_INCREASE : 0),
+        OPTION_HEIGHT + (selectedUpgrade == 1 ? HOVER_SIZE_INCREASE : 0)
+    };
+
+    // Range
+    SDL_Rect rangeRect = {
+        START_X + (OPTION_WIDTH + SPACING) * 2 + (selectedUpgrade == 2 ? -HOVER_OFFSET : 0),
+        BASE_Y + (selectedUpgrade == 2 ? -HOVER_OFFSET : 0),
+        OPTION_WIDTH + (selectedUpgrade == 2 ? HOVER_SIZE_INCREASE : 0),
+        OPTION_HEIGHT + (selectedUpgrade == 2 ? HOVER_SIZE_INCREASE : 0)
+    };
+
+    // Render options
+    SDL_RenderCopy(renderer, upgradeFireTexture, NULL, &fireRect);
+    SDL_RenderCopy(renderer, upgradeDamageTexture, NULL, &damageRect);
+    SDL_RenderCopy(renderer, upgradeRangeTexture, NULL, &rangeRect);
+
+    // Puščice
+    if(texture_manager->HasTexture("arrow")) {
+        SDL_Texture* arrowTex = texture_manager->GetTexture("arrow");
+        const int ARROW_SIZE = ScaleX(40);
+
+        // Lev
+        SDL_Rect leftArrow = {
+            fireRect.x - ScaleX(60),
+            fireRect.y + (fireRect.h / 2 - ARROW_SIZE / 2),
+            ARROW_SIZE,
+            ARROW_SIZE
+        };
+
+        // Desen
+        SDL_Rect rightArrow = {
+            rangeRect.x + rangeRect.w + ScaleX(20),
+            rangeRect.y + (rangeRect.h / 2 - ARROW_SIZE / 2),
+            ARROW_SIZE,
+            ARROW_SIZE
+        };
+
+        SDL_RenderCopyEx(renderer, arrowTex, NULL, &leftArrow, 180, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopy(renderer, arrowTex, NULL, &rightArrow);
+    }
+}
+        else if(gameOver) {
+            // Game over screen
+            SDL_Rect screenRect = {0, 0, windowWidth, windowHeight};
             SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
         }
-        // Render metki
-        for (auto& projectile : projectiles) {
-            projectile->Render(renderer, camera->GetViewport());
-        }
-        // RENDER WAVE ŠTEVILKE
-        if (!gameOver && !betweenWaves) {
-            RenderWaveNumber();
-        }
+
         // Health bar
-        int startX = 50;
-        int startY = 50;
-        int spacing = 10;
+        int startX = ScaleX(50);
+        int startY = ScaleY(50);
+        int spacing = ScaleX(10);
+        int destHeartSize = ScaleY(64);
         int currentHealth = player->GetHealth();
         int maxHearts = player->GetMaxHealth() / HEALTH_PER_HEART;
 
-        int fullHearts = currentHealth / HEALTH_PER_HEART;
-        int remainder = currentHealth % HEALTH_PER_HEART;
+        for(int i = 0; i < maxHearts; ++i) {
+            int phase = CalculateHeartPhase(i, currentHealth);
+            SDL_Rect srcRect = {
+                phase * (112 / HEART_PHASES),
+                0,
+                112 / HEART_PHASES,
+                srcHeartSize
+            };
 
-        for (int i = 0; i < maxHearts; ++i) {
-            int phase;
-
-            if (i < fullHearts) {
-                phase = 0; // Polno srce
-            } else if (i == fullHearts && remainder > 0) {
-                // Delno srce z zaokroževanjem
-                float ratio = static_cast<float>(remainder) / HEALTH_PER_HEART;
-                int originalPhase = static_cast<int>(std::round(ratio * (HEART_PHASES - 1)));
-                phase = HEART_PHASES - 1 - originalPhase;
-            } else {
-                phase = HEART_PHASES - 1; // Prazno srce
-            }
-
-            SDL_Rect srcRect = {phase * (112 / HEART_PHASES),0,112 / HEART_PHASES,srcHeartSize};
-
-            SDL_Rect destRect = {startX + (destHeartSize + spacing) * i,startY,destHeartSize,destHeartSize};
+            SDL_Rect destRect = {
+                startX + (destHeartSize + spacing) * i,
+                startY,
+                destHeartSize,
+                destHeartSize
+            };
 
             SDL_RenderCopy(renderer, heartTexture, &srcRect, &destRect);
         }
 
+        // Wave number display
+        if(!gameOver && !betweenWaves) {
+            RenderWaveNumber();
+        }
 
-        if (debugMode) {
-            // DEBUG:
-            SDL_Rect cameraViewport = camera->GetViewport();
+        // Debug:
+        if(debugMode) {
             SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 
-            // Igralec
+            // Player hitbox
             SDL_Rect playerBox = player->GetCollisionBox();
             playerBox.x -= cameraViewport.x;
             playerBox.y -= cameraViewport.y;
             SDL_RenderDrawRect(renderer, &playerBox);
 
-            // Sovražniki
+            // Enemy hit box
             for(auto& enemy : enemies) {
                 SDL_Rect enemyBox = enemy->GetCollisionBox();
                 enemyBox.x -= cameraViewport.x;
@@ -445,9 +457,31 @@ void Game::Render() {
             }
         }
     }
-        SDL_RenderPresent(renderer);
 
+    SDL_RenderPresent(renderer);
+}int Game::CalculateHeartPhase(int index, int currentHealth) const {
+    int fullHearts = currentHealth / HEALTH_PER_HEART;
+    int remainder = currentHealth % HEALTH_PER_HEART;
+
+    if (index < fullHearts) {
+        return 0; // Full heart
+    }
+    if (index == fullHearts && remainder > 0) {
+        float ratio = static_cast<float>(remainder) / HEALTH_PER_HEART;
+        int originalPhase = static_cast<int>(std::round(ratio * (HEART_PHASES - 1)));
+        return HEART_PHASES - 1 - originalPhase;
+    }
+    return HEART_PHASES - 1; // 0 heart
 }
+
+int Game::ScaleX(int original) const {
+    return static_cast<int>(original * (windowWidth / 1920.0f));
+}
+
+int Game::ScaleY(int original) const {
+    return static_cast<int>(original * (windowHeight / 1080.0f));
+}
+
 
 bool Game::Running() {
     return isRunning;
@@ -527,24 +561,25 @@ void Game::StartNewWave() {
 
 }
 void Game::RenderWaveNumber() {
-    if (!waveTextTexture || !numbersTexture) return;
-    if (currentWave != cachedWaveNumber) {
+    if(!waveTextTexture || !numbersTexture) return;
+
+    if(currentWave != cachedWaveNumber) {
         SDL_DestroyTexture(cachedWaveTexture);
-        cachedWaveTexture = CreateWaveNumberTexture(); // Uporabite PRAVILNO ime
+        cachedWaveTexture = CreateWaveNumberTexture();
         cachedWaveNumber = currentWave;
     }
 
-    // Render če obstaja
-    if (cachedWaveTexture) {
-        // Določi pozicijo v zgornjem desnem kotu
+    if(cachedWaveTexture) {
         int texWidth, texHeight;
         SDL_QueryTexture(cachedWaveTexture, NULL, NULL, &texWidth, &texHeight);
+
         SDL_Rect destRect = {
-            1920 - texWidth - 50, // X
-            50,                   // Y
-            texWidth,             // Širina
-            texHeight             // Višina
+            windowWidth - texWidth - ScaleX(50),
+            ScaleY(50),
+            texWidth,
+            texHeight
         };
+
         SDL_RenderCopy(renderer, cachedWaveTexture, NULL, &destRect);
     }
 }
@@ -748,43 +783,63 @@ void Game::ProcessInput() {
     player->SetVelocity(vx, vy);
 }
 SDL_Texture* Game::CreateWaveNumberTexture() {
-    // Naloži sliko ker je ttf - šupak
+    // Load scale image
     SDL_Surface* waveSurface = IMG_Load("assets/textures/ui/wave.png");
-    if (!waveSurface) {
-        SDL_Log("Napaka pri nalaganju wave.png: %s", IMG_GetError());
-        return nullptr;
-    }
-
-    // Pripravi površino
-    SDL_Surface* combinedSurface = SDL_CreateRGBSurfaceWithFormat(0,waveSurface->w + (std::to_string(currentWave).length() * (NUMBER_WIDTH + 2)),std::max(waveSurface->h, NUMBER_HEIGHT),32,SDL_PIXELFORMAT_RGBA32);
-
-    // Prekopiraj sloko wave
-    SDL_Rect waveDest = {0, (combinedSurface->h - waveSurface->h)/2, waveSurface->w, waveSurface->h};
-    SDL_BlitSurface(waveSurface, NULL, combinedSurface, &waveDest);
-    SDL_FreeSurface(waveSurface);
-
-    // Naloži števke iz datoteke
     SDL_Surface* numbersSurface = IMG_Load("assets/textures/ui/numbers.png");
-    if (!numbersSurface) {
-        SDL_Log("Napaka pri nalaganju numbers.png: %s", IMG_GetError());
-        SDL_FreeSurface(combinedSurface);
+
+    if(!waveSurface || !numbersSurface) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load wave/number textures");
         return nullptr;
     }
 
-    // Dodaj števke
+    // Scale surface
+    SDL_Surface* scaledWave = SDL_CreateRGBSurfaceWithFormat(0,
+        waveSurface->w * WAVE_SCALE,
+        waveSurface->h * WAVE_SCALE,
+        32,
+        SDL_PIXELFORMAT_RGBA32);
+
+    SDL_BlitScaled(waveSurface, NULL, scaledWave, NULL);
+
+    // Skupek textur
+    int numberWidth = NUMBER_WIDTH * NUMBER_SCALE;
+    int numberHeight = NUMBER_HEIGHT * NUMBER_SCALE;
+
+    SDL_Surface* combinedSurface = SDL_CreateRGBSurfaceWithFormat(0,
+        scaledWave->w + (std::to_string(currentWave).length() * (numberWidth + 2)),
+        std::max(scaledWave->h, numberHeight),
+        32,
+        SDL_PIXELFORMAT_RGBA32);
+
+    // Scale wave
+    SDL_Rect waveDest = {0, (combinedSurface->h - scaledWave->h)/2, scaledWave->w, scaledWave->h};
+    SDL_BlitSurface(scaledWave, NULL, combinedSurface, &waveDest);
+
+    // Scale number
     int xOffset = waveDest.w;
     std::string waveStr = std::to_string(currentWave);
-    for (char c : waveStr) {
+
+    for(char c : waveStr) {
         int digit = c - '0';
         SDL_Rect srcRect = {digit * NUMBER_WIDTH, 0, NUMBER_WIDTH, NUMBER_HEIGHT};
-        SDL_Rect destRect = {xOffset, (combinedSurface->h - NUMBER_HEIGHT)/2, NUMBER_WIDTH, NUMBER_HEIGHT};
-        SDL_BlitSurface(numbersSurface, &srcRect, combinedSurface, &destRect);
-        xOffset += NUMBER_WIDTH + 2;
-    }
-    SDL_FreeSurface(numbersSurface);
+        SDL_Rect destRect = {
+            xOffset,
+            (combinedSurface->h - numberHeight)/2,
+            numberWidth,
+            numberHeight
+        };
 
-    // Ustvari teksturo iz površine
+        SDL_BlitScaled(numbersSurface, &srcRect, combinedSurface, &destRect);
+        xOffset += numberWidth + 2;
+    }
+
+    // Finalna textura
     SDL_Texture* result = SDL_CreateTextureFromSurface(renderer, combinedSurface);
+
+    // Clean
+    SDL_FreeSurface(waveSurface);
+    SDL_FreeSurface(numbersSurface);
+    SDL_FreeSurface(scaledWave);
     SDL_FreeSurface(combinedSurface);
 
     return result;
@@ -817,18 +872,15 @@ void Game::ApplyUpgrade(int choice) {
 void Game::CreateMenuLayout() {
     menuButtons.clear();
 
-    const int BUTTON_WIDTH = 400;
-    const int BUTTON_HEIGHT = 100;
-    const int SPACING = 50;
+    const int BUTTON_WIDTH = ScaleX(400);
+    const int BUTTON_HEIGHT = ScaleY(100);
+    const int SPACING = ScaleY(50);
 
-
-    int startY = static_cast<int>(windowHeight/2) -
-                static_cast<int>((resolutions.size() * (BUTTON_HEIGHT + SPACING))/2);
-
+    int startY = windowHeight/2 - (resolutions.size() * (BUTTON_HEIGHT + SPACING))/2;
 
     for(size_t i = 0; i < resolutions.size(); i++) {
         SDL_Rect btnRect = {
-            static_cast<int>(windowWidth/2 - BUTTON_WIDTH/2),
+            windowWidth/2 - BUTTON_WIDTH/2,
             startY + static_cast<int>(i) * (BUTTON_HEIGHT + SPACING),
             BUTTON_WIDTH,
             BUTTON_HEIGHT
@@ -836,9 +888,9 @@ void Game::CreateMenuLayout() {
         menuButtons.push_back(btnRect);
     }
 
-
+    // Exit button
     SDL_Rect exitBtn = {
-        static_cast<int>(windowWidth/2 - BUTTON_WIDTH/2),
+        windowWidth/2 - BUTTON_WIDTH/2,
         startY + static_cast<int>(resolutions.size()) * (BUTTON_HEIGHT + SPACING),
         BUTTON_WIDTH,
         BUTTON_HEIGHT

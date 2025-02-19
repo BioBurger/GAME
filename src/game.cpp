@@ -168,7 +168,7 @@ void Game::Init(const char* title, bool fullscreen) {
             player = new GameObject(*texture_manager,"player",PLAYER_SPAWN_X, PLAYER_SPAWN_Y,playerWidth, playerHeight,frameWidth, frameHeight,totalFrames, animationSpeed);
             // Komponente
             camera = new Camera(1920, 1080);
-            camera->Update(PLAYER_SPAWN_X + playerWidth/2, PLAYER_SPAWN_Y + playerHeight/2);
+            camera->Reset(PLAYER_SPAWN_X + playerWidth/2, PLAYER_SPAWN_Y + playerHeight/2);
             camera->SetMapBounds(20000, 20000);
             tileMap = new TileMap(*texture_manager, *camera);
 
@@ -287,8 +287,6 @@ void Game::Update(float deltaTime) {
         selectedUpgrade = 0;
     }
 
-    SDL_Log("FIRE_RATE AT: (%f, %f), DAMAGE AT: (%f, %f), RANGE AT:: %f",
-FIRE_RATE,PROJECTILE_DAMAGE,PISTOL_RANGE);
 }
 // Collisoni
 bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
@@ -827,7 +825,7 @@ void Game::CreateMenuLayout() {
     int startY = static_cast<int>(windowHeight/2) -
                 static_cast<int>((resolutions.size() * (BUTTON_HEIGHT + SPACING))/2);
 
-    // Resolution gumbi
+
     for(size_t i = 0; i < resolutions.size(); i++) {
         SDL_Rect btnRect = {
             static_cast<int>(windowWidth/2 - BUTTON_WIDTH/2),
@@ -838,7 +836,7 @@ void Game::CreateMenuLayout() {
         menuButtons.push_back(btnRect);
     }
 
-    // Exit gumb
+
     SDL_Rect exitBtn = {
         static_cast<int>(windowWidth/2 - BUTTON_WIDTH/2),
         startY + static_cast<int>(resolutions.size()) * (BUTTON_HEIGHT + SPACING),
@@ -884,55 +882,60 @@ void Game::ChangeResolution(int width, int height) {
     SDL_SetWindowSize(window, width, height);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
-    // Destroy old renderer and create new one
+
     SDL_DestroyRenderer(renderer);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    // Update renderer in texture manager and reload textures
+
     texture_manager->UpdateRenderer(renderer);
-    ReloadAllTextures(); // Add this function
+    ReloadAllTextures();
 
-    // Update camera dimensions
+
     camera->UpdateDimensions(width, height);
+    Vector2f playerCenter = player->GetCenterPosition();
+    camera->Reset(playerCenter.x, playerCenter.y);
 
-    // Recreate menu layout
+
+    delete tileMap;
+    tileMap = new TileMap(*texture_manager, *camera);
+
+
     CreateMenuLayout();
 }
 void Game::ReloadAllTextures() {
-    // Clear existing textures
+
     texture_manager->ClearTextures();
 
-    // Menu textures
+
     texture_manager->LoadTexture("assets/textures/menu/background.png", "menu_bg");
     texture_manager->LoadTexture("assets/textures/menu/button.png", "button");
     texture_manager->LoadTexture("assets/textures/menu/button_hover.png", "button_hover");
 
-    // Player
+
     texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");
 
-    // Environment
+
     texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
 
-    // Enemies
     texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy1");
     texture_manager->LoadTexture("assets/textures/Enemys/Enemy2.png", "enemy2");
     texture_manager->LoadTexture("assets/textures/Enemys/Enemy3.png", "enemy3");
 
-    // UI Elements
+
     texture_manager->LoadTexture("assets/textures/Screens/GameOver.png", "game_over");
     texture_manager->LoadTexture("assets/textures/ui/Heart.png", "heart");
     texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet");
     texture_manager->LoadTexture("assets/textures/ui/numbers.png", "numbers");
     texture_manager->LoadTexture("assets/textures/ui/wave.png", "wave_text");
 
-    // Upgrades
+
     texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu");
     texture_manager->LoadTexture("assets/textures/ui/upgrade_fire.png", "upgrade_fire_rate");
     texture_manager->LoadTexture("assets/textures/ui/upgrade_damage.png", "upgrade_damage");
     texture_manager->LoadTexture("assets/textures/ui/upgrade_range.png", "upgrade_range");
     texture_manager->LoadTexture("assets/textures/ui/arrow.png", "arrow");
 
-    // Reassign texture pointers
+
     upgradeMenuTexture = texture_manager->GetTexture("upgrade_menu");
     heartTexture = texture_manager->GetTexture("heart");
     numbersTexture = texture_manager->GetTexture("numbers");
@@ -945,15 +948,13 @@ void Game::ReloadAllTextures() {
     buttonTexture = texture_manager->GetTexture("button");
     buttonHoverTexture = texture_manager->GetTexture("button_hover");
 
-    // Player texture needs special handling if animated
+
     player->ReloadTexture(*texture_manager, "player");
 
-    // Reload enemy textures
     for (auto& enemy : enemyPool) {
         enemy->ReloadTexture(*texture_manager, "enemy1"); // Base enemy type
     }
 
-    // Reload projectiles
     for (auto& projectile : projectiles) {
         projectile->ReloadTexture(*texture_manager, "bullet");
     }

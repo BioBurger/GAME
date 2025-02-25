@@ -16,6 +16,11 @@ class Projectile;
 
 enum class GameState { MAIN_MENU, PLAYING, EXIT };
 
+struct Collectible {
+    SDL_Rect rect;
+    bool active;
+};
+
 class Game {
 private:
     GameState currentState = GameState::MAIN_MENU;
@@ -94,6 +99,17 @@ private:
     int ScaleY(int original) const;
     const float WAVE_SCALE = 2.0f;
     const float NUMBER_SCALE = 2.0f;
+    std::vector<Collectible> collectibles;
+    float waveTimeRemaining;
+    float waveTimeElapsed = 0.0f;
+    SDL_Texture* collectibleTexture;
+    const float WAVE_TIME_LIMIT = 30.0f;
+    int collectiblesRemaining;
+    SDL_Rect collectibleSrcRect;const int BASE_COLLECTIBLES = 3;
+    const int COLLECTIBLES_PER_WAVE = 1;
+    const int MIN_SPAWN_DISTANCE = 600;
+    const int MAX_SPAWN_DISTANCE = 1000;
+
 
 public:
     Game();
@@ -122,6 +138,8 @@ public:
     float DistanceToPlayer(Enemy* enemy);
     void ApplyUpgrade(int choice);
     void ReloadAllTextures();
+    void SpawnCollectibles();
+    void RenderTimer();
 };
 
 #endif //GAME_H

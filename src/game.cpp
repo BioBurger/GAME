@@ -127,6 +127,12 @@ void Game::Init(const char* title, bool fullscreen) {
                     exit(1);
                 }
             }
+            if (!texture_manager->HasTexture("collectible")) {
+                if(!texture_manager->LoadTexture("assets/textures/collectible1.png", "collectible")) {
+                    SDL_Log("Missing collectible texture!");
+                    exit(1);
+                }
+            }
             // Upgradi
             if (!texture_manager->HasTexture("upgrade_menu")) {
                 texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu");
@@ -155,6 +161,9 @@ void Game::Init(const char* title, bool fullscreen) {
             menuBackground = texture_manager->GetTexture("menu_bg");
             buttonTexture = texture_manager->GetTexture("button");
             buttonHoverTexture = texture_manager->GetTexture("button_hover");
+            collectibleTexture = texture_manager->GetTexture("collectible");
+
+            collectibleSrcRect = {0, 0, 32, 32};
 
             SDL_SetWindowSize(window, windowWidth, windowHeight);
             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -276,14 +285,16 @@ void Game::Update(float deltaTime) {
             ++it;
         }
     }
+    // Update collectible
+    for (auto& c : collectibles) {
+        if (c.active && CheckCollision(player->GetCollisionBox(), c.rect)) {
+            c.active = false;
+            collectiblesRemaining--;
+        }
+    }
 
     if (!player->IsAlive()) {
         gameOver = true;
-    }
-    if (enemiesKilledThisWave >= 10) {
-        isChoosingUpgrade = true;
-        enemiesKilledThisWave = 0;
-        selectedUpgrade = 0;
     }
 
 }
@@ -318,6 +329,19 @@ void Game::Render() {
             tileMap->Render(renderer, cameraViewport);
             player->Render(renderer, cameraViewport);
 
+            // Collectible
+            for (const auto& c : collectibles) {
+                if (c.active) {
+                    SDL_Rect destRect = {
+                        c.rect.x - cameraViewport.x,
+                        c.rect.y - cameraViewport.y,
+                        c.rect.w,
+                        c.rect.h
+                    };
+                    SDL_RenderCopy(renderer, collectibleTexture, &collectibleSrcRect, &destRect);
+                }
+            }
+
             for(auto& enemy : enemies) {
                 enemy->Render(renderer, cameraViewport);
             }
@@ -326,6 +350,7 @@ void Game::Render() {
             for(auto& projectile : projectiles) {
                 projectile->Render(renderer, cameraViewport);
             }
+
         }
 
         // UI Elements
@@ -341,6 +366,7 @@ void Game::Render() {
     const int BASE_Y = ScaleY(300);
     const int TOTAL_WIDTH = (OPTION_WIDTH * 3) + (SPACING * 2);
     const int START_X = (windowWidth - TOTAL_WIDTH) / 2;
+
 
     // Pop up effect za upgrade
     const int HOVER_OFFSET = ScaleY(15);
@@ -436,6 +462,7 @@ void Game::Render() {
         // Wave number display
         if(!gameOver && !betweenWaves) {
             RenderWaveNumber();
+            RenderTimer();
         }
 
         // Debug:
@@ -455,11 +482,77 @@ void Game::Render() {
                 enemyBox.y -= cameraViewport.y;
                 SDL_RenderDrawRect(renderer, &enemyBox);
             }
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+            for (const auto& c : collectibles) {
+                if (c.active) {
+                    SDL_Rect debugRect = {
+                        c.rect.x - cameraViewport.x,
+                        c.rect.y - cameraViewport.y,
+                        c.rect.w,
+                        c.rect.h
+                    };
+                    SDL_RenderDrawRect(renderer, &debugRect);
+                }
+            }
         }
     }
 
     SDL_RenderPresent(renderer);
-}int Game::CalculateHeartPhase(int index, int currentHealth) const {
+}
+void Game::SpawnCollectibles() {
+    collectibles.clear();
+    collectiblesRemaining = BASE_COLLECTIBLES + (currentWave * COLLECTIBLES_PER_WAVE);
+
+    SDL_Rect playerPos = player->GetPosition();
+    const int SPAWN_RADIUS = 600;
+
+    for (int i = 0; i < collectiblesRemaining; ++i) {
+    // Krog okoli playerja
+        float angle = static_cast<float>(rand() % 360) * (M_PI / 180.0f);
+        float distance = MIN_SPAWN_DISTANCE +
+                        static_cast<float>(rand()) / RAND_MAX *
+                        (MAX_SPAWN_DISTANCE - MIN_SPAWN_DISTANCE);
+
+        int x = playerPos.x + static_cast<int>(cos(angle) * distance);
+        int y = playerPos.y + static_cast<int>(sin(angle) * distance);
+
+        // Da je v mapi
+        x = std::clamp(x, 0, 20000 - 32);
+        y = std::clamp(y, 0, 20000 - 32);
+
+        collectibles.push_back({ {x, y, 32, 32}, true });
+        SDL_Log("Spawned collectible %d at %d,%d (Wave %d)",
+               i, x, y, currentWave);
+    }
+}
+void Game::RenderTimer() {
+    if (!numbersTexture) return;
+
+    int timerSeconds = static_cast<int>(waveTimeRemaining);
+    if (timerSeconds < 0) timerSeconds = 0;
+    std::string timeStr = std::to_string(timerSeconds);
+
+    int startX = windowWidth - ScaleX(300);
+    int startY = ScaleY(100);
+    int digitWidth = ScaleX(NUMBER_WIDTH * NUMBER_SCALE);
+    int digitHeight = ScaleY(NUMBER_HEIGHT * NUMBER_SCALE);
+    int spacing = ScaleX(2);
+
+    for (size_t i = 0; i < timeStr.size(); ++i) {
+        char c = timeStr[i];
+        int digit = c - '0';
+        SDL_Rect srcRect = { digit * NUMBER_WIDTH, 0, NUMBER_WIDTH, NUMBER_HEIGHT };
+        SDL_Rect destRect = {
+            startX + (digitWidth + spacing) * i,
+            startY,
+            digitWidth,
+            digitHeight
+        };
+        SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
+    }
+}
+
+int Game::CalculateHeartPhase(int index, int currentHealth) const {
     int fullHearts = currentHealth / HEALTH_PER_HEART;
     int remainder = currentHealth % HEALTH_PER_HEART;
 
@@ -550,15 +643,20 @@ void Game::RestartGame() {
 }
 void Game::StartNewWave() {
     currentWave++;
-    enemiesPerWave = 20;
-    enemiesRemaining = enemiesPerWave;
     betweenWaves = false;
+    waveTimeRemaining = WAVE_TIME_LIMIT;
 
-    // Ohranjam enemyje
+    // Clear enemijev za prejšni wave
     for (auto& e : enemyPool) {
-        e->Revive(-1000, -1000, 1); // Začasno skrij
+        e->Revive(-1000, -1000, 1);
     }
+    enemies.clear();
 
+    // Spawn nov collectible
+    SpawnCollectibles();
+
+    SDL_Log("Starting wave %d with %d collectibles",
+           currentWave, collectiblesRemaining);
 }
 void Game::RenderWaveNumber() {
     if(!waveTextTexture || !numbersTexture) return;
@@ -613,17 +711,40 @@ Enemy* Game::GetPooledEnemy() {
     return newEnemy;
 }
 void Game::UpdateWave(float deltaTime) {
-    // Delay med wavi
     if (betweenWaves) {
         waveTimer += deltaTime;
-
         if (waveTimer >= waveStartDelay) {
             StartNewWave();
             waveTimer = 0.0f;
         }
     } else {
-        if (enemiesRemaining <= 0 && enemies.empty()) {
+        waveTimeRemaining -= deltaTime;
+
+        // Check failure condition
+        if (waveTimeRemaining <= 0.0f) {
+            gameOver = true;
+            return;
+        }
+
+        // Check success condition
+        if (collectiblesRemaining <= 0) {
+            // Clear enemies
+            for (auto& enemy : enemies) {
+                enemy->Revive(-1000, -1000, 1); // Reset position off-screen
+            }
+            enemies.clear();
+
             betweenWaves = true;
+            isChoosingUpgrade = true;
+            selectedUpgrade = 0;
+        }
+        else {
+            // Spawn enemies infinitely
+            spawnTimer += deltaTime;
+            if (spawnTimer >= SPAWN_INTERVAL) {
+                SpawnEnemy();
+                spawnTimer = 0.0f;
+            }
         }
     }
 }

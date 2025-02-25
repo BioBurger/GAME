@@ -128,7 +128,7 @@ void Game::Init(const char* title, bool fullscreen) {
                 }
             }
             if (!texture_manager->HasTexture("collectible")) {
-                if(!texture_manager->LoadTexture("assets/textures/collectible1.png", "collectible")) {
+                if(!texture_manager->LoadTexture("assets/textures/collectible.png", "collectible")) {
                     SDL_Log("Missing collectible texture!");
                     exit(1);
                 }
@@ -327,7 +327,6 @@ void Game::Render() {
 
         if(!gameOver && !isChoosingUpgrade) {
             tileMap->Render(renderer, cameraViewport);
-            player->Render(renderer, cameraViewport);
 
             // Collectible
             for (const auto& c : collectibles) {
@@ -341,6 +340,8 @@ void Game::Render() {
                     SDL_RenderCopy(renderer, collectibleTexture, &collectibleSrcRect, &destRect);
                 }
             }
+
+            player->Render(renderer, cameraViewport);
 
             for(auto& enemy : enemies) {
                 enemy->Render(renderer, cameraViewport);
@@ -503,26 +504,29 @@ void Game::SpawnCollectibles() {
     collectibles.clear();
     collectiblesRemaining = BASE_COLLECTIBLES + (currentWave * COLLECTIBLES_PER_WAVE);
 
-    SDL_Rect playerPos = player->GetPosition();
-    const int SPAWN_RADIUS = 600;
+    Vector2f playerCenter = player->GetCenterPosition();
+    const int BASE_DISTANCE = 600 + (currentWave * 100);
 
     for (int i = 0; i < collectiblesRemaining; ++i) {
-    // Krog okoli playerja
-        float angle = static_cast<float>(rand() % 360) * (M_PI / 180.0f);
-        float distance = MIN_SPAWN_DISTANCE +
-                        static_cast<float>(rand()) / RAND_MAX *
-                        (MAX_SPAWN_DISTANCE - MIN_SPAWN_DISTANCE);
+        float angle = static_cast<float>(i) * (360.0f/collectiblesRemaining);
+        float distance = BASE_DISTANCE + (rand() % 200);
 
-        int x = playerPos.x + static_cast<int>(cos(angle) * distance);
-        int y = playerPos.y + static_cast<int>(sin(angle) * distance);
+        Vector2f offset = {
+            static_cast<float>(cos(angle * (M_PI/180.0f)) * distance),
+            static_cast<float>(sin(angle * (M_PI/180.0f)) * distance)
+        };
 
-        // Da je v mapi
-        x = std::clamp(x, 0, 20000 - 32);
-        y = std::clamp(y, 0, 20000 - 32);
+        SDL_Rect pos = {
+            static_cast<int>(playerCenter.x + offset.x - 16), // Center collectible
+            static_cast<int>(playerCenter.y + offset.y - 16),
+            32, 32
+        };
 
-        collectibles.push_back({ {x, y, 32, 32}, true });
-        SDL_Log("Spawned collectible %d at %d,%d (Wave %d)",
-               i, x, y, currentWave);
+        // Clamp na meje mape
+        pos.x = std::clamp(pos.x, 0, 20000 - 32);
+        pos.y = std::clamp(pos.y, 0, 20000 - 32);
+
+        collectibles.push_back({pos, true});
     }
 }
 void Game::RenderTimer() {
@@ -543,10 +547,10 @@ void Game::RenderTimer() {
         int digit = c - '0';
         SDL_Rect srcRect = { digit * NUMBER_WIDTH, 0, NUMBER_WIDTH, NUMBER_HEIGHT };
         SDL_Rect destRect = {
-            startX + (digitWidth + spacing) * i,
-            startY,
-            digitWidth,
-            digitHeight
+            static_cast<int>(startX + (digitWidth + spacing) * static_cast<int>(i)),
+            static_cast<int>(startY),
+            static_cast<int>(digitWidth),
+            static_cast<int>(digitHeight)
         };
         SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
     }
@@ -1100,7 +1104,7 @@ void Game::ReloadAllTextures() {
     texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet");
     texture_manager->LoadTexture("assets/textures/ui/numbers.png", "numbers");
     texture_manager->LoadTexture("assets/textures/ui/wave.png", "wave_text");
-
+    texture_manager->LoadTexture("assets/textures/collectible.png", "collectible");
 
     texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu");
     texture_manager->LoadTexture("assets/textures/ui/upgrade_fire.png", "upgrade_fire_rate");
@@ -1120,6 +1124,7 @@ void Game::ReloadAllTextures() {
     menuBackground = texture_manager->GetTexture("menu_bg");
     buttonTexture = texture_manager->GetTexture("button");
     buttonHoverTexture = texture_manager->GetTexture("button_hover");
+    collectibleTexture = texture_manager->GetTexture("collectible");
 
 
     player->ReloadTexture(*texture_manager, "player");

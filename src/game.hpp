@@ -14,11 +14,15 @@
 class Enemy;
 class Projectile;
 
-enum class GameState { MAIN_MENU, PLAYING, EXIT };
+enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT };
 
 struct Collectible {
     SDL_Rect rect;
     bool active;
+};
+struct MenuButton {
+    std::string id;
+    SDL_Rect rect;
 };
 
 class Game {
@@ -81,12 +85,12 @@ private:
     SDL_Texture* menuBackground = nullptr;
     SDL_Texture* buttonTexture = nullptr;
     SDL_Texture* buttonHoverTexture = nullptr;
-    std::vector<SDL_Rect> menuButtons;
+    std::vector<MenuButton> menuButtons;
     int hoveredButton = -1;
-    const std::vector<std::pair<int, int>> resolutions = {
-        {2560, 1440},  // 1440p
-        {1920, 1080},  // 1080p
-        {1280, 720}    // 720p
+    std::vector<std::pair<int, int>> resolutions = {
+        {1280, 720},
+        {1920, 1080},
+        {2560, 1440}
     };
     int windowWidth = 1920;
     int windowHeight = 1080;

@@ -51,15 +51,74 @@ void Game::Init(const char* title, bool fullscreen) {
                     exit(1);
                 }
             }
-            if (!texture_manager->HasTexture("button")) {
-                if (!texture_manager->LoadTexture("assets/textures/menu/button.png", "button")) {
+            if (!texture_manager->HasTexture("play_btn")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/play_btn.png", "play_btn")) {
                     SDL_Log("NI menu texture!");
                     exit(1);
                 }
             }
-            if (!texture_manager->HasTexture("button_hover")) {
-                if (!texture_manager->LoadTexture("assets/textures/menu/button_hover.png", "button_hover")) {
+            if (!texture_manager->HasTexture("play_btn_hover")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/play_btn_hover.png", "play_btn_hover")) {
                     SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("settings_btn")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/settings_btn.png", "settings_btn")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("settings_btn_hove")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/settings_btn_hover.png", "settings_btn_hover")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("quit_btn")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/quit_btn.png", "quit_btn")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("quit_btn_hover")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/quit_btn_hover.png", "quit_btn_hover")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("back_btn")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/back_btn.png", "back_btn")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("back_btn_hover")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/back_btn_hover.png", "back_btn_hover")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+
+            std::vector<std::pair<int, int>> resolutions = {
+                {1280, 720},
+                {1920, 1080},
+                {2560, 1440}
+            };
+            for (const auto& res : resolutions) {
+                std::string resStr = std::to_string(res.first) + "x" + std::to_string(res.second);
+
+                // Normal
+                std::string normalName = "resolution_btn_" + resStr;
+                if (!texture_manager->LoadTexture(("assets/textures/menu/" + normalName + ".png").c_str(), normalName)) {
+                    SDL_Log("FAILED TO LOAD: %s", normalName.c_str());
+                    exit(1);
+                }
+
+                // Hover
+                std::string hoverName = "resolution_btn_hover_" + resStr;
+                if (!texture_manager->LoadTexture(("assets/textures/menu/" + hoverName + ".png").c_str(), hoverName)) {
+                    SDL_Log("FAILED TO LOAD: %s", hoverName.c_str());
                     exit(1);
                 }
             }
@@ -128,7 +187,7 @@ void Game::Init(const char* title, bool fullscreen) {
                 }
             }
             if (!texture_manager->HasTexture("collectible")) {
-                if(!texture_manager->LoadTexture("assets/textures/collectible.png", "collectible")) {
+                if(!texture_manager->LoadTexture("assets/textures/collectible2.png", "collectible")) {
                     SDL_Log("Missing collectible texture!");
                     exit(1);
                 }
@@ -204,16 +263,14 @@ void Game::HandleEvents() {
                 break;
 
             case SDL_MOUSEMOTION:
-                if (currentState == GameState::MAIN_MENU) {
-                    UpdateButtonHover(event.motion.x, event.motion.y);
-                }
-                break;
+                UpdateButtonHover(event.motion.x, event.motion.y);
+            break;
 
             case SDL_MOUSEBUTTONDOWN:
-                if (currentState == GameState::MAIN_MENU && event.button.button == SDL_BUTTON_LEFT) {
+                if (event.button.button == SDL_BUTTON_LEFT) {
                     HandleMenuClick(event.button.x, event.button.y);
                 }
-                break;
+            break;
 
             case SDL_KEYDOWN:
                 if(gameOver && event.key.keysym.sym == SDLK_r) {
@@ -253,7 +310,10 @@ void Game::HandleEvents() {
 }
 
 void Game::Update(float deltaTime) {
-    if (gameOver || !player->IsAlive()) {return;}
+    if (currentState != GameState::PLAYING) {
+        return;
+    }
+    if (gameOver || !player->IsAlive()) return;
     if (isChoosingUpgrade) return;
 
     // Updajtanje dmg cooldowna
@@ -311,14 +371,41 @@ void Game::Render() {
 
 
     if(currentState == GameState::MAIN_MENU) {
-        // Render menu
         SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
-        // Render buttons
         for(size_t i = 0; i < menuButtons.size(); i++) {
-            SDL_Texture* tex = (hoveredButton == static_cast<int>(i))
-                ? buttonHoverTexture : buttonTexture;
-            SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i]);
+            std::string texName = menuButtons[i].id + "_btn"; // String go brrrrrrrr
+            if(hoveredButton == static_cast<int>(i)) {
+                texName += "_hover";
+            }
+            SDL_Texture* tex = texture_manager->GetTexture(texName);
+            SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i].rect);
+        }
+    }
+    else if(currentState == GameState::SETTINGS) {
+        SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
+
+        for (size_t i = 0; i < menuButtons.size(); i++) {
+            std::string texName;
+
+            if (menuButtons[i].id == "resolution") {
+                auto res = resolutions[i];
+                std::string resStr = std::to_string(res.first) + "x" + std::to_string(res.second);
+                texName = (hoveredButton == static_cast<int>(i))
+                    ? "resolution_btn_hover_" + resStr
+                    : "resolution_btn_" + resStr;
+            } else {
+                // Back + ostalo
+                texName = menuButtons[i].id + "_btn";
+                if (hoveredButton == static_cast<int>(i)) {
+                    texName += "_hover";
+                }
+            }
+
+            SDL_Texture* tex = texture_manager->GetTexture(texName);
+            if (tex) {
+                SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i].rect);
+            }
         }
     }
     else if (currentState == GameState::PLAYING) {
@@ -630,37 +717,44 @@ void Game::SpawnEnemy() {
 void Game::RestartGame() {
     // Reset player
     delete player;
-    player = new GameObject(*texture_manager, "player",PLAYER_SPAWN_X,PLAYER_SPAWN_Y,playerWidth,playerHeight,frameWidth,frameHeight,totalFrames,animationSpeed);
+    player = new GameObject(*texture_manager, "player",
+                           PLAYER_SPAWN_X, PLAYER_SPAWN_Y,
+                           playerWidth, playerHeight,
+                           frameWidth, frameHeight,
+                           totalFrames, animationSpeed);
 
-    // Reset enemy
+    // Reset enemies
     enemies.clear();
     for (auto& e : enemyPool) {
-        e->SetTarget(player);
-        e->Revive(-1000, -1000, 1); // Skri namesto delete
+        e->Revive(-1000, -1000, 1);
     }
 
-    // Reset camera + state + wave
-    camera->Reset(PLAYER_SPAWN_X + playerWidth/2, PLAYER_SPAWN_Y + playerHeight/2);
-    gameOver = false;
+    // Reset game state
     currentWave = 0;
+    waveTimer = 0.0f;
+    waveTimeRemaining = WAVE_TIME_LIMIT;
     betweenWaves = true;
+    gameOver = false;
+    collectibles.clear();
+    collectiblesRemaining = 0;
+
+    // Reset camera
+    camera->Reset(PLAYER_SPAWN_X + playerWidth/2,
+                PLAYER_SPAWN_Y + playerHeight/2);
 }
 void Game::StartNewWave() {
-    currentWave++;
+    currentWave = 1; // Start wave 1
     betweenWaves = false;
     waveTimeRemaining = WAVE_TIME_LIMIT;
 
-    // Clear enemijev za prejšni wave
+    // Clear enemy
     for (auto& e : enemyPool) {
         e->Revive(-1000, -1000, 1);
     }
     enemies.clear();
 
-    // Spawn nov collectible
+    // Spawn new colectible
     SpawnCollectibles();
-
-    SDL_Log("Starting wave %d with %d collectibles",
-           currentWave, collectiblesRemaining);
 }
 void Game::RenderWaveNumber() {
     if(!waveTextTexture || !numbersTexture) return;
@@ -1000,84 +1094,140 @@ void Game::CreateMenuLayout() {
     const int BUTTON_WIDTH = ScaleX(400);
     const int BUTTON_HEIGHT = ScaleY(100);
     const int SPACING = ScaleY(50);
+    const int START_Y = ScaleY(300);
 
-    int startY = windowHeight/2 - (resolutions.size() * (BUTTON_HEIGHT + SPACING))/2;
+    if(currentState == GameState::MAIN_MENU) {
+        // Play Button
+        menuButtons.push_back({
+            "play",
+            {windowWidth/2 - BUTTON_WIDTH/2, START_Y, BUTTON_WIDTH, BUTTON_HEIGHT}
+        });
 
-    for(size_t i = 0; i < resolutions.size(); i++) {
-        SDL_Rect btnRect = {
-            windowWidth/2 - BUTTON_WIDTH/2,
-            startY + static_cast<int>(i) * (BUTTON_HEIGHT + SPACING),
-            BUTTON_WIDTH,
-            BUTTON_HEIGHT
-        };
-        menuButtons.push_back(btnRect);
+        // Settings Button
+        menuButtons.push_back({
+            "settings",
+            {windowWidth/2 - BUTTON_WIDTH/2, START_Y + BUTTON_HEIGHT + SPACING, BUTTON_WIDTH, BUTTON_HEIGHT}
+        });
+
+        // Quit Button
+        menuButtons.push_back({
+            "quit",
+            {windowWidth/2 - BUTTON_WIDTH/2, START_Y + 2*(BUTTON_HEIGHT + SPACING), BUTTON_WIDTH, BUTTON_HEIGHT}
+        });
     }
+    else if(currentState == GameState::SETTINGS) {
+        menuButtons.clear();
 
-    // Exit button
-    SDL_Rect exitBtn = {
-        windowWidth/2 - BUTTON_WIDTH/2,
-        startY + static_cast<int>(resolutions.size()) * (BUTTON_HEIGHT + SPACING),
-        BUTTON_WIDTH,
-        BUTTON_HEIGHT
-    };
-    menuButtons.push_back(exitBtn);
+        // Resolution buttons
+        for (size_t i = 0; i < resolutions.size(); i++) {
+            menuButtons.push_back({
+                "resolution", // ID to identify resolution buttons
+                {
+                    windowWidth/2 - BUTTON_WIDTH/2,
+                    START_Y + static_cast<int>(i) * (BUTTON_HEIGHT + SPACING),
+                    BUTTON_WIDTH,
+                    BUTTON_HEIGHT
+                }
+            });
+        }
+
+        // Back button
+        menuButtons.push_back({
+            "back",
+            {
+                windowWidth/2 - BUTTON_WIDTH/2,
+                START_Y + static_cast<int>(resolutions.size()) * (BUTTON_HEIGHT + SPACING),
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT
+            }
+        });
+    }
 }
 
 void Game::UpdateButtonHover(int mouseX, int mouseY) {
     hoveredButton = -1;
-    SDL_Point mousePos = {mouseX, mouseY};
+    int winW, winH;
+    SDL_GetWindowSize(window, &winW, &winH);
+    float scaleX = static_cast<float>(winW) / windowWidth;
+    float scaleY = static_cast<float>(winH) / windowHeight;
+    SDL_Point mousePos = {
+        static_cast<int>(mouseX / scaleX),
+        static_cast<int>(mouseY / scaleY)
+    };
     for(size_t i = 0; i < menuButtons.size(); i++) {
-        if(SDL_PointInRect(&mousePos, &menuButtons[i])) {
-            hoveredButton = static_cast<int>(i);
-            break;
+            if(SDL_PointInRect(&mousePos, &menuButtons[i].rect)) {
+                hoveredButton = static_cast<int>(i);
+                break;
+            }
         }
     }
-}
 
 void Game::HandleMenuClick(int mouseX, int mouseY) {
     SDL_Point mousePos = {mouseX, mouseY};
-    for(size_t i = 0; i < menuButtons.size(); i++) {
-        if(SDL_PointInRect(&mousePos, &menuButtons[i])) {
-            if(i < resolutions.size()) {
-                ChangeResolution(resolutions[i].first, resolutions[i].second);
-            }
-            else if(i == menuButtons.size()-1) {
-                isRunning = false;
-            }
 
-            if(i != menuButtons.size()-1) {
-                currentState = GameState::PLAYING;
-                CreateMenuLayout();
+    for(size_t i = 0; i < menuButtons.size(); i++) {
+        if(SDL_PointInRect(&mousePos, &menuButtons[i].rect)) {
+            if(currentState == GameState::MAIN_MENU) {
+                if (menuButtons[i].id == "play") {
+                    RestartGame();
+                    currentState = GameState::PLAYING;
+                    StartNewWave();
+                }
+                else if(menuButtons[i].id == "settings") {
+                    currentState = GameState::SETTINGS;
+                    CreateMenuLayout();
+                }
+                else if(menuButtons[i].id == "quit") {
+                    isRunning = false;
+                }
+            }
+            else if(currentState == GameState::SETTINGS) {
+                if (menuButtons[i].id == "resolution") {
+                    auto selectedRes = resolutions[i];
+                    ChangeResolution(selectedRes.first, selectedRes.second);
+                }
+                else if(menuButtons[i].id == "back") {
+                    currentState = GameState::MAIN_MENU;
+                    CreateMenuLayout();
+                }
             }
         }
     }
 }
 
 void Game::ChangeResolution(int width, int height) {
+    // Destroy old renderer and textures
+    SDL_DestroyRenderer(renderer);
+    texture_manager->ClearTextures();
+
+    // Update window dimensions
     windowWidth = width;
     windowHeight = height;
     SDL_SetWindowSize(window, width, height);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
-
-    SDL_DestroyRenderer(renderer);
+    // Recreate renderer
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
-
     texture_manager->UpdateRenderer(renderer);
+
+    // Reload ALL textures
     ReloadAllTextures();
 
+    // Recalculate button positions
+    CreateMenuLayout();
 
-    camera->UpdateDimensions(width, height);
-    Vector2f playerCenter = player->GetCenterPosition();
-    camera->Reset(playerCenter.x, playerCenter.y);
-
+    // Reset camera and tilemap
+    delete camera;
+    camera = new Camera(windowWidth, windowHeight);
+    camera->SetMapBounds(20000, 20000);
 
     delete tileMap;
     tileMap = new TileMap(*texture_manager, *camera);
 
-
-    CreateMenuLayout();
+    // Force immediate redraw
+    SDL_RenderClear(renderer);
+    Render();
+    SDL_RenderPresent(renderer);
 }
 void Game::ReloadAllTextures() {
 
@@ -1111,6 +1261,24 @@ void Game::ReloadAllTextures() {
     texture_manager->LoadTexture("assets/textures/ui/upgrade_damage.png", "upgrade_damage");
     texture_manager->LoadTexture("assets/textures/ui/upgrade_range.png", "upgrade_range");
     texture_manager->LoadTexture("assets/textures/ui/arrow.png", "arrow");
+
+    //Menu
+    texture_manager->LoadTexture("assets/textures/menu/background.png", "menu_bg");
+    texture_manager->LoadTexture("assets/textures/menu/play_btn.png", "play_btn");
+    texture_manager->LoadTexture("assets/textures/menu/play_btn_hover.png", "play_btn_hover");
+    texture_manager->LoadTexture("assets/textures/menu/settings_btn.png", "settings_btn");
+    texture_manager->LoadTexture("assets/textures/menu/settings_btn_hover.png", "settings_btn_hover");
+    texture_manager->LoadTexture("assets/textures/menu/back_btn.png", "back_btn");
+    texture_manager->LoadTexture("assets/textures/menu/back_btn_hover.png", "back_btn_hover");
+    texture_manager->LoadTexture("assets/textures/menu/quit_btn.png", "quit_btn");
+    texture_manager->LoadTexture("assets/textures/menu/quit_btn_hover.png", "quit_btn_hover");
+
+    // Resolution Buttons
+    for (const auto& res : resolutions) {
+        std::string resStr = std::to_string(res.first) + "x" + std::to_string(res.second);
+        texture_manager->LoadTexture("assets/textures/menu/resolution_btn_" + resStr + ".png","resolution_btn_" + resStr);
+        texture_manager->LoadTexture("assets/textures/menu/resolution_btn_hover_" + resStr + ".png","resolution_btn_hover_" + resStr);
+    }
 
 
     upgradeMenuTexture = texture_manager->GetTexture("upgrade_menu");

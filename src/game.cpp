@@ -154,7 +154,7 @@ void Game::Init(const char* title, bool fullscreen) {
             }
             // Game Over
             if (!texture_manager->HasTexture("game_over")) {
-                if(!texture_manager->LoadTexture("assets/textures/Screens/GameOver.png", "game_over")) {
+                if(!texture_manager->LoadTexture("assets/textures/ui/GameOver.png", "game_over")) {
                     SDL_Log("MANJKA GAME OVER TEKSTURA!");
                     exit(1);
                 }
@@ -1249,7 +1249,7 @@ void Game::ReloadAllTextures() {
     texture_manager->LoadTexture("assets/textures/Enemys/Enemy3.png", "enemy3");
 
 
-    texture_manager->LoadTexture("assets/textures/Screens/GameOver.png", "game_over");
+    texture_manager->LoadTexture("assets/textures/ui/GameOver.png", "game_over");
     texture_manager->LoadTexture("assets/textures/ui/Heart.png", "heart");
     texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet");
     texture_manager->LoadTexture("assets/textures/ui/numbers.png", "numbers");

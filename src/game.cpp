@@ -18,6 +18,7 @@ Game::~Game() {
     delete texture_manager;
     delete camera;
     delete tileMap;
+    delete ally;
     for (auto& p : projectiles) {
         delete p;
     }
@@ -129,6 +130,14 @@ void Game::Init(const char* title, bool fullscreen) {
                     exit(1);
                 }
             }
+            // Ally
+            if (!texture_manager->HasTexture("ally")) {
+                if(!texture_manager->LoadTexture("assets/textures/Player/ally.png", "ally")) {
+                    SDL_Log("Failed to load ally texture!");
+                    exit(1);
+                }
+            }
+
             // Water
             if (!texture_manager->HasTexture("water")) {
                 texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
@@ -234,6 +243,7 @@ void Game::Init(const char* title, bool fullscreen) {
 
             // Player ustvarjen
             player = new GameObject(*texture_manager,"player",PLAYER_SPAWN_X, PLAYER_SPAWN_Y,playerWidth, playerHeight,frameWidth, frameHeight,totalFrames, animationSpeed);
+            ally = new Ally(*texture_manager, "ally", PLAYER_SPAWN_X + 100, PLAYER_SPAWN_Y);
             // Komponente
             camera = new Camera(1920, 1080);
             camera->Reset(PLAYER_SPAWN_X + playerWidth/2, PLAYER_SPAWN_Y + playerHeight/2);
@@ -320,6 +330,41 @@ void Game::Update(float deltaTime) {
     if (player->GetDamageCooldown() > 0.0f) {
         player->SetDamageCooldown(player->GetDamageCooldown() - deltaTime);
     }
+    if (ally && ally->IsAlive()) {
+        // Following player
+        const Vector2f targetPos = player->GetCenterPosition() + Vector2f(50, 50);
+        const Vector2f allyPos = ally->GetCenterPosition();
+
+        // Movement
+        const Vector2f direction = targetPos - allyPos;
+        const float distance = direction.x * direction.x + direction.y * direction.y;
+
+        if (distance > 100.0f) {
+            const float speed = 200.0f;
+            const float invDistance = 1.0f / std::sqrt(distance);
+            ally->SetVelocity(direction.x * invDistance * speed, direction.y * invDistance * speed);
+        } else {
+            ally->SetVelocity(0, 0);
+        }
+
+        // Shooting
+        static float fireTimer = 0.0f;
+        fireTimer += deltaTime;
+
+        if (Enemy* nearest = FindNearestEnemyToAlly()) {
+            const float attackRange = 500.0f;
+            const float sqrRange = attackRange * attackRange;
+            const Vector2f enemyPos = nearest->GetCenterPosition();
+
+            if ((enemyPos - allyPos).LengthSquared() <= sqrRange &&
+                fireTimer >= 1.0f/1.5f) {
+                ShootAllyProjectile(nearest);
+                fireTimer = 0.0f;
+                }
+        }
+
+        ally->Update(deltaTime);
+    }
 
     // Updati za objekte
     UpdateWave(deltaTime);
@@ -357,6 +402,35 @@ void Game::Update(float deltaTime) {
         gameOver = true;
     }
 
+}
+void Game::ShootAllyProjectile(Enemy* target) {
+    Vector2f startPos = ally->GetCenterPosition();
+    projectiles.push_back(new Projectile(
+        *texture_manager,
+        target,
+        startPos.x - 8,
+        startPos.y - 8,
+        600.0f,
+        30,
+        500.0f
+    ));
+}
+Enemy* Game::FindNearestEnemyToAlly() {
+    if (!ally) return nullptr;
+    Vector2f allyPos = ally->GetCenterPosition();
+    Enemy* nearest = nullptr;
+    float minDist = FLT_MAX;
+
+    for (auto enemy : enemies) {
+        if (!enemy->IsAlive()) continue;
+        Vector2f enemyPos = enemy->GetCenterPosition();
+        float dist = Vector2f::Distance(allyPos, enemyPos);
+        if (dist < minDist) {
+            minDist = dist;
+            nearest = enemy;
+        }
+    }
+    return nearest;
 }
 // Collisoni
 bool Game::CheckCollision(const SDL_Rect& a, const SDL_Rect& b) {
@@ -429,6 +503,10 @@ void Game::Render() {
             }
 
             player->Render(renderer, cameraViewport);
+
+            if (ally && ally->IsAlive()) {
+                ally->Render(renderer, cameraViewport);
+            }
 
             for(auto& enemy : enemies) {
                 enemy->Render(renderer, cameraViewport);
@@ -674,6 +752,7 @@ bool Game::Running() {
 void Game::Clean() {
     delete player;
     delete texture_manager;
+    delete ally;
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
@@ -1240,6 +1319,7 @@ void Game::ReloadAllTextures() {
 
 
     texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");
+    texture_manager->LoadTexture("assets/textures/Player/ally.png", "ally");
 
 
     texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");

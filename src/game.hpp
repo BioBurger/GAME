@@ -9,10 +9,12 @@
 #include "TileMap.hpp"
 #include "Projectile.hpp"
 #include "Enemy.hpp"
+#include "Ally.hpp"
 #ifndef Game_h
 #define Game_h
 class Enemy;
 class Projectile;
+class Ally;
 
 enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT };
 
@@ -27,6 +29,7 @@ struct MenuButton {
 
 class Game {
 private:
+    Ally* ally;
     GameState currentState = GameState::MAIN_MENU;
     Texture_Manager *texture_manager;
     bool isRunning;
@@ -144,6 +147,8 @@ public:
     void ReloadAllTextures();
     void SpawnCollectibles();
     void RenderTimer();
+    Enemy* FindNearestEnemyToAlly();
+    void ShootAllyProjectile(Enemy* target);
 };
 
 #endif //GAME_H

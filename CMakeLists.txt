@@ -32,6 +32,8 @@ add_executable(GAME src/main.cpp
         src/Enemy.cpp
         src/Projectile.hpp
         src/Projectile.cpp
-        src/Vector2f.hpp)
+        src/Vector2f.hpp
+        src/Ally.hpp
+        src/Ally.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES})

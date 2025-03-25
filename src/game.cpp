@@ -1376,9 +1376,12 @@ void Game::ReloadAllTextures() {
 
 
     player->ReloadTexture(*texture_manager, "player");
+    if (ally) {
+        ally->ReloadTexture(*texture_manager, "ally");
+    }
 
     for (auto& enemy : enemyPool) {
-        enemy->ReloadTexture(*texture_manager, "enemy1"); // Base enemy type
+        enemy->ReloadTexture(*texture_manager, "enemy1"); // Base enemy
     }
 
     for (auto& projectile : projectiles) {

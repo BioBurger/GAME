@@ -23,6 +23,7 @@ GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name
     currentDirection = Direction::DOWN;
     flipType = SDL_FLIP_NONE;
     animationRow = 0;
+
 }
 
 GameObject::~GameObject() {}

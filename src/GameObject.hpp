@@ -34,6 +34,7 @@ public:
     Vector2f GetCenterPosition() const;
     Vector2f position;
     void ReloadTexture(Texture_Manager& tm, const std::string& textureID);
+    void SetHealth(int newHealth) { health = newHealth; }
 protected:
     int health;
     int maxHealth;

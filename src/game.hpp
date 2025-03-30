@@ -2,6 +2,8 @@
 #include <ostream>
 #include <stdio.h>
 #include <SDL_image.h>
+#include <shlobj.h>
+#include <fstream>
 #include "GameObject.hpp"
 #include "SDL2/SDL.h"
 #include "Texture_Manager.hpp"
@@ -132,7 +134,7 @@ public:
     void RestartGame();
     bool IsGameOver() const { return gameOver; }
     void RenderWaveNumber();
-    void StartNewWave();
+    void StartNewWave(int wave = -1);
     Enemy* GetPooledEnemy();
     void InitializeEnemyPool(int initialSize);
     void ProcessInput();
@@ -149,6 +151,19 @@ public:
     void RenderTimer();
     Enemy* FindNearestEnemyToAlly();
     void ShootAllyProjectile(Enemy* target);
+    void SaveGame();
+    bool LoadGame();
+    std::string GetSavePath() {
+        char path[MAX_PATH];
+        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, path))) {
+            std::string fullPath = std::string(path) + "\\GAME\\";
+            if (!CreateDirectoryA(fullPath.c_str(), NULL) && (GetLastError() != ERROR_ALREADY_EXISTS)) {
+                return "savegame.dat";
+            }
+            return fullPath + "savegame.dat";
+        }
+        return "savegame.dat";
+    }
 };
 
 #endif //GAME_H

@@ -70,6 +70,16 @@ void Game::Init(const char* title, bool fullscreen) {
                     exit(1);
                 }
             }
+            if (!texture_manager->HasTexture("load_btn")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/load_btn.png", "load_btn")) {
+                    SDL_Log("Missing load button texture!");
+                }
+            }
+            if (!texture_manager->HasTexture("load_btn_hover")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/load_btn_hover.png", "load_btn_hover")) {
+                    SDL_Log("Missing load button hover texture!");
+                }
+            }
             if (!texture_manager->HasTexture("settings_btn_hove")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/settings_btn_hover.png", "settings_btn_hover")) {
                     SDL_Log("NI menu texture!");
@@ -274,13 +284,13 @@ void Game::HandleEvents() {
 
             case SDL_MOUSEMOTION:
                 UpdateButtonHover(event.motion.x, event.motion.y);
-            break;
+                break;
 
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT) {
                     HandleMenuClick(event.button.x, event.button.y);
                 }
-            break;
+                break;
 
             case SDL_KEYDOWN:
                 if(gameOver && event.key.keysym.sym == SDLK_r) {
@@ -306,6 +316,22 @@ void Game::HandleEvents() {
                         break;
                     case SDLK_F2:
                         StartNewWave();
+                        break;
+                    case SDLK_F5:  // Save game
+                        if (currentState == GameState::PLAYING) {
+                            SaveGame();
+                            SDL_Log("Game saved successfully!");
+                        }
+                        break;
+                    case SDLK_F6:  // Load game
+                        if (currentState == GameState::MAIN_MENU || currentState == GameState::PLAYING) {
+                            if (LoadGame()) {
+                                SDL_Log("Game loaded successfully!");
+                                if (currentState == GameState::MAIN_MENU) {
+                                    currentState = GameState::PLAYING;
+                                }
+                            }
+                        }
                         break;
                     case SDLK_KP_PLUS:
                         player->SetSpeedMultiplier(1.5f);
@@ -756,6 +782,9 @@ void Game::Clean() {
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
+    if(currentState == GameState::PLAYING) {
+        SaveGame();
+    }
     std::cout << "Game cleaned" << std::endl;
 }
 
@@ -807,6 +836,10 @@ void Game::RestartGame() {
     for (auto& e : enemyPool) {
         e->Revive(-1000, -1000, 1);
     }
+    // Reset upgrades
+    FIRE_RATE = 1.0f;
+    PROJECTILE_DAMAGE = 50;
+    PISTOL_RANGE = 700.0f;
 
     // Reset game state
     currentWave = 0;
@@ -821,19 +854,28 @@ void Game::RestartGame() {
     camera->Reset(PLAYER_SPAWN_X + playerWidth/2,
                 PLAYER_SPAWN_Y + playerHeight/2);
 }
-void Game::StartNewWave() {
-    currentWave = 1; // Start wave 1
+void Game::StartNewWave(int wave) {
+    if (wave == -1) currentWave++;
+    else currentWave = wave;
+
     betweenWaves = false;
     waveTimeRemaining = WAVE_TIME_LIMIT;
 
-    // Clear enemy
-    for (auto& e : enemyPool) {
-        e->Revive(-1000, -1000, 1);
+    // Only clear enemies if starting new wave
+    if (wave == -1) {
+        for (auto& e : enemyPool) {
+            e->Revive(-1000, -1000, 1);
+        }
+        enemies.clear();
     }
-    enemies.clear();
 
-    // Spawn new colectible
-    SpawnCollectibles();
+    // Only spawn new collectibles if new wave
+    if (wave == -1) {
+        SpawnCollectibles();
+    }
+
+    SDL_Log("Wave %d %s", currentWave,
+          (wave == -1) ? "started" : "reloaded");
 }
 void Game::RenderWaveNumber() {
     if(!waveTextTexture || !numbersTexture) return;
@@ -1182,16 +1224,28 @@ void Game::CreateMenuLayout() {
             {windowWidth/2 - BUTTON_WIDTH/2, START_Y, BUTTON_WIDTH, BUTTON_HEIGHT}
         });
 
+        // Load Button
+        menuButtons.push_back({
+            "load",
+            {windowWidth/2 - BUTTON_WIDTH/2,
+             START_Y + 1*(BUTTON_HEIGHT + SPACING),
+             BUTTON_WIDTH, BUTTON_HEIGHT}
+        });
+
         // Settings Button
         menuButtons.push_back({
             "settings",
-            {windowWidth/2 - BUTTON_WIDTH/2, START_Y + BUTTON_HEIGHT + SPACING, BUTTON_WIDTH, BUTTON_HEIGHT}
+            {windowWidth/2 - BUTTON_WIDTH/2,
+             START_Y + 2*(BUTTON_HEIGHT + SPACING),
+             BUTTON_WIDTH, BUTTON_HEIGHT}
         });
 
         // Quit Button
         menuButtons.push_back({
             "quit",
-            {windowWidth/2 - BUTTON_WIDTH/2, START_Y + 2*(BUTTON_HEIGHT + SPACING), BUTTON_WIDTH, BUTTON_HEIGHT}
+            {windowWidth/2 - BUTTON_WIDTH/2,
+             START_Y + 3*(BUTTON_HEIGHT + SPACING),
+             BUTTON_WIDTH, BUTTON_HEIGHT}
         });
     }
     else if(currentState == GameState::SETTINGS) {
@@ -1200,7 +1254,7 @@ void Game::CreateMenuLayout() {
         // Resolution buttons
         for (size_t i = 0; i < resolutions.size(); i++) {
             menuButtons.push_back({
-                "resolution", // ID to identify resolution buttons
+                "resolution",
                 {
                     windowWidth/2 - BUTTON_WIDTH/2,
                     START_Y + static_cast<int>(i) * (BUTTON_HEIGHT + SPACING),
@@ -1259,8 +1313,24 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
                 else if(menuButtons[i].id == "quit") {
                     isRunning = false;
                 }
+                else if(menuButtons[i].id == "load") {
+                    if (LoadGame()) {
+                        currentState = GameState::PLAYING;
+
+
+                        const Uint8* keystate = SDL_GetKeyboardState(NULL);
+                        SDL_PumpEvents();
+
+                        // Reset player animation
+                        player->SetVelocity(0, 0);
+                        player->SetDirection(GameObject::Direction::DOWN);
+
+                        SDL_Log("Successfully entered playing state after load");
+                    }
+                }
             }
-            else if(currentState == GameState::SETTINGS) {
+            }
+                else if(currentState == GameState::SETTINGS) {
                 if (menuButtons[i].id == "resolution") {
                     auto selectedRes = resolutions[i];
                     ChangeResolution(selectedRes.first, selectedRes.second);
@@ -1272,7 +1342,7 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
             }
         }
     }
-}
+
 
 void Game::ChangeResolution(int width, int height) {
     // Destroy old renderer and textures
@@ -1308,6 +1378,168 @@ void Game::ChangeResolution(int width, int height) {
     Render();
     SDL_RenderPresent(renderer);
 }
+void Game::SaveGame() {
+    std::string savePath = GetSavePath();
+    SDL_Log("Saving to: %s", savePath.c_str());
+    std::ofstream saveFile(savePath, std::ios::binary);
+    if (!saveFile.is_open()) {
+        SDL_Log("Failed to save game! Couldn't open file");
+        return;
+    }
+    if (!saveFile) {
+        SDL_Log("Failed to save game!");
+        return;
+    }
+
+    // Save player data
+    Vector2f playerPos = player->GetCenterPosition();
+    saveFile.write(reinterpret_cast<const char*>(&playerPos.x), sizeof(float));
+    saveFile.write(reinterpret_cast<const char*>(&playerPos.y), sizeof(float));
+    int health = player->GetHealth();
+    saveFile.write(reinterpret_cast<const char*>(&health), sizeof(int));
+
+    // Save current wave
+    saveFile.write(reinterpret_cast<const char*>(&currentWave), sizeof(int));
+
+    // Save collectibles
+    int collectibleCount = collectibles.size();
+    saveFile.write(reinterpret_cast<const char*>(&collectibleCount), sizeof(int));
+    for (const auto& c : collectibles) {
+        saveFile.write(reinterpret_cast<const char*>(&c.rect.x), sizeof(int));
+        saveFile.write(reinterpret_cast<const char*>(&c.rect.y), sizeof(int));
+        saveFile.write(reinterpret_cast<const char*>(&c.active), sizeof(bool));
+    }
+
+    // Save upgrades
+    saveFile.write(reinterpret_cast<const char*>(&PISTOL_RANGE), sizeof(float));
+    saveFile.write(reinterpret_cast<const char*>(&FIRE_RATE), sizeof(float));
+    saveFile.write(reinterpret_cast<const char*>(&PROJECTILE_DAMAGE), sizeof(int));
+
+    saveFile.close();
+    if (saveFile.fail()) {
+        SDL_Log("Error occurred during saving!");
+    }
+    saveFile.close();
+    SDL_Log("Game saved successfully to: %s", savePath.c_str());
+}
+
+bool Game::LoadGame() {
+    std::string savePath = GetSavePath();
+    SDL_Log("Attempting to load from: %s", savePath.c_str());
+
+    std::ifstream loadFile(savePath, std::ios::binary);
+    if (!loadFile.is_open()) {
+        SDL_Log("Load failed! File not found: %s", savePath.c_str());
+        return false;
+    }
+
+    // Load player data
+    Vector2f playerPos;
+    loadFile.read(reinterpret_cast<char*>(&playerPos.x), sizeof(float));
+    loadFile.read(reinterpret_cast<char*>(&playerPos.y), sizeof(float));
+    SDL_Log("Loaded player position: %.2f, %.2f", playerPos.x, playerPos.y);
+
+    int health;
+    loadFile.read(reinterpret_cast<char*>(&health), sizeof(int));
+    player->SetHealth(health);
+    SDL_Log("Loaded health: %d", health);
+
+    // Load current wave
+    loadFile.read(reinterpret_cast<char*>(&currentWave), sizeof(int));
+    SDL_Log("Loaded current wave: %d", currentWave);
+
+    // Load collectibles
+    int collectibleCount;
+    loadFile.read(reinterpret_cast<char*>(&collectibleCount), sizeof(int));
+    SDL_Log("Loading %d collectibles", collectibleCount);
+
+    collectibles.clear();
+    for (int i = 0; i < collectibleCount; ++i) {
+        SDL_Rect rect;
+        bool active;
+        loadFile.read(reinterpret_cast<char*>(&rect.x), sizeof(int));
+        loadFile.read(reinterpret_cast<char*>(&rect.y), sizeof(int));
+        loadFile.read(reinterpret_cast<char*>(&active), sizeof(bool));
+        rect.w = 32;
+        rect.h = 32;
+        collectibles.push_back({rect, active});
+        SDL_Log("Collectible %d: %s at (%d,%d)",
+               i+1,
+               active ? "active" : "inactive",
+               rect.x,
+               rect.y);
+    }
+    collectiblesRemaining = std::count_if(collectibles.begin(), collectibles.end(),
+        [](const Collectible& c) { return c.active; });
+    SDL_Log("Active collectibles remaining: %d", collectiblesRemaining);
+
+    // Load upgrades
+    loadFile.read(reinterpret_cast<char*>(&PISTOL_RANGE), sizeof(float));
+    loadFile.read(reinterpret_cast<char*>(&FIRE_RATE), sizeof(float));
+    loadFile.read(reinterpret_cast<char*>(&PROJECTILE_DAMAGE), sizeof(int));
+    SDL_Log("Loaded upgrades - Range: %.2f, Fire Rate: %.2f, Damage: %d",
+          PISTOL_RANGE, FIRE_RATE, PROJECTILE_DAMAGE);
+
+    // Reset game state
+    betweenWaves = false;
+    waveTimeRemaining = WAVE_TIME_LIMIT;
+    SDL_Log("Reset wave state - betweenWaves: %d, waveTimeRemaining: %.2f",
+          betweenWaves, waveTimeRemaining);
+
+    // Clear enemies
+    enemies.clear();
+    for (auto& enemy : enemyPool) {
+        enemy->Revive(-1000, -1000, 1);
+    }
+    SDL_Log("Reset enemy pool");
+
+    // Reset camera
+    Vector2f centerPos = player->GetCenterPosition();
+    camera->Reset(centerPos.x, centerPos.y);
+    SDL_Log("Reset camera to player position: %.2f, %.2f", centerPos.x, centerPos.y);
+
+    loadFile.close();
+    betweenWaves = false;
+    gameOver = false;
+    isChoosingUpgrade = false;
+
+    // Reset timers
+    spawnTimer = 0.0f;
+    waveTimer = 0.0f;
+    fireTimer = 0.0f;
+    waveTimeElapsed = 0.0f;
+
+    // Clear enemis and projectiles
+    enemies.clear();
+    for (auto& p : projectiles) {
+        delete p;
+    }
+    projectiles.clear();
+
+    // Reload enemies and projectiles
+    for (auto& enemy : enemyPool) {
+        if (enemy->IsActive()) {
+            enemies.push_back(enemy);
+        }
+    }
+
+    // Force UI refresh
+    cachedWaveNumber = -1;
+    SDL_DestroyTexture(cachedWaveTexture);
+    cachedWaveTexture = nullptr;
+
+    // Reset camera tracking
+    camera->SetTarget(player);
+    Vector2f playerCenter = player->GetCenterPosition();
+    camera->Reset(playerCenter.x, playerCenter.y);
+
+    // Restart wave system
+    StartNewWave(currentWave);
+
+    SDL_Log("Game state fully reset after loading");
+    return true;
+}
+
 void Game::ReloadAllTextures() {
 
     texture_manager->ClearTextures();

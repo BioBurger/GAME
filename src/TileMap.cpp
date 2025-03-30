@@ -57,9 +57,6 @@ void TileMap::Update(float deltaTime) {
 }
 
 void TileMap::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
-    SDL_Log("Camera Viewport: %d,%d %dx%d",
-    cameraViewport.x, cameraViewport.y,
-    cameraViewport.w, cameraViewport.h);
     for (auto& pair : loadedTiles) {
         SDL_Rect tilePos = pair.second->GetPosition();
 

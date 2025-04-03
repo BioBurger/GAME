@@ -3,7 +3,7 @@
 
 class Ally : public GameObject {
 public:
-    Ally(Texture_Manager& manager, const std::string& textureID, int x, int y);
+    Ally(Texture_Manager& tm, const std::string& textureID, int x, int y);
     void Update(float deltaTime) override;
 
 private:

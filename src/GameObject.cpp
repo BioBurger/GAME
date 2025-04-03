@@ -132,9 +132,6 @@ void GameObject::TakeDamage(int damage) {
     health -= damage;
     if (health < 0) health = 0;
 }
-void GameObject::GetHealth(int healAmount) {
-    health = std::min(maxHealth, health + healAmount);
-}
 void GameObject::PlayDeathAnimation() {
     isAnimated = true;
     totalFrames = 1;

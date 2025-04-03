@@ -482,21 +482,21 @@ void Game::Render() {
             SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i].rect);
         }
     }
-    else if(currentState == GameState::SETTINGS) {
+    else if (currentState == GameState::SETTINGS) {
         SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
         for (size_t i = 0; i < menuButtons.size(); i++) {
             std::string texName;
 
-            if (menuButtons[i].id == "resolution") {
-                auto res = resolutions[i];
-                std::string resStr = std::to_string(res.first) + "x" + std::to_string(res.second);
-                texName = (hoveredButton == static_cast<int>(i))
-                    ? "resolution_btn_hover_" + resStr
-                    : "resolution_btn_" + resStr;
+            if (menuButtons[i].id != "back") {
+                // Resolution button: Construct texture name from ID
+                texName = "resolution_btn_" + menuButtons[i].id;
+                if (hoveredButton == static_cast<int>(i)) {
+                    texName = "resolution_btn_hover_" + menuButtons[i].id;
+                }
             } else {
-                // Back + ostalo
-                texName = menuButtons[i].id + "_btn";
+                // Back button
+                texName = "back_btn";
                 if (hoveredButton == static_cast<int>(i)) {
                     texName += "_hover";
                 }
@@ -692,32 +692,34 @@ void Game::Render() {
     SDL_RenderPresent(renderer);
 }
 void Game::SpawnCollectibles() {
-    collectibles.clear();
-    collectiblesRemaining = BASE_COLLECTIBLES + (currentWave * COLLECTIBLES_PER_WAVE);
+    if (!betweenWaves && collectibles.empty()) {
+        collectibles.clear();
+        collectiblesRemaining = BASE_COLLECTIBLES + (currentWave * COLLECTIBLES_PER_WAVE);
 
-    Vector2f playerCenter = player->GetCenterPosition();
-    const int BASE_DISTANCE = 600 + (currentWave * 100);
+        Vector2f playerCenter = player->GetCenterPosition();
+        const int BASE_DISTANCE = 600 + (currentWave * 100);
 
-    for (int i = 0; i < collectiblesRemaining; ++i) {
-        float angle = static_cast<float>(i) * (360.0f/collectiblesRemaining);
-        float distance = BASE_DISTANCE + (rand() % 200);
+        for (int i = 0; i < collectiblesRemaining; ++i) {
+            float angle = static_cast<float>(i) * (360.0f/collectiblesRemaining);
+            float distance = BASE_DISTANCE + (rand() % 200);
 
-        Vector2f offset = {
-            static_cast<float>(cos(angle * (M_PI/180.0f)) * distance),
-            static_cast<float>(sin(angle * (M_PI/180.0f)) * distance)
-        };
+            Vector2f offset = {
+                static_cast<float>(cos(angle * (M_PI/180.0f)) * distance),
+                static_cast<float>(sin(angle * (M_PI/180.0f)) * distance)
+            };
 
-        SDL_Rect pos = {
-            static_cast<int>(playerCenter.x + offset.x - 16), // Center collectible
-            static_cast<int>(playerCenter.y + offset.y - 16),
-            32, 32
-        };
+            SDL_Rect pos = {
+                static_cast<int>(playerCenter.x + offset.x - 16), // Center collectible
+                static_cast<int>(playerCenter.y + offset.y - 16),
+                32, 32
+            };
 
-        // Clamp na meje mape
-        pos.x = std::clamp(pos.x, 0, 20000 - 32);
-        pos.y = std::clamp(pos.y, 0, 20000 - 32);
+            // Clamp na meje mape
+            pos.x = std::clamp(pos.x, 0, 20000 - 32);
+            pos.y = std::clamp(pos.y, 0, 20000 - 32);
 
-        collectibles.push_back({pos, true});
+            collectibles.push_back({pos, true});
+        }
     }
 }
 void Game::RenderTimer() {
@@ -831,6 +833,14 @@ void Game::RestartGame() {
                            frameWidth, frameHeight,
                            totalFrames, animationSpeed);
 
+    // Reset ally position to spawn near the player
+    if (ally) {
+        ally->SetPosition(
+            PLAYER_SPAWN_X + 100,  // Same as initial spawn offset
+            PLAYER_SPAWN_Y
+        );
+    }
+
     // Reset enemies
     enemies.clear();
     for (auto& e : enemyPool) {
@@ -855,13 +865,16 @@ void Game::RestartGame() {
                 PLAYER_SPAWN_Y + playerHeight/2);
 }
 void Game::StartNewWave(int wave) {
-    if (wave == -1) currentWave++;
+    if (wave == -1) {
+        waveTimeRemaining = WAVE_TIME_LIMIT; // If new wave not loaded wave
+        currentWave++;
+    }
     else currentWave = wave;
 
     betweenWaves = false;
     waveTimeRemaining = WAVE_TIME_LIMIT;
 
-    // Only clear enemies if starting new wave
+    // Clear enemy if new round
     if (wave == -1) {
         for (auto& e : enemyPool) {
             e->Revive(-1000, -1000, 1);
@@ -869,7 +882,7 @@ void Game::StartNewWave(int wave) {
         enemies.clear();
     }
 
-    // Only spawn new collectibles if new wave
+    // Spawn collectible if new round
     if (wave == -1) {
         SpawnCollectibles();
     }
@@ -1248,31 +1261,37 @@ void Game::CreateMenuLayout() {
              BUTTON_WIDTH, BUTTON_HEIGHT}
         });
     }
-    else if(currentState == GameState::SETTINGS) {
-        menuButtons.clear();
+    if (currentState == GameState::SETTINGS) {
+        const int BUTTON_SPACING = ScaleY(30);
+        int yPos = ScaleY(300);
 
-        // Resolution buttons
-        for (size_t i = 0; i < resolutions.size(); i++) {
-            menuButtons.push_back({
-                "resolution",
-                {
-                    windowWidth/2 - BUTTON_WIDTH/2,
-                    START_Y + static_cast<int>(i) * (BUTTON_HEIGHT + SPACING),
-                    BUTTON_WIDTH,
-                    BUTTON_HEIGHT
-                }
-            });
+        for (const auto& res : resolutions) {
+            std::string resStr = std::to_string(res.first) + "x" + std::to_string(res.second);
+            std::string texName = "resolution_btn_" + resStr;
+            SDL_Texture* tex = texture_manager->GetTexture(texName);
+            if (tex) {
+                int texWidth, texHeight;
+                SDL_QueryTexture(tex, NULL, NULL, &texWidth, &texHeight);
+                MenuButton btn;
+                btn.id = resStr;
+                btn.rect = {
+                    windowWidth / 2 - texWidth / 2,
+                    yPos,
+                    texWidth,
+                    texHeight
+                };
+                menuButtons.push_back(btn);
+                yPos += texHeight + BUTTON_SPACING;
+            }
         }
 
         // Back button
+        SDL_Texture* backTex = texture_manager->GetTexture("back_btn");
+        int backWidth, backHeight;
+        SDL_QueryTexture(backTex, NULL, NULL, &backWidth, &backHeight);
         menuButtons.push_back({
             "back",
-            {
-                windowWidth/2 - BUTTON_WIDTH/2,
-                START_Y + static_cast<int>(resolutions.size()) * (BUTTON_HEIGHT + SPACING),
-                BUTTON_WIDTH,
-                BUTTON_HEIGHT
-            }
+            {windowWidth / 2 - backWidth / 2, yPos, backWidth, backHeight}
         });
     }
 }
@@ -1281,25 +1300,28 @@ void Game::UpdateButtonHover(int mouseX, int mouseY) {
     hoveredButton = -1;
     int winW, winH;
     SDL_GetWindowSize(window, &winW, &winH);
-    float scaleX = static_cast<float>(winW) / windowWidth;
-    float scaleY = static_cast<float>(winH) / windowHeight;
+    float scaleX = static_cast<float>(windowWidth) / winW;
+    float scaleY = static_cast<float>(windowHeight) / winH;
+
     SDL_Point mousePos = {
-        static_cast<int>(mouseX / scaleX),
-        static_cast<int>(mouseY / scaleY)
+        static_cast<int>(mouseX * scaleX),
+        static_cast<int>(mouseY * scaleY)
     };
-    for(size_t i = 0; i < menuButtons.size(); i++) {
-            if(SDL_PointInRect(&mousePos, &menuButtons[i].rect)) {
-                hoveredButton = static_cast<int>(i);
-                break;
-            }
+
+    for (size_t i = 0; i < menuButtons.size(); i++) {
+        if (SDL_PointInRect(&mousePos, &menuButtons[i].rect)) {
+            hoveredButton = static_cast<int>(i);
+            break;
         }
     }
+}
 
 void Game::HandleMenuClick(int mouseX, int mouseY) {
     SDL_Point mousePos = {mouseX, mouseY};
 
     for(size_t i = 0; i < menuButtons.size(); i++) {
         if(SDL_PointInRect(&mousePos, &menuButtons[i].rect)) {
+            // Main menu buttons
             if(currentState == GameState::MAIN_MENU) {
                 if (menuButtons[i].id == "play") {
                     RestartGame();
@@ -1308,7 +1330,7 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
                 }
                 else if(menuButtons[i].id == "settings") {
                     currentState = GameState::SETTINGS;
-                    CreateMenuLayout();
+                    CreateMenuLayout();  // Refresh menu for settings
                 }
                 else if(menuButtons[i].id == "quit") {
                     isRunning = false;
@@ -1316,32 +1338,31 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
                 else if(menuButtons[i].id == "load") {
                     if (LoadGame()) {
                         currentState = GameState::PLAYING;
-
-
-                        const Uint8* keystate = SDL_GetKeyboardState(NULL);
-                        SDL_PumpEvents();
-
-                        // Reset player animation
+                        // Reset player state
                         player->SetVelocity(0, 0);
                         player->SetDirection(GameObject::Direction::DOWN);
-
-                        SDL_Log("Successfully entered playing state after load");
                     }
                 }
             }
-            }
-                else if(currentState == GameState::SETTINGS) {
-                if (menuButtons[i].id == "resolution") {
-                    auto selectedRes = resolutions[i];
-                    ChangeResolution(selectedRes.first, selectedRes.second);
+            // Settings menu buttons
+            else if(currentState == GameState::SETTINGS) {
+                // Resolution buttons
+                if(menuButtons[i].id.find('x') != std::string::npos) {
+                    size_t separator = menuButtons[i].id.find('x');
+                    int width = std::stoi(menuButtons[i].id.substr(0, separator));
+                    int height = std::stoi(menuButtons[i].id.substr(separator+1));
+                    ChangeResolution(width, height);
                 }
+                // Back button
                 else if(menuButtons[i].id == "back") {
                     currentState = GameState::MAIN_MENU;
-                    CreateMenuLayout();
+                    CreateMenuLayout();  // Return to main menu
                 }
             }
         }
     }
+}
+
 
 
 void Game::ChangeResolution(int width, int height) {
@@ -1372,6 +1393,15 @@ void Game::ChangeResolution(int width, int height) {
 
     delete tileMap;
     tileMap = new TileMap(*texture_manager, *camera);
+
+    // Reset camera to player's position
+    Vector2f playerPos = player->GetCenterPosition();
+    camera->Reset(playerPos.x, playerPos.y);
+
+    // Refresh UI elements
+    cachedWaveNumber = -1;
+    SDL_DestroyTexture(cachedWaveTexture);
+    cachedWaveTexture = nullptr;
 
     // Force immediate redraw
     SDL_RenderClear(renderer);
@@ -1415,15 +1445,36 @@ void Game::SaveGame() {
     saveFile.write(reinterpret_cast<const char*>(&FIRE_RATE), sizeof(float));
     saveFile.write(reinterpret_cast<const char*>(&PROJECTILE_DAMAGE), sizeof(int));
 
+    // Save wave state
+    saveFile.write(reinterpret_cast<const char*>(&betweenWaves), sizeof(bool));
+
+    // Save the timer
+    saveFile.write(reinterpret_cast<const char*>(&waveTimeRemaining), sizeof(float));
+
+    // Save ally position
+    if (ally) {
+        Vector2f allyPos = ally->GetCenterPosition();
+        saveFile.write(reinterpret_cast<const char*>(&allyPos.x), sizeof(float));
+        saveFile.write(reinterpret_cast<const char*>(&allyPos.y), sizeof(float));
+    } else {
+        // Default position if no ally
+        float invalidPos = -1000.0f;
+        saveFile.write(reinterpret_cast<const char*>(&invalidPos), sizeof(float));
+        saveFile.write(reinterpret_cast<const char*>(&invalidPos), sizeof(float));
+    }
+
     saveFile.close();
     if (saveFile.fail()) {
         SDL_Log("Error occurred during saving!");
     }
-    saveFile.close();
     SDL_Log("Game saved successfully to: %s", savePath.c_str());
 }
 
 bool Game::LoadGame() {
+    for (auto& e : enemies) e->Revive(-1000, -1000, 1);
+    enemies.clear();
+    for (auto& p : projectiles) delete p;
+    projectiles.clear();
     std::string savePath = GetSavePath();
     SDL_Log("Attempting to load from: %s", savePath.c_str());
 
@@ -1437,106 +1488,106 @@ bool Game::LoadGame() {
     Vector2f playerPos;
     loadFile.read(reinterpret_cast<char*>(&playerPos.x), sizeof(float));
     loadFile.read(reinterpret_cast<char*>(&playerPos.y), sizeof(float));
-    SDL_Log("Loaded player position: %.2f, %.2f", playerPos.x, playerPos.y);
 
+    // Set player position and camera
+    player->SetPosition(static_cast<int>(playerPos.x), static_cast<int>(playerPos.y));
+    Vector2f centerPos = player->GetCenterPosition();
+    camera->Reset(centerPos.x, centerPos.y);
+    camera->SetTarget(player);
+
+    // Load health
     int health;
     loadFile.read(reinterpret_cast<char*>(&health), sizeof(int));
-    player->SetHealth(health);
-    SDL_Log("Loaded health: %d", health);
+    player->SetHealth(std::max(0, health)); // Dont allow game over save
+    gameOver = (health <= 0); // Game over check
 
-    // Load current wave
+    // Load wave state
     loadFile.read(reinterpret_cast<char*>(&currentWave), sizeof(int));
-    SDL_Log("Loaded current wave: %d", currentWave);
+    betweenWaves = false;
+    waveTimeRemaining = WAVE_TIME_LIMIT;
 
     // Load collectibles
     int collectibleCount;
     loadFile.read(reinterpret_cast<char*>(&collectibleCount), sizeof(int));
-    SDL_Log("Loading %d collectibles", collectibleCount);
-
     collectibles.clear();
     for (int i = 0; i < collectibleCount; ++i) {
-        SDL_Rect rect;
-        bool active;
-        loadFile.read(reinterpret_cast<char*>(&rect.x), sizeof(int));
-        loadFile.read(reinterpret_cast<char*>(&rect.y), sizeof(int));
-        loadFile.read(reinterpret_cast<char*>(&active), sizeof(bool));
-        rect.w = 32;
-        rect.h = 32;
-        collectibles.push_back({rect, active});
-        SDL_Log("Collectible %d: %s at (%d,%d)",
-               i+1,
-               active ? "active" : "inactive",
-               rect.x,
-               rect.y);
+        Collectible c;
+        loadFile.read(reinterpret_cast<char*>(&c.rect.x), sizeof(int));
+        loadFile.read(reinterpret_cast<char*>(&c.rect.y), sizeof(int));
+        loadFile.read(reinterpret_cast<char*>(&c.active), sizeof(bool));
+
+        // Chat said i need to do this he has no clue what he is doing
+        c.rect.w = 32;
+        c.rect.h = 32;
+
+        // Validate position
+        c.rect.x = std::clamp(c.rect.x, 0, 20000 - c.rect.w);
+        c.rect.y = std::clamp(c.rect.y, 0, 20000 - c.rect.h);
+
+        collectibles.push_back(c);
     }
-    collectiblesRemaining = std::count_if(collectibles.begin(), collectibles.end(),
-        [](const Collectible& c) { return c.active; });
-    SDL_Log("Active collectibles remaining: %d", collectiblesRemaining);
+    collectiblesRemaining = std::count_if(
+    collectibles.begin(), collectibles.end(),
+    [](const Collectible& c) { return c.active; }
+);
+
+    // Force spawn
+    if (collectibles.empty() && !betweenWaves) {
+        SpawnCollectibles();
+    }
 
     // Load upgrades
     loadFile.read(reinterpret_cast<char*>(&PISTOL_RANGE), sizeof(float));
     loadFile.read(reinterpret_cast<char*>(&FIRE_RATE), sizeof(float));
     loadFile.read(reinterpret_cast<char*>(&PROJECTILE_DAMAGE), sizeof(int));
-    SDL_Log("Loaded upgrades - Range: %.2f, Fire Rate: %.2f, Damage: %d",
-          PISTOL_RANGE, FIRE_RATE, PROJECTILE_DAMAGE);
 
-    // Reset game state
-    betweenWaves = false;
-    waveTimeRemaining = WAVE_TIME_LIMIT;
-    SDL_Log("Reset wave state - betweenWaves: %d, waveTimeRemaining: %.2f",
-          betweenWaves, waveTimeRemaining);
-
-    // Clear enemies
+    // Reset combat state
     enemies.clear();
+    for (auto& p : projectiles) delete p;
+    projectiles.clear();
+    spawnTimer = 0.0f;
+    fireTimer = 0.0f;
+
+    // Reset enemy pool
     for (auto& enemy : enemyPool) {
         enemy->Revive(-1000, -1000, 1);
     }
-    SDL_Log("Reset enemy pool");
 
-    // Reset camera
-    Vector2f centerPos = player->GetCenterPosition();
-    camera->Reset(centerPos.x, centerPos.y);
-    SDL_Log("Reset camera to player position: %.2f, %.2f", centerPos.x, centerPos.y);
-
-    loadFile.close();
-    betweenWaves = false;
-    gameOver = false;
+    // Initialize wave system
+    StartNewWave(currentWave);
+    betweenWaves = (collectiblesRemaining <= 0);
     isChoosingUpgrade = false;
 
-    // Reset timers
-    spawnTimer = 0.0f;
-    waveTimer = 0.0f;
-    fireTimer = 0.0f;
-    waveTimeElapsed = 0.0f;
-
-    // Clear enemis and projectiles
-    enemies.clear();
-    for (auto& p : projectiles) {
-        delete p;
-    }
-    projectiles.clear();
-
-    // Reload enemies and projectiles
-    for (auto& enemy : enemyPool) {
-        if (enemy->IsActive()) {
-            enemies.push_back(enemy);
-        }
-    }
-
-    // Force UI refresh
+    // Refresh UI
     cachedWaveNumber = -1;
     SDL_DestroyTexture(cachedWaveTexture);
     cachedWaveTexture = nullptr;
 
-    // Reset camera tracking
-    camera->SetTarget(player);
+    // Load wave state
+    loadFile.read(reinterpret_cast<char*>(&betweenWaves), sizeof(bool));
+
+    // Load the timer
+    loadFile.read(reinterpret_cast<char*>(&waveTimeRemaining), sizeof(float));
+
+    // Load ally position
+    Vector2f allyPos;
+    loadFile.read(reinterpret_cast<char*>(&allyPos.x), sizeof(float));
+    loadFile.read(reinterpret_cast<char*>(&allyPos.y), sizeof(float));
+
+    if (ally) {
+        ally->SetPosition(
+            static_cast<int>(allyPos.x - ally->GetWidth() / 2),
+            static_cast<int>(allyPos.y - ally->GetHeight() / 2)
+        );
+    }
+
+    loadFile.close();
+
+    // Force camera update
     Vector2f playerCenter = player->GetCenterPosition();
-    camera->Reset(playerCenter.x, playerCenter.y);
-
-    // Restart wave system
-    StartNewWave(currentWave);
-
-    SDL_Log("Game state fully reset after loading");
+    camera->Update(playerCenter.x, playerCenter.y);
+    SDL_Log("Game loaded successfully. Player at: %d,%d",
+          player->GetPosition().x, player->GetPosition().y);
     return true;
 }
 
@@ -1548,6 +1599,8 @@ void Game::ReloadAllTextures() {
     texture_manager->LoadTexture("assets/textures/menu/background.png", "menu_bg");
     texture_manager->LoadTexture("assets/textures/menu/button.png", "button");
     texture_manager->LoadTexture("assets/textures/menu/button_hover.png", "button_hover");
+    texture_manager->LoadTexture("assets/textures/menu/load_btn.png", "load_btn");
+    texture_manager->LoadTexture("assets/textures/menu/load_btn_hover.png", "load_btn_hover");
 
 
     texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");

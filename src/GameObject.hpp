@@ -24,7 +24,6 @@ public:
     void PlayDeathAnimation();
     SDL_Rect GetCollisionBox() const;
     int GetMaxHealth() const {return maxHealth;}
-    void GetHealth(int healAmount);
     void SetSpeedMultiplier(float mult) { speedMultiplier = mult; }
     float GetVelocityX() const { return velocityX; }
     float GetVelocityY() const { return velocityY; }
@@ -35,9 +34,13 @@ public:
     Vector2f position;
     void ReloadTexture(Texture_Manager& tm, const std::string& textureID);
     void SetHealth(int newHealth) { health = newHealth; }
+    int GetWidth() const { return width; }
+    int GetHeight() const { return height; }
 protected:
     int health;
     int maxHealth;
+    int width;
+    int height;
     SDL_Rect positionrect;
     float velocityX;
     float velocityY;

@@ -1,16 +1,7 @@
 #include "Ally.hpp"
 
-Ally::Ally(Texture_Manager& manager, const std::string& textureID, int x, int y)
-    : GameObject(manager, textureID, x, y, 64, 64, 32, 32, 4, 0.15f) {
-    int texWidth, texHeight;
-    SDL_QueryTexture(texture, NULL, NULL, &texWidth, &texHeight);
-
-    if(texWidth < 32*5 || texHeight < 32*6) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                   "Ally texture too small! Required: 160x192, Actual: %dx%d",
-                   texWidth, texHeight);
-    }
-}
+Ally::Ally(Texture_Manager& tm, const std::string& textureID, int x, int y)
+    : GameObject(tm, textureID, x, y, 64, 64, 32, 32, 1, 0.1f) {}
 
 GameObject::Direction Ally::DetermineDirection() {
     if (abs(velocityX) > abs(velocityY)) {

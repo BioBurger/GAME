@@ -241,7 +241,7 @@ void Game::Init(const char* title, bool fullscreen) {
             buttonHoverTexture = texture_manager->GetTexture("button_hover");
             collectibleTexture = texture_manager->GetTexture("collectible");
 
-            collectibleSrcRect = {0, 0, 32, 32};
+            collectibleSrcRect = {0, 0, 64, 64};
 
             SDL_SetWindowSize(window, windowWidth, windowHeight);
             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -519,10 +519,10 @@ void Game::Render() {
             for (const auto& c : collectibles) {
                 if (c.active) {
                     SDL_Rect destRect = {
-                        c.rect.x - cameraViewport.x,
-                        c.rect.y - cameraViewport.y,
-                        c.rect.w,
-                        c.rect.h
+                        c.rect.x - cameraViewport.x - (64 - c.rect.w) / 2,
+                        c.rect.y - cameraViewport.y - (64 - c.rect.h) / 2,
+                        64,
+                        64
                     };
                     SDL_RenderCopy(renderer, collectibleTexture, &collectibleSrcRect, &destRect);
                 }

@@ -9,11 +9,10 @@ GameObject::Direction Ally::DetermineDirection() {
     }
     return (velocityY > 0) ? Direction::DOWN : Direction::UP;
 }
-void Ally::Revive(int x, int y) {
+void Ally::Revive(int x, int y, int health) {
     SetPosition(x, y);
-    SetHealth(GetMaxHealth());
+    SetHealth(health);
     SetActive(true);
- // Reset state
     currentState = State::IDLE;
     animationTimer = 0.0f;
     currentFrameIndex = 0;
@@ -27,25 +26,25 @@ void Ally::ResetAnimation() {
 void Ally::Update(float deltaTime) {
     // Prejšni state
     static State previousState = currentState;
-    static Direction lastDirection = Direction::DOWN;// Default
+    static Direction lastDirection = Direction::DOWN; // Default
 
     // Update current state
     currentState = (velocityX != 0 || velocityY != 0) ? State::MOVING : State::IDLE;
 
     // Update direction
-    if(currentState == State::MOVING) {
+    if (currentState == State::MOVING) {
         lastDirection = DetermineDirection();
     }
 
-    // Reset animation when state diffrend
-    if(currentState != previousState) {
+    // Reset animation when state different
+    if (currentState != previousState) {
         currentFrameIndex = 0;
         animationTimer = 0.0f;
         previousState = currentState;
     }
 
-    // Set animation
-    if(currentState == State::IDLE) {
+    // Set animation parameters
+    if (currentState == State::IDLE) {
         totalFrames = 4;
         animationSpeed = 0.15f;
     } else {
@@ -53,37 +52,42 @@ void Ally::Update(float deltaTime) {
         animationSpeed = 0.1f;
     }
 
-    // Animation on last state
-    switch(lastDirection) {
+    // Animation row based on direction
+    switch (lastDirection) {
         case Direction::DOWN:
-            animationRow = currentState == State::IDLE ? 0 : 3;
+            animationRow = (currentState == State::IDLE) ? 0 : 3;
             flipType = SDL_FLIP_NONE;
             break;
         case Direction::RIGHT:
-            animationRow = currentState == State::IDLE ? 1 : 4;
+            animationRow = (currentState == State::IDLE) ? 1 : 4;
             flipType = SDL_FLIP_NONE;
             break;
         case Direction::LEFT:
-            animationRow = currentState == State::IDLE ? 1 : 4;
+            animationRow = (currentState == State::IDLE) ? 1 : 4;
             flipType = SDL_FLIP_HORIZONTAL;
             break;
         case Direction::UP:
-            animationRow = currentState == State::IDLE ? 2 : 5;
+            animationRow = (currentState == State::IDLE) ? 2 : 5;
             flipType = SDL_FLIP_NONE;
             break;
     }
 
     // Update animation frames
     animationTimer += deltaTime;
-    if(animationTimer >= animationSpeed) {
+    if (animationTimer >= animationSpeed) {
         currentFrameIndex = (currentFrameIndex + 1) % totalFrames;
         animationTimer = 0.0f;
     }
 
-    // Frame coordinates
+    // Update frame coordinates
     currentFrame.x = currentFrameIndex * frameWidth;
     currentFrame.y = animationRow * frameHeight;
 
-    // Update position
-    GameObject::Update(deltaTime);
+    this->totalFrames = (currentState == State::IDLE) ? 4 : 6;
+    this->animationSpeed = (currentState == State::IDLE) ? 0.15f : 0.1f;
+
+    positionX += velocityX * deltaTime * speedMultiplier;
+    positionY += velocityY * deltaTime * speedMultiplier;
+    positionrect.x = static_cast<int>(positionX);
+    positionrect.y = static_cast<int>(positionY);
 }

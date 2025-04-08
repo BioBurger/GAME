@@ -5,7 +5,7 @@ class Ally : public GameObject {
 public:
     Ally(Texture_Manager& tm, const std::string& textureID, int x, int y);
     void Update(float deltaTime) override;
-    void Revive(int x, int y);
+    void Revive(int x, int y, int health);
     void ResetAnimation();
     enum class State { IDLE, MOVING };
 

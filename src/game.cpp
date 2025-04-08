@@ -1495,24 +1495,6 @@ void Game::SaveGame() {
     // Save the timer
     saveFile.write(reinterpret_cast<const char*>(&waveTimeRemaining), sizeof(float));
 
-    // Save ally position
-    if (ally) {
-        Vector2f allyPos = ally->GetCenterPosition();
-        saveFile.write(reinterpret_cast<const char*>(&allyPos.x), sizeof(float));
-        saveFile.write(reinterpret_cast<const char*>(&allyPos.y), sizeof(float));
-        int allyHealth = ally->GetHealth();
-        saveFile.write(reinterpret_cast<const char*>(&allyHealth), sizeof(int));
-        bool allyActive = ally->IsActive();
-        saveFile.write(reinterpret_cast<const char*>(&allyActive), sizeof(bool));
-    } else {
-        float invalidPos = -1000.0f;
-        int dummyHealth = 0;
-        bool dummyActive = false;
-        saveFile.write(reinterpret_cast<const char*>(&invalidPos), sizeof(float));
-        saveFile.write(reinterpret_cast<const char*>(&invalidPos), sizeof(float));
-        saveFile.write(reinterpret_cast<const char*>(&dummyHealth), sizeof(int));
-        saveFile.write(reinterpret_cast<const char*>(&dummyActive), sizeof(bool));
-    }
 
     saveFile.close();
     if (saveFile.fail()) {
@@ -1540,11 +1522,16 @@ bool Game::LoadGame() {
     loadFile.read(reinterpret_cast<char*>(&playerPos.x), sizeof(float));
     loadFile.read(reinterpret_cast<char*>(&playerPos.y), sizeof(float));
 
+
     // Set player, camera
-    player->SetPosition(static_cast<int>(playerPos.x), static_cast<int>(playerPos.y));
     Vector2f centerPos = player->GetCenterPosition();
     camera->Reset(centerPos.x, centerPos.y);
     camera->SetTarget(player);
+
+    if (ally) {
+        ally->SetPosition(centerPos.x + 100, centerPos.y);
+        ally->Revive(centerPos.x + 100, centerPos.y, 100);
+    }
 
     // Load health
     int health;
@@ -1620,35 +1607,15 @@ bool Game::LoadGame() {
     // Load the timer
     loadFile.read(reinterpret_cast<char*>(&waveTimeRemaining), sizeof(float));
 
-    // Load ally position
-    Vector2f allyPos;
-    int allyHealth;
-    bool allyActive;
-    loadFile.read(reinterpret_cast<char*>(&allyPos.x), sizeof(float));
-    loadFile.read(reinterpret_cast<char*>(&allyPos.y), sizeof(float));
-    loadFile.read(reinterpret_cast<char*>(&allyHealth), sizeof(int));
-    loadFile.read(reinterpret_cast<char*>(&allyActive), sizeof(bool));
-
-    if (ally) {
-        // Pozicija in health
-        ally->SetPosition(
-            static_cast<int>(allyPos.x - ally->GetWidth() / 2),
-            static_cast<int>(allyPos.y - ally->GetHeight() / 2)
-        );
-        ally->SetHealth(allyHealth);
-        ally->SetActive(allyActive); // Active na elly
-
-        // Reset animacijo
-        if (allyActive) {
-            ally->ResetAnimation();
-        }
-    }
-
-    loadFile.close();
 
     // Force camera update
     Vector2f playerCenter = player->GetCenterPosition();
     camera->Update(playerCenter.x, playerCenter.y);
+
+
+    loadFile.close();
+
+
     SDL_Log("Game loaded successfully. Player at: %d,%d",
           player->GetPosition().x, player->GetPosition().y);
     return true;

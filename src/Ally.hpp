@@ -5,9 +5,11 @@ class Ally : public GameObject {
 public:
     Ally(Texture_Manager& tm, const std::string& textureID, int x, int y);
     void Update(float deltaTime) override;
+    void Revive(int x, int y);
+    void ResetAnimation();
+    enum class State { IDLE, MOVING };
 
 private:
-    enum class State { IDLE, MOVING };
     State currentState = State::IDLE;
     State previousState = State::IDLE;
     GameObject::Direction DetermineDirection();

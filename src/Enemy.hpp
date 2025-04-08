@@ -8,8 +8,23 @@ private:
     float moveSpeed = 100.0f;
     bool isActive = false;
     int level;
+
+    const int ENEMY_FRAME_WIDTH = 32;
+    const int ENEMY_FRAME_HEIGHT = 32;
+    const int ENEMY_TOTAL_FRAMES = 5;
+    const float ENEMY_ANIM_SPEED = 0.15f;
+
+
 public:
-    Enemy(Texture_Manager& manager, const std::string& texture_name, int x, int y, GameObject* playerTarget, int health = 50);
+    Enemy(Texture_Manager& manager,
+          const std::string& textureName,
+          int x, int y,
+          int width, int height,
+          int collisionWidth, int collisionHeight,
+          int renderOrder,
+          float speed,
+          GameObject* target,
+          int health);
     void Update(float deltaTime) override;
     void Revive(int x, int y, int level);
     void SetSpeed(float speed) { moveSpeed = speed; }

@@ -153,20 +153,20 @@ void Game::Init(const char* title, bool fullscreen) {
                 texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
             }
             // Enemys
-            if (!texture_manager->HasTexture("enemy")) {
-                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy1")) {
+            if (!texture_manager->HasTexture("enemy1")) {
+                if (!texture_manager->LoadTexture("assets/textures/Enemys/test.png", "enemy1")) {
                     SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("enemy2")) {
-                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy2.png", "enemy2")) {
+                if (!texture_manager->LoadTexture("assets/textures/Enemys/newenemy2.png", "enemy2")) {
                     SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE 2!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("enemy3")) {
-                if (!texture_manager->LoadTexture("assets/textures/Enemys/Enemy3.png", "enemy3")) {
+                if (!texture_manager->LoadTexture("assets/textures/Enemys/newenemy3.png", "enemy3")) {
                     SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE 3!");
                     exit(1);
                 }
@@ -418,9 +418,20 @@ void Game::Update(float deltaTime) {
     }
     // Update collectible
     for (auto& c : collectibles) {
-        if (c.active && CheckCollision(player->GetCollisionBox(), c.rect)) {
-            c.active = false;
-            collectiblesRemaining--;
+        if (c.active) {
+            // Ustvari centriran collision box
+            const int COLLECTIBLE_HITBOX_SIZE = 24;
+            SDL_Rect centeredCollision = {
+                c.rect.x + (c.rect.w - COLLECTIBLE_HITBOX_SIZE)/2,
+                c.rect.y + (c.rect.h - COLLECTIBLE_HITBOX_SIZE)/2,
+                COLLECTIBLE_HITBOX_SIZE,
+                COLLECTIBLE_HITBOX_SIZE
+            };
+
+            if (CheckCollision(player->GetCollisionBox(), centeredCollision)) {
+                c.active = false;
+                collectiblesRemaining--;
+            }
         }
     }
 
@@ -489,7 +500,7 @@ void Game::Render() {
             std::string texName;
 
             if (menuButtons[i].id != "back") {
-                // Resolution button: Construct texture name from ID
+                // Z id-jem vlecemo 720,1080,1440
                 texName = "resolution_btn_" + menuButtons[i].id;
                 if (hoveredButton == static_cast<int>(i)) {
                     texName = "resolution_btn_hover_" + menuButtons[i].id;
@@ -519,8 +530,8 @@ void Game::Render() {
             for (const auto& c : collectibles) {
                 if (c.active) {
                     SDL_Rect destRect = {
-                        c.rect.x - cameraViewport.x - (64 - c.rect.w) / 2,
-                        c.rect.y - cameraViewport.y - (64 - c.rect.h) / 2,
+                        c.rect.x - cameraViewport.x,
+                        c.rect.y - cameraViewport.y,
                         64,
                         64
                     };
@@ -692,7 +703,7 @@ void Game::Render() {
     SDL_RenderPresent(renderer);
 }
 void Game::SpawnCollectibles() {
-    if (!betweenWaves && collectibles.empty()) {
+    if (!betweenWaves) {
         collectibles.clear();
         collectiblesRemaining = BASE_COLLECTIBLES + (currentWave * COLLECTIBLES_PER_WAVE);
 
@@ -709,12 +720,11 @@ void Game::SpawnCollectibles() {
             };
 
             SDL_Rect pos = {
-                static_cast<int>(playerCenter.x + offset.x - 16), // Center collectible
+                static_cast<int>(playerCenter.x + offset.x - 16),
                 static_cast<int>(playerCenter.y + offset.y - 16),
                 32, 32
             };
 
-            // Clamp na meje mape
             pos.x = std::clamp(pos.x, 0, 20000 - 32);
             pos.y = std::clamp(pos.y, 0, 20000 - 32);
 
@@ -813,7 +823,6 @@ void Game::SpawnEnemy() {
         level = 3;
     }
     else if(currentWave >= 3) {
-
         level = (rand() % 100 < 80) ? 2 : 3;
     }
     else if(currentWave >= 1) {
@@ -821,7 +830,27 @@ void Game::SpawnEnemy() {
     }
 
     Enemy* e = GetPooledEnemy();
-    e->Revive(spawnX, spawnY, level); // Respawn z lvl odvisn na wave
+    if (e) {
+        // Update ustvarjene pooled enemy
+        e->Revive(spawnX, spawnY, level);
+        // Parametri za animacijo
+        e->ReloadTexture(*texture_manager, "enemy" + std::to_string(level));
+    } else {
+        // Nov enemy
+        e = new Enemy(
+            *texture_manager,
+            "enemy" + std::to_string(level),
+            spawnX, spawnY,
+            64, 64,
+            32, 32,
+            1,
+            200.0f,
+            player,
+            50
+        );
+        enemyPool.push_back(e);
+    }
+
     enemies.push_back(e);
 }
 void Game::RestartGame() {
@@ -833,10 +862,10 @@ void Game::RestartGame() {
                            frameWidth, frameHeight,
                            totalFrames, animationSpeed);
 
-    // Reset ally position to spawn near the player
+    // Reset ally blizu playerja
     if (ally) {
         ally->SetPosition(
-            PLAYER_SPAWN_X + 100,  // Same as initial spawn offset
+            PLAYER_SPAWN_X + 100,  // Offset na 100px
             PLAYER_SPAWN_Y
         );
     }
@@ -866,7 +895,7 @@ void Game::RestartGame() {
 }
 void Game::StartNewWave(int wave) {
     if (wave == -1) {
-        waveTimeRemaining = WAVE_TIME_LIMIT; // If new wave not loaded wave
+        waveTimeRemaining = WAVE_TIME_LIMIT; // Če je nov wave nocmo da je gameover
         currentWave++;
     }
     else currentWave = wave;
@@ -874,7 +903,7 @@ void Game::StartNewWave(int wave) {
     betweenWaves = false;
     waveTimeRemaining = WAVE_TIME_LIMIT;
 
-    // Clear enemy if new round
+    // Clear enemy če je nov round
     if (wave == -1) {
         for (auto& e : enemyPool) {
             e->Revive(-1000, -1000, 1);
@@ -882,7 +911,7 @@ void Game::StartNewWave(int wave) {
         enemies.clear();
     }
 
-    // Spawn collectible if new round
+    // Spawn collectible če nov round
     if (wave == -1) {
         SpawnCollectibles();
     }
@@ -915,15 +944,20 @@ void Game::RenderWaveNumber() {
 }
 // Shranjevanje nasprotnikov
 void Game::InitializeEnemyPool(int initialSize) {
+
     for (int i = 0; i < initialSize; ++i) {
         Enemy* e = new Enemy(
             *texture_manager,
-            "enemy1", // Privzeta tekstura za pool
+            "enemy1",
             0, 0,
+            32, 32,
+            24, 24,
+            1,
+            200.0f,
             player,
             50
         );
-        e->Revive(-1000, -1000, 1); // level 1
+        e->Revive(-1000, -1000, 1);
         enemyPool.push_back(e);
     }
 }
@@ -937,7 +971,17 @@ Enemy* Game::GetPooledEnemy() {
         }
     }
 
-    Enemy* newEnemy = new Enemy(*texture_manager,"enemy",0,0,player,50);
+    Enemy* newEnemy = new Enemy(
+    *texture_manager,
+    "enemy",
+    0, 0,
+    32, 32,
+    32, 32,
+    3,
+    2.0f,
+    player,
+    50
+);
     newEnemy->SetTarget(player);
     enemyPool.push_back(newEnemy);
     return newEnemy;
@@ -952,17 +996,17 @@ void Game::UpdateWave(float deltaTime) {
     } else {
         waveTimeRemaining -= deltaTime;
 
-        // Check failure condition
+        // Če je zajebu
         if (waveTimeRemaining <= 0.0f) {
             gameOver = true;
             return;
         }
 
-        // Check success condition
+        // Če je zmagu
         if (collectiblesRemaining <= 0) {
             // Clear enemies
             for (auto& enemy : enemies) {
-                enemy->Revive(-1000, -1000, 1); // Reset position off-screen
+                enemy->Revive(-1000, -1000, 1); // Reset pozicija off-screen
             }
             enemies.clear();
 
@@ -971,7 +1015,7 @@ void Game::UpdateWave(float deltaTime) {
             selectedUpgrade = 0;
         }
         else {
-            // Spawn enemies infinitely
+            // Spawn v neskončnost
             spawnTimer += deltaTime;
             if (spawnTimer >= SPAWN_INTERVAL) {
                 SpawnEnemy();
@@ -1356,7 +1400,7 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
                 // Back button
                 else if(menuButtons[i].id == "back") {
                     currentState = GameState::MAIN_MENU;
-                    CreateMenuLayout();  // Return to main menu
+                    CreateMenuLayout(); // Nazaj na main menu
                 }
             }
         }
@@ -1366,24 +1410,24 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
 
 
 void Game::ChangeResolution(int width, int height) {
-    // Destroy old renderer and textures
+    // Destroy stare texture
     SDL_DestroyRenderer(renderer);
     texture_manager->ClearTextures();
 
-    // Update window dimensions
+    // Posodobi velikost windowa
     windowWidth = width;
     windowHeight = height;
     SDL_SetWindowSize(window, width, height);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
-    // Recreate renderer
+    // Na novo render
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture_manager->UpdateRenderer(renderer);
 
-    // Reload ALL textures
+    // Reload vsse texture
     ReloadAllTextures();
 
-    // Recalculate button positions
+    // Reload menu
     CreateMenuLayout();
 
     // Reset camera and tilemap
@@ -1394,16 +1438,16 @@ void Game::ChangeResolution(int width, int height) {
     delete tileMap;
     tileMap = new TileMap(*texture_manager, *camera);
 
-    // Reset camera to player's position
+    // Reset na playerja
     Vector2f playerPos = player->GetCenterPosition();
     camera->Reset(playerPos.x, playerPos.y);
 
-    // Refresh UI elements
-    cachedWaveNumber = -1;
-    SDL_DestroyTexture(cachedWaveTexture);
-    cachedWaveTexture = nullptr;
+    // Na novo collectible
+    if (!betweenWaves) {
+        SpawnCollectibles();
+    }
 
-    // Force immediate redraw
+    // Force
     SDL_RenderClear(renderer);
     Render();
     SDL_RenderPresent(renderer);
@@ -1421,14 +1465,14 @@ void Game::SaveGame() {
         return;
     }
 
-    // Save player data
+    // Save player
     Vector2f playerPos = player->GetCenterPosition();
     saveFile.write(reinterpret_cast<const char*>(&playerPos.x), sizeof(float));
     saveFile.write(reinterpret_cast<const char*>(&playerPos.y), sizeof(float));
     int health = player->GetHealth();
     saveFile.write(reinterpret_cast<const char*>(&health), sizeof(int));
 
-    // Save current wave
+    // Savewave
     saveFile.write(reinterpret_cast<const char*>(&currentWave), sizeof(int));
 
     // Save collectibles
@@ -1456,11 +1500,18 @@ void Game::SaveGame() {
         Vector2f allyPos = ally->GetCenterPosition();
         saveFile.write(reinterpret_cast<const char*>(&allyPos.x), sizeof(float));
         saveFile.write(reinterpret_cast<const char*>(&allyPos.y), sizeof(float));
+        int allyHealth = ally->GetHealth();
+        saveFile.write(reinterpret_cast<const char*>(&allyHealth), sizeof(int));
+        bool allyActive = ally->IsActive();
+        saveFile.write(reinterpret_cast<const char*>(&allyActive), sizeof(bool));
     } else {
-        // Default position if no ally
         float invalidPos = -1000.0f;
+        int dummyHealth = 0;
+        bool dummyActive = false;
         saveFile.write(reinterpret_cast<const char*>(&invalidPos), sizeof(float));
         saveFile.write(reinterpret_cast<const char*>(&invalidPos), sizeof(float));
+        saveFile.write(reinterpret_cast<const char*>(&dummyHealth), sizeof(int));
+        saveFile.write(reinterpret_cast<const char*>(&dummyActive), sizeof(bool));
     }
 
     saveFile.close();
@@ -1484,12 +1535,12 @@ bool Game::LoadGame() {
         return false;
     }
 
-    // Load player data
+    // Load player
     Vector2f playerPos;
     loadFile.read(reinterpret_cast<char*>(&playerPos.x), sizeof(float));
     loadFile.read(reinterpret_cast<char*>(&playerPos.y), sizeof(float));
 
-    // Set player position and camera
+    // Set player, camera
     player->SetPosition(static_cast<int>(playerPos.x), static_cast<int>(playerPos.y));
     Vector2f centerPos = player->GetCenterPosition();
     camera->Reset(centerPos.x, centerPos.y);
@@ -1498,10 +1549,10 @@ bool Game::LoadGame() {
     // Load health
     int health;
     loadFile.read(reinterpret_cast<char*>(&health), sizeof(int));
-    player->SetHealth(std::max(0, health)); // Dont allow game over save
+    player->SetHealth(std::max(0, health)); // Brez gameover savea
     gameOver = (health <= 0); // Game over check
 
-    // Load wave state
+    // Load wave
     loadFile.read(reinterpret_cast<char*>(&currentWave), sizeof(int));
     betweenWaves = false;
     waveTimeRemaining = WAVE_TIME_LIMIT;
@@ -1571,14 +1622,26 @@ bool Game::LoadGame() {
 
     // Load ally position
     Vector2f allyPos;
+    int allyHealth;
+    bool allyActive;
     loadFile.read(reinterpret_cast<char*>(&allyPos.x), sizeof(float));
     loadFile.read(reinterpret_cast<char*>(&allyPos.y), sizeof(float));
+    loadFile.read(reinterpret_cast<char*>(&allyHealth), sizeof(int));
+    loadFile.read(reinterpret_cast<char*>(&allyActive), sizeof(bool));
 
     if (ally) {
+        // Pozicija in health
         ally->SetPosition(
             static_cast<int>(allyPos.x - ally->GetWidth() / 2),
             static_cast<int>(allyPos.y - ally->GetHeight() / 2)
         );
+        ally->SetHealth(allyHealth);
+        ally->SetActive(allyActive); // Active na elly
+
+        // Reset animacijo
+        if (allyActive) {
+            ally->ResetAnimation();
+        }
     }
 
     loadFile.close();
@@ -1609,9 +1672,9 @@ void Game::ReloadAllTextures() {
 
     texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
 
-    texture_manager->LoadTexture("assets/textures/Enemys/Enemy1.png", "enemy1");
-    texture_manager->LoadTexture("assets/textures/Enemys/Enemy2.png", "enemy2");
-    texture_manager->LoadTexture("assets/textures/Enemys/Enemy3.png", "enemy3");
+    texture_manager->LoadTexture("assets/textures/Enemys/test.png", "enemy1");
+    texture_manager->LoadTexture("assets/textures/Enemys/newenemy2.png", "enemy2");
+    texture_manager->LoadTexture("assets/textures/Enemys/newenemy3.png", "enemy3");
 
 
     texture_manager->LoadTexture("assets/textures/ui/GameOver.png", "game_over");
@@ -1619,7 +1682,7 @@ void Game::ReloadAllTextures() {
     texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet");
     texture_manager->LoadTexture("assets/textures/ui/numbers.png", "numbers");
     texture_manager->LoadTexture("assets/textures/ui/wave.png", "wave_text");
-    texture_manager->LoadTexture("assets/textures/collectible.png", "collectible");
+    texture_manager->LoadTexture("assets/textures/collectible2.png", "collectible");
 
     texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu");
     texture_manager->LoadTexture("assets/textures/ui/upgrade_fire.png", "upgrade_fire_rate");

@@ -36,7 +36,10 @@ public:
     void SetHealth(int newHealth) { health = newHealth; }
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
+    void SetActive(bool active) { isActive = active; }
+    bool IsActive() const { return isActive; }
 protected:
+    bool isActive = true;
     int health;
     int maxHealth;
     int width;
@@ -67,6 +70,7 @@ protected:
     int collisionWidth = 48;
     int collisionHeight = 48;
     float speedMultiplier = 1.0f;
+    bool useVerticalAnimation = true;
 private:
     float damageCooldown = 0.0f;
     const float DAMAGE_COOLDOWN_TIME = 0.0f;

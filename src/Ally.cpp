@@ -9,16 +9,30 @@ GameObject::Direction Ally::DetermineDirection() {
     }
     return (velocityY > 0) ? Direction::DOWN : Direction::UP;
 }
+void Ally::Revive(int x, int y) {
+    SetPosition(x, y);
+    SetHealth(GetMaxHealth());
+    SetActive(true);
+ // Reset state
+    currentState = State::IDLE;
+    animationTimer = 0.0f;
+    currentFrameIndex = 0;
+}
+void Ally::ResetAnimation() {
+    currentState = State::IDLE;
+    animationTimer = 0.0f;
+    currentFrameIndex = 0;
+}
 
 void Ally::Update(float deltaTime) {
-    // Store previous state
+    // Prejšni state
     static State previousState = currentState;
     static Direction lastDirection = Direction::DOWN;// Default
 
     // Update current state
     currentState = (velocityX != 0 || velocityY != 0) ? State::MOVING : State::IDLE;
 
-    // Update direction when moving
+    // Update direction
     if(currentState == State::MOVING) {
         lastDirection = DetermineDirection();
     }

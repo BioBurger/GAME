@@ -98,6 +98,18 @@ void Game::Init(const char* title, bool fullscreen) {
                     exit(1);
                 }
             }
+            if (!texture_manager->HasTexture("scores_btn")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/scores_btn.png", "scores_btn")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
+            if (!texture_manager->HasTexture("scores_btn_hover")) {
+                if (!texture_manager->LoadTexture("assets/textures/menu/scores_btn_hover.png", "scores_btn_hover")) {
+                    SDL_Log("NI menu texture!");
+                    exit(1);
+                }
+            }
             if (!texture_manager->HasTexture("back_btn")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/back_btn.png", "back_btn")) {
                     SDL_Log("NI menu texture!");
@@ -110,6 +122,15 @@ void Game::Init(const char* title, bool fullscreen) {
                     exit(1);
                 }
             }
+            if (!texture_manager->HasTexture("letters")) {
+                if(!texture_manager->LoadTexture("assets/textures/ui/letters.png", "letters")) {
+                    SDL_Log("Missing letters texture!");
+                }
+            }
+            lettersTexture = texture_manager->GetTexture("letters");
+            letterSrcRect = {0, 0, LETTER_WIDTH, LETTER_HEIGHT};
+
+            LoadHighScores();
 
             std::vector<std::pair<int, int>> resolutions = {
                 {1280, 720},
@@ -293,9 +314,18 @@ void Game::HandleEvents() {
                 break;
 
             case SDL_KEYDOWN:
-                if(gameOver && event.key.keysym.sym == SDLK_r) {
+                // Handle high score name entry first
+                if (currentState == GameState::HIGHSCORE_ENTRY) {
+                    HandleHighscoreInput(event);
+                    break; // Skip other key processing
+                }
+
+                // Existing game over restart handling
+                if (gameOver && event.key.keysym.sym == SDLK_r) {
                     RestartGame();
                 }
+
+                // Upgrade selection handling
                 if (isChoosingUpgrade) {
                     switch(event.key.keysym.sym) {
                         case SDLK_LEFT:
@@ -310,6 +340,8 @@ void Game::HandleEvents() {
                             break;
                     }
                 }
+
+                // General key handling
                 switch(event.key.keysym.sym) {
                     case SDLK_F1:
                         debugMode = !debugMode;
@@ -317,13 +349,13 @@ void Game::HandleEvents() {
                     case SDLK_F2:
                         StartNewWave();
                         break;
-                    case SDLK_F5:  // Save game
+                    case SDLK_F5:
                         if (currentState == GameState::PLAYING) {
                             SaveGame();
                             SDL_Log("Game saved successfully!");
                         }
                         break;
-                    case SDLK_F6:  // Load game
+                    case SDLK_F6:
                         if (currentState == GameState::MAIN_MENU || currentState == GameState::PLAYING) {
                             if (LoadGame()) {
                                 SDL_Log("Game loaded successfully!");
@@ -348,6 +380,11 @@ void Game::HandleEvents() {
 void Game::Update(float deltaTime) {
     if (currentState != GameState::PLAYING) {
         return;
+    }
+    if (gameOver) {
+        currentState = GameState::HIGHSCORE_ENTRY;
+        currentNameInput.clear();
+        gameOver = false;
     }
     if (gameOver || !player->IsAlive()) return;
     if (isChoosingUpgrade) return;
@@ -492,6 +529,31 @@ void Game::Render() {
             SDL_Texture* tex = texture_manager->GetTexture(texName);
             SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i].rect);
         }
+    }
+    else if(currentState == GameState::HIGHSCORES_DISPLAY) {
+        SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
+
+        // Render scores text
+        int startY = ScaleY(200);
+        RenderText("TOP SCORES", windowWidth/2 - 100, startY, 2.0f);
+        for(size_t i = 0; i < highScores.size(); ++i) {
+            std::string entry = std::to_string(i+1) + ". " + highScores[i].name + " - " + std::to_string(highScores[i].score);
+            RenderText(entry, windowWidth/2 - 200, startY + 100 + i*50);
+        }
+
+        // Render ONLY high scores screen buttons
+        for(const auto& btn : menuButtons) {
+            std::string texName = btn.id + "_btn";
+            if(hoveredButton == &btn - &menuButtons[0]) {
+                texName += "_hover";
+            }
+            SDL_Texture* tex = texture_manager->GetTexture(texName);
+            if(tex) SDL_RenderCopy(renderer, tex, NULL, &btn.rect);
+        }
+    }
+    else if (currentState == GameState::HIGHSCORE_ENTRY) {
+        SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
+        RenderText("ENTER YOUR NAME: " + currentNameInput, windowWidth/2 - 200, windowHeight/2, 1.5f);
     }
     else if (currentState == GameState::SETTINGS) {
         SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
@@ -1269,62 +1331,43 @@ void Game::ApplyUpgrade(int choice) {
 void Game::CreateMenuLayout() {
     menuButtons.clear();
 
-    const int BUTTON_WIDTH = ScaleX(400);
-    const int BUTTON_HEIGHT = ScaleY(100);
-    const int SPACING = ScaleY(50);
-    const int START_Y = ScaleY(300);
-
     if(currentState == GameState::MAIN_MENU) {
-        // Play Button
-        menuButtons.push_back({
-            "play",
-            {windowWidth/2 - BUTTON_WIDTH/2, START_Y, BUTTON_WIDTH, BUTTON_HEIGHT}
-        });
+        const int BUTTON_WIDTH = ScaleX(400);
+        const int BUTTON_HEIGHT = ScaleY(100);
+        const int SPACING = ScaleY(50);
+        const int START_Y = ScaleY(300);
 
-        // Load Button
-        menuButtons.push_back({
-            "load",
-            {windowWidth/2 - BUTTON_WIDTH/2,
-             START_Y + 1*(BUTTON_HEIGHT + SPACING),
-             BUTTON_WIDTH, BUTTON_HEIGHT}
-        });
+        menuButtons.push_back({"play", {windowWidth/2 - BUTTON_WIDTH/2, START_Y, BUTTON_WIDTH, BUTTON_HEIGHT}});
+        menuButtons.push_back({"load", {windowWidth/2 - BUTTON_WIDTH/2, START_Y + 1*(BUTTON_HEIGHT + SPACING), BUTTON_WIDTH, BUTTON_HEIGHT}});
+        menuButtons.push_back({"settings", {windowWidth/2 - BUTTON_WIDTH/2, START_Y + 2*(BUTTON_HEIGHT + SPACING), BUTTON_WIDTH, BUTTON_HEIGHT}});
+        menuButtons.push_back({"scores", {windowWidth/2 - BUTTON_WIDTH/2, START_Y + 3*(BUTTON_HEIGHT + SPACING), BUTTON_WIDTH, BUTTON_HEIGHT}});
+        menuButtons.push_back({"quit", {windowWidth/2 - BUTTON_WIDTH/2, START_Y + 4*(BUTTON_HEIGHT + SPACING), BUTTON_WIDTH, BUTTON_HEIGHT}});
+    }
+    else if(currentState == GameState::HIGHSCORES_DISPLAY) {
+        SDL_Texture* backTex = texture_manager->GetTexture("back_btn");
+        int texW, texH;
+        SDL_QueryTexture(backTex, NULL, NULL, &texW, &texH);
 
-        // Settings Button
         menuButtons.push_back({
-            "settings",
-            {windowWidth/2 - BUTTON_WIDTH/2,
-             START_Y + 2*(BUTTON_HEIGHT + SPACING),
-             BUTTON_WIDTH, BUTTON_HEIGHT}
-        });
-
-        // Quit Button
-        menuButtons.push_back({
-            "quit",
-            {windowWidth/2 - BUTTON_WIDTH/2,
-             START_Y + 3*(BUTTON_HEIGHT + SPACING),
-             BUTTON_WIDTH, BUTTON_HEIGHT}
+            "back",
+            {windowWidth/2 - texW/2, windowHeight - ScaleY(200), texW, texH}
         });
     }
-    if (currentState == GameState::SETTINGS) {
+    else if(currentState == GameState::SETTINGS) {
         const int BUTTON_SPACING = ScaleY(30);
         int yPos = ScaleY(300);
 
-        for (const auto& res : resolutions) {
+        for(const auto& res : resolutions) {
             std::string resStr = std::to_string(res.first) + "x" + std::to_string(res.second);
             std::string texName = "resolution_btn_" + resStr;
             SDL_Texture* tex = texture_manager->GetTexture(texName);
-            if (tex) {
+            if(tex) {
                 int texWidth, texHeight;
                 SDL_QueryTexture(tex, NULL, NULL, &texWidth, &texHeight);
-                MenuButton btn;
-                btn.id = resStr;
-                btn.rect = {
-                    windowWidth / 2 - texWidth / 2,
-                    yPos,
-                    texWidth,
-                    texHeight
-                };
-                menuButtons.push_back(btn);
+                menuButtons.push_back({
+                    resStr,
+                    {windowWidth/2 - texWidth/2, yPos, texWidth, texHeight}
+                });
                 yPos += texHeight + BUTTON_SPACING;
             }
         }
@@ -1335,7 +1378,7 @@ void Game::CreateMenuLayout() {
         SDL_QueryTexture(backTex, NULL, NULL, &backWidth, &backHeight);
         menuButtons.push_back({
             "back",
-            {windowWidth / 2 - backWidth / 2, yPos, backWidth, backHeight}
+            {windowWidth/2 - backWidth/2, yPos, backWidth, backHeight}
         });
     }
 }
@@ -1361,49 +1404,80 @@ void Game::UpdateButtonHover(int mouseX, int mouseY) {
 }
 
 void Game::HandleMenuClick(int mouseX, int mouseY) {
-    SDL_Point mousePos = {mouseX, mouseY};
+    // Scale mouse coordinates to match rendering resolution
+    int winW, winH;
+    SDL_GetWindowSize(window, &winW, &winH);
+    float scaleX = static_cast<float>(windowWidth) / winW;
+    float scaleY = static_cast<float>(windowHeight) / winH;
 
+    SDL_Point mousePos = {
+        static_cast<int>(mouseX * scaleX),
+        static_cast<int>(mouseY * scaleY)
+    };
+
+    // Check all menu buttons
     for(size_t i = 0; i < menuButtons.size(); i++) {
         if(SDL_PointInRect(&mousePos, &menuButtons[i].rect)) {
-            // Main menu buttons
+            // Handle MAIN_MENU state first
             if(currentState == GameState::MAIN_MENU) {
-                if (menuButtons[i].id == "play") {
+                if(menuButtons[i].id == "play") {
                     RestartGame();
                     currentState = GameState::PLAYING;
                     StartNewWave();
                 }
-                else if(menuButtons[i].id == "settings") {
-                    currentState = GameState::SETTINGS;
-                    CreateMenuLayout();  // Refresh menu for settings
-                }
-                else if(menuButtons[i].id == "quit") {
-                    isRunning = false;
-                }
                 else if(menuButtons[i].id == "load") {
-                    if (LoadGame()) {
+                    if(LoadGame()) {
                         currentState = GameState::PLAYING;
-                        // Reset player state
                         player->SetVelocity(0, 0);
                         player->SetDirection(GameObject::Direction::DOWN);
                     }
                 }
+                else if(menuButtons[i].id == "settings") {
+                    currentState = GameState::SETTINGS;
+                    CreateMenuLayout();
+                }
+                else if(menuButtons[i].id == "scores") {
+                    currentState = GameState::HIGHSCORES_DISPLAY;
+                    CreateMenuLayout();
+                }
+                else if(menuButtons[i].id == "quit") {
+                    isRunning = false;
+                }
+                return; // Exit after handling main menu click
             }
-            // Settings menu buttons
+            // Handle SETTINGS state
             else if(currentState == GameState::SETTINGS) {
-                // Resolution buttons
                 if(menuButtons[i].id.find('x') != std::string::npos) {
+                    // Handle resolution change
                     size_t separator = menuButtons[i].id.find('x');
                     int width = std::stoi(menuButtons[i].id.substr(0, separator));
                     int height = std::stoi(menuButtons[i].id.substr(separator+1));
                     ChangeResolution(width, height);
                 }
-                // Back button
                 else if(menuButtons[i].id == "back") {
                     currentState = GameState::MAIN_MENU;
-                    CreateMenuLayout(); // Nazaj na main menu
+                    CreateMenuLayout();
+                }
+                return; // Exit after handling settings click
+            }
+            // Handle HIGHSCORES_DISPLAY state
+            else if(currentState == GameState::HIGHSCORES_DISPLAY) {
+                if(menuButtons[i].id == "back") {
+                    currentState = GameState::MAIN_MENU;
+                    CreateMenuLayout();
+                    return; // Explicit return for state transition
                 }
             }
         }
+        if(menuButtons[i].id == "back") {
+            SDL_Log("BACK BUTTON CLICKED"); // Debug output
+            currentState = GameState::MAIN_MENU;
+            CreateMenuLayout();
+            return;
+        }
+
+        // In CreateMenuLayout():
+        SDL_Log("Creating menu for state: %d", static_cast<int>(currentState));
     }
 }
 
@@ -1620,6 +1694,81 @@ bool Game::LoadGame() {
           player->GetPosition().x, player->GetPosition().y);
     return true;
 }
+void Game::SaveHighScores() {
+    std::string path = GetSavePath();
+    size_t lastSlash = path.find_last_of("\\/");
+    std::string directory = path.substr(0, lastSlash);
+    std::string fullPath = directory + "\\highscores.dat";
+
+    std::ofstream file(fullPath, std::ios::binary);
+    if (file.is_open()) {
+        size_t count = highScores.size();
+        file.write(reinterpret_cast<char*>(&count), sizeof(size_t));
+        for (const auto& hs : highScores) {
+            size_t nameLen = hs.name.size();
+            file.write(reinterpret_cast<char*>(&nameLen), sizeof(size_t));
+            file.write(hs.name.c_str(), nameLen);
+            file.write(reinterpret_cast<const char*>(&hs.score), sizeof(int));
+        }
+    }
+}
+
+void Game::LoadHighScores() {
+    std::string path = GetSavePath();
+    size_t lastSlash = path.find_last_of("\\/");
+    std::string directory = path.substr(0, lastSlash);
+    std::string fullPath = directory + "\\highscores.dat";
+
+    std::ifstream file(fullPath, std::ios::binary);
+    highScores.clear();
+    if (file.is_open()) {
+        size_t count;
+        file.read(reinterpret_cast<char*>(&count), sizeof(size_t));
+        for (size_t i = 0; i < count; ++i) {
+            HighScore hs;
+            size_t nameLen;
+            file.read(reinterpret_cast<char*>(&nameLen), sizeof(size_t));
+            hs.name.resize(nameLen);
+            file.read(&hs.name[0], nameLen);
+            file.read(reinterpret_cast<char*>(&hs.score), sizeof(int));
+            highScores.push_back(hs);
+        }
+    }
+}
+void Game::HandleHighscoreInput(const SDL_Event& event) {
+    SDL_Keycode key = event.key.keysym.sym;
+    if (key == SDLK_RETURN && !currentNameInput.empty()) {
+        // Add score and sort
+        highScores.push_back({currentNameInput, currentWave});
+        std::sort(highScores.begin(), highScores.end(),
+            [](const HighScore& a, const HighScore& b) { return a.score > b.score; });
+        if (highScores.size() > 5) highScores.resize(5);
+        SaveHighScores();
+        currentState = GameState::MAIN_MENU;
+    } else if (key == SDLK_BACKSPACE && !currentNameInput.empty()) {
+        currentNameInput.pop_back();
+    } else if (currentNameInput.length() < MAX_NAME_LENGTH) {
+        if (key >= SDLK_a && key <= SDLK_z) {
+            currentNameInput += toupper(static_cast<char>(key));
+        }
+    }
+}
+void Game::RenderText(const std::string& text, int x, int y, float scale) {
+    if (!lettersTexture) return;
+
+    int destWidth = LETTER_WIDTH * scale;
+    int destHeight = LETTER_HEIGHT * scale;
+    for (size_t i = 0; i < text.size(); ++i) {
+        char c = text[i];
+        int index = toupper(c) - 'A'; // Assuming texture starts with 'A' at index 0
+        if (c == ' ') continue;
+        if (index < 0 || index >= 26) index = 26; // Assume '?' for invalid
+
+        SDL_Rect src = { index * LETTER_WIDTH, 0, LETTER_WIDTH, LETTER_HEIGHT };
+        SDL_Rect dest = { x + static_cast<int>(i * destWidth * 1.2f), y, destWidth, destHeight };
+        SDL_RenderCopy(renderer, lettersTexture, &src, &dest);
+    }
+}
 
 void Game::ReloadAllTextures() {
 
@@ -1667,6 +1816,11 @@ void Game::ReloadAllTextures() {
     texture_manager->LoadTexture("assets/textures/menu/back_btn_hover.png", "back_btn_hover");
     texture_manager->LoadTexture("assets/textures/menu/quit_btn.png", "quit_btn");
     texture_manager->LoadTexture("assets/textures/menu/quit_btn_hover.png", "quit_btn_hover");
+    texture_manager->LoadTexture("assets/textures/menu/scores_btn.png", "scores_btn");
+    texture_manager->LoadTexture("assets/textures/menu/scores_btn_hover.png", "scores_btn_hover");
+
+    lettersTexture = texture_manager->GetTexture("letters");
+    letterSrcRect = {0, 0, LETTER_WIDTH, LETTER_HEIGHT};
 
     // Resolution Buttons
     for (const auto& res : resolutions) {

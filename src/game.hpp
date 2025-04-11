@@ -18,7 +18,7 @@ class Enemy;
 class Projectile;
 class Ally;
 
-enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT };
+enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT, HIGHSCORE_ENTRY, HIGHSCORES_DISPLAY };
 
 struct Collectible {
     SDL_Rect rect;
@@ -27,6 +27,10 @@ struct Collectible {
 struct MenuButton {
     std::string id;
     SDL_Rect rect;
+};
+struct HighScore {
+    std::string name;
+    int score;
 };
 
 class Game {
@@ -118,6 +122,14 @@ private:
     const int COLLECTIBLES_PER_WAVE = 1;
     const int MIN_SPAWN_DISTANCE = 600;
     const int MAX_SPAWN_DISTANCE = 1000;
+    std::vector<HighScore> highScores;
+    std::string currentNameInput;
+    bool isEnteringName;
+    SDL_Texture* lettersTexture;
+    SDL_Rect letterSrcRect;
+    const int LETTER_WIDTH = 16;
+    const int LETTER_HEIGHT = 16;
+    const int MAX_NAME_LENGTH = 3;
 
 
 public:
@@ -164,6 +176,10 @@ public:
         }
         return "savegame.dat";
     }
+    void SaveHighScores();
+    void LoadHighScores();
+    void RenderText(const std::string& text, int x, int y, float scale = 1.0f);
+    void HandleHighscoreInput(const SDL_Event& event);
 };
 
 #endif //GAME_H

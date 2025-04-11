@@ -362,15 +362,29 @@ void Game::HandleEvents() {
                 break;
 
             case SDL_KEYDOWN:
+                if (currentState == GameState::GAME_OVER) {
+                    if (event.key.keysym.sym == SDLK_r) {
+                        RestartGame();
+                        currentState = GameState::PLAYING;
+                    }
+                    else if (event.key.keysym.sym == SDLK_h) {
+                        currentState = GameState::HIGHSCORE_ENTRY;
+                        currentNameInput.clear();
+                    }
+                    break;
+                }
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    if (currentState == GameState::PLAYING ||
+                        currentState == GameState::SETTINGS ||
+                        currentState == GameState::HIGHSCORES_DISPLAY) {
+                        currentState = GameState::MAIN_MENU;
+                        CreateMenuLayout();
+                        }
+                }
                 // Handle high score name entry first
                 if (currentState == GameState::HIGHSCORE_ENTRY) {
                     HandleHighscoreInput(event);
                     break; // Skip other key processing
-                }
-
-                // Existing game over restart handling
-                if (gameOver && event.key.keysym.sym == SDLK_r) {
-                    RestartGame();
                 }
 
                 // Upgrade selection handling
@@ -440,6 +454,10 @@ void Game::Update(float deltaTime) {
     // Updajtanje dmg cooldowna
     if (player->GetDamageCooldown() > 0.0f) {
         player->SetDamageCooldown(player->GetDamageCooldown() - deltaTime);
+    }
+    if ((!player->IsAlive() || waveTimeRemaining <= 0) && !gameOver) {
+        gameOver = true;
+        currentState = GameState::GAME_OVER;
     }
     if (ally && ally->IsAlive()) {
         // Following player
@@ -516,6 +534,8 @@ void Game::Update(float deltaTime) {
             if (CheckCollision(player->GetCollisionBox(), centeredCollision)) {
                 c.active = false;
                 collectiblesRemaining--;
+                collectiblesCollected++;
+                totalScore+=100;
             }
         }
     }
@@ -583,22 +603,22 @@ void Game::Render() {
 
         // Render scores text
         int startY = ScaleY(200);
-        RenderText("TOP SCORES", windowWidth/2 - 100, startY, 2.0f);
+        RenderText("TOP SCORES", windowWidth/2 - 300, startY, 3.2f);
 
         // Position constants
         const int POSITION_X = windowWidth/2 - 400;
         const int NAME_X = windowWidth/2 - 300;
         const int SCORE_X = windowWidth/2 + 200;
-        const int Y_SPACING = 60;
+        const int Y_SPACING = 120;
 
         for(size_t i = 0; i < highScores.size(); ++i) {
             int yPos = startY + 100 + i * Y_SPACING;
 
             // Render position (1., 2., etc.)
-            RenderText(std::to_string(i+1) + ".", POSITION_X, yPos);
+            RenderNumber(i+1, POSITION_X, yPos, 3.2f);
 
             // Render name
-            RenderText(highScores[i].name, NAME_X, yPos);
+            RenderText(highScores[i].name, NAME_X, yPos,3.2f);
 
             // Render score using numbers texture
             RenderNumber(highScores[i].score, SCORE_X, yPos, 3.2f);
@@ -643,6 +663,32 @@ void Game::Render() {
                 SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i].rect);
             }
         }
+    }
+    else if (currentState == GameState::GAME_OVER) {
+        // Game over screen background
+        SDL_Rect screenRect = {0, 0, windowWidth, windowHeight};
+        SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
+
+        // Position constants
+        const int LABEL_X = windowWidth/2 - 200;
+        const int NUMBER_X = windowWidth/2 + 200;
+        const int BASE_Y = ScaleY(300);
+        const int Y_SPACING = 80;
+
+        // Score
+        RenderText("SCORE:", LABEL_X, BASE_Y, 1.5f);
+        RenderNumber(totalScore, NUMBER_X, BASE_Y, 1.5f);
+
+        // Enemies Killed
+        RenderText("ENEMIES:", LABEL_X, BASE_Y + Y_SPACING, 1.5f);
+        RenderNumber(enemiesKilledTotal, NUMBER_X, BASE_Y + Y_SPACING, 1.5f);
+
+        // Collectibles
+        RenderText("COLLECTIBLES:", LABEL_X, BASE_Y + Y_SPACING*2, 1.5f);
+        RenderNumber(collectiblesCollected, NUMBER_X, BASE_Y + Y_SPACING*2, 1.5f);
+
+        RenderText("PRESS R TO RESTART", windowWidth/2 - 300, BASE_Y + Y_SPACING*4, 1.5f);
+        RenderText("PRESS H FOR HIGHSCORE", windowWidth/2 - 350, BASE_Y + Y_SPACING*5, 1.5f);
     }
     else if (currentState == GameState::PLAYING) {
         // Render game
@@ -754,11 +800,6 @@ void Game::Render() {
         SDL_RenderCopy(renderer, arrowTex, NULL, &rightArrow);
     }
 }
-        else if(gameOver) {
-            // Game over screen
-            SDL_Rect screenRect = {0, 0, windowWidth, windowHeight};
-            SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
-        }
 
         // Health bar
         int startX = ScaleX(50);
@@ -995,6 +1036,11 @@ void Game::RestartGame() {
         );
     }
 
+    totalScore = 0;
+    enemiesKilledTotal = 0;
+    collectiblesCollected = 0;
+    enemiesKilledThisWave = 0;
+
     // Reset enemies
     enemies.clear();
     for (auto& e : enemyPool) {
@@ -1115,6 +1161,7 @@ void Game::UpdateWave(float deltaTime) {
     if (betweenWaves) {
         waveTimer += deltaTime;
         if (waveTimer >= waveStartDelay) {
+            totalScore+=1000;
             StartNewWave();
             waveTimer = 0.0f;
         }
@@ -1124,6 +1171,7 @@ void Game::UpdateWave(float deltaTime) {
         // Če je zajebu
         if (waveTimeRemaining <= 0.0f) {
             gameOver = true;
+            GameState::GAME_OVER;
             return;
         }
 
@@ -1156,6 +1204,8 @@ void Game::UpdateEnemies(float deltaTime) {
         if (spawnTimer >= SPAWN_INTERVAL) {
             SpawnEnemy();
             enemiesRemaining--;
+            enemiesKilledTotal++;
+            totalScore+=25;
             spawnTimer = 0.0f;
         }
     }
@@ -1589,68 +1639,27 @@ void Game::ChangeResolution(int width, int height) {
     Render();
     SDL_RenderPresent(renderer);
 }
-/*void Game::RenderNumber(int number, int x, int y, float scale) {
-    if (!numbersTexture) return;
 
-    std::string numStr = std::to_string(number);
-    const int DIGIT_WIDTH = 32;  // Width of each number in your texture
-    const int DIGIT_HEIGHT = 64; // Height of each number
-
-    for (size_t i = 0; i < numStr.size(); ++i) {
-        char c = numStr[i];
-        if (c < '0' || c > '9') continue;
-
-        int digit = c - '0'; // Convert char to 0-9 index
-        SDL_Rect srcRect = {
-            digit * DIGIT_WIDTH,
-            0,
-            DIGIT_WIDTH,
-            DIGIT_HEIGHT
-        };
-
-        SDL_Rect destRect = {
-            x + static_cast<int>(i * DIGIT_WIDTH * scale),
-            y,
-            static_cast<int>(DIGIT_WIDTH * scale),
-            static_cast<int>(DIGIT_HEIGHT * scale)
-        };
-
-        SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
-    }
-}*/
 void Game::RenderNumber(int number, int x, int y, float scale) {
     if (!numbersTexture) return;
 
-    // Texture dimensions: 160x16 (10 digits, 16x16 each)
-    const int DIGIT_WIDTH = 16;
-    const int DIGIT_HEIGHT = 16;
-    const int SPACING = 2 * scale;  // Space between digits
-
+    const int DIGIT_WIDTH = 16 * scale;
+    const int SPACING = 2 * scale;
     std::string numStr = std::to_string(number);
 
-    // Center the number string horizontally
-    float totalWidth = (DIGIT_WIDTH * numStr.length() + SPACING * (numStr.length() - 1)) * scale;
-    x -= totalWidth / 2;
-
+    // Center calculation removed for positional accuracy
     for (size_t i = 0; i < numStr.size(); ++i) {
         char c = numStr[i];
         if (c < '0' || c > '9') continue;
 
         int digit = c - '0';
-        SDL_Rect srcRect = {
-            digit * DIGIT_WIDTH,  // X position
-            0,                    // Y position (full height)
-            DIGIT_WIDTH,
-            DIGIT_HEIGHT
-        };
-
+        SDL_Rect srcRect = { digit * 16, 0, 16, 16 };
         SDL_Rect destRect = {
-            x + static_cast<int>(i * (DIGIT_WIDTH * scale + SPACING)),
+            x + static_cast<int>(i * (DIGIT_WIDTH + SPACING)),
             y,
-            static_cast<int>(DIGIT_WIDTH * scale),
-            static_cast<int>(DIGIT_HEIGHT * scale)
+            static_cast<int>(DIGIT_WIDTH),
+            static_cast<int>(16 * scale)
         };
-
         SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
     }
 }
@@ -1677,6 +1686,8 @@ void Game::SaveGame() {
     saveFile.write(reinterpret_cast<const char*>(&playerPos.y), sizeof(float));
     int health = player->GetHealth();
     saveFile.write(reinterpret_cast<const char*>(&health), sizeof(int));
+
+    saveFile.write(reinterpret_cast<const char*>(&totalScore), sizeof(int));
 
     // Savewave
     saveFile.write(reinterpret_cast<const char*>(&currentWave), sizeof(int));
@@ -1742,6 +1753,9 @@ bool Game::LoadGame() {
     // Load health
     int health;
     loadFile.read(reinterpret_cast<char*>(&health), sizeof(int));
+
+    loadFile.read(reinterpret_cast<char*>(&totalScore), sizeof(int));
+
     player->SetHealth(std::max(0, health)); // Brez gameover savea
     gameOver = (health <= 0); // Game over check
 
@@ -1867,7 +1881,7 @@ void Game::HandleHighscoreInput(const SDL_Event& event) {
     SDL_Keycode key = event.key.keysym.sym;
     if (key == SDLK_RETURN && !currentNameInput.empty()) {
         // Add score and sort
-        highScores.push_back({currentNameInput, currentWave});
+        highScores.push_back({currentNameInput, totalScore});
         std::sort(highScores.begin(), highScores.end(),
             [](const HighScore& a, const HighScore& b) { return a.score > b.score; });
         if (highScores.size() > 5) highScores.resize(5);

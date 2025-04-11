@@ -43,7 +43,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "Debug"
+			"value" : "Release"
 		},
 		{
 			"name" : "CMAKE_CACHEFILE_DIR",
@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/bostj/CLionProjects/GAME/cmake-build-debug"
+			"value" : "c:/Users/bostj/CLionProjects/GAME/cmake-build-release"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -575,7 +575,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/bostj/CLionProjects/GAME/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "C:/Users/bostj/CLionProjects/GAME/cmake-build-release/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -1307,7 +1307,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "[C:/msys64/ucrt64/bin/pkg-config.exe][v2.3.0()]"
+			"value" : "[C:/msys64/mingw64/bin/pkg-config.exe][v2.3.0()]"
 		},
 		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_SDL2",
@@ -1355,7 +1355,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/bostj/CLionProjects/GAME/cmake-build-debug"
+			"value" : "C:/Users/bostj/CLionProjects/GAME/cmake-build-release"
 		},
 		{
 			"name" : "GAME_IS_TOP_LEVEL",
@@ -1423,7 +1423,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/msys64/ucrt64/bin/pkg-config.exe"
+			"value" : "C:/msys64/mingw64/bin/pkg-config.exe"
 		},
 		{
 			"name" : "SDL2MAIN_LIBRARY",
@@ -1503,7 +1503,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a"
+			"value" : "mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a"
 		},
 		{
 			"name" : "VCPKG_APPLOCAL_DEPS",

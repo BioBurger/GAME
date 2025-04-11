@@ -18,7 +18,7 @@ class Enemy;
 class Projectile;
 class Ally;
 
-enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT, HIGHSCORE_ENTRY, HIGHSCORES_DISPLAY };
+enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT, HIGHSCORE_ENTRY, HIGHSCORES_DISPLAY, GAME_OVER };
 
 struct Collectible {
     SDL_Rect rect;
@@ -133,6 +133,9 @@ private:
     std::string GetSaveDirectory();
     std::string GetSavePath(const std::string& filename);
     void CreateGameDirectories();
+    int totalScore=0;
+    int enemiesKilledTotal=0;
+    int collectiblesCollected=0;
 
 
 public:

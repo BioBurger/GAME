@@ -1,5 +1,7 @@
 #include "Game.hpp"
 #include <SDL2/SDL_keyboard.h>
+#include <SDL_filesystem.h>
+#include <filesystem>
 #include <random>
 #include "Projectile.hpp"
 #include "Enemy.hpp"
@@ -27,6 +29,52 @@ Game::~Game() {
     SDL_DestroyTexture(numbersTexture);
 
 };
+std::string Game::GetSavePath(const std::string& filename) {
+    return GetSaveDirectory() + filename;
+}
+
+/*void Game::CreateGameDirectories() {
+    char* basePathPtr = SDL_GetBasePath();
+    std::string basePath(basePathPtr);
+    SDL_free(basePathPtr);
+
+    // Create directories in sequence
+    std::vector<std::string> directories = {"GAME", "saves"};
+    std::string currentPath = basePath;
+
+    for (const auto& dir : directories) {
+        currentPath += dir + "/";  // Append directory name
+
+#if defined(_WIN32)
+        // Windows: Use CreateDirectoryW for Unicode support
+        if (!CreateDirectoryA(currentPath.c_str(), NULL)) {
+            DWORD error = GetLastError();
+            if (error != ERROR_ALREADY_EXISTS) {
+                SDL_Log("Failed to create directory: %s (Error: %lu)", currentPath.c_str(), error);
+            }
+        }
+#else
+        // Linux/macOS: Create with proper permissions
+        if (mkdir(currentPath.c_str(), 0755) != 0) {
+            if (errno != EEXIST) {
+                SDL_Log("Failed to create directory: %s (Error: %s)", currentPath.c_str(), strerror(errno));
+            }
+        }
+#endif
+    }
+}*/
+void Game::CreateGameDirectories() {
+    std::filesystem::create_directories(GetSaveDirectory());
+}
+
+// Keep the existing GetSaveDirectory implementation
+std::string Game::GetSaveDirectory() {
+    char* basePath = SDL_GetBasePath();
+    std::string path(basePath);
+    SDL_free(basePath);
+    path += "GAME/saves/";  // Forward slashes work cross-platform
+    return path;
+}
 
 void Game::Init(const char* title, bool fullscreen) {
     int flags = 0;
@@ -522,7 +570,7 @@ void Game::Render() {
         SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
         for(size_t i = 0; i < menuButtons.size(); i++) {
-            std::string texName = menuButtons[i].id + "_btn"; // String go brrrrrrrr
+            std::string texName = menuButtons[i].id + "_btn";
             if(hoveredButton == static_cast<int>(i)) {
                 texName += "_hover";
             }
@@ -536,12 +584,27 @@ void Game::Render() {
         // Render scores text
         int startY = ScaleY(200);
         RenderText("TOP SCORES", windowWidth/2 - 100, startY, 2.0f);
+
+        // Position constants
+        const int POSITION_X = windowWidth/2 - 400;
+        const int NAME_X = windowWidth/2 - 300;
+        const int SCORE_X = windowWidth/2 + 200;
+        const int Y_SPACING = 60;
+
         for(size_t i = 0; i < highScores.size(); ++i) {
-            std::string entry = std::to_string(i+1) + ". " + highScores[i].name + " - " + std::to_string(highScores[i].score);
-            RenderText(entry, windowWidth/2 - 200, startY + 100 + i*50);
+            int yPos = startY + 100 + i * Y_SPACING;
+
+            // Render position (1., 2., etc.)
+            RenderText(std::to_string(i+1) + ".", POSITION_X, yPos);
+
+            // Render name
+            RenderText(highScores[i].name, NAME_X, yPos);
+
+            // Render score using numbers texture
+            RenderNumber(highScores[i].score, SCORE_X, yPos, 3.2f);
         }
 
-        // Render ONLY high scores screen buttons
+        // Render buttons
         for(const auto& btn : menuButtons) {
             std::string texName = btn.id + "_btn";
             if(hoveredButton == &btn - &menuButtons[0]) {
@@ -1526,12 +1589,81 @@ void Game::ChangeResolution(int width, int height) {
     Render();
     SDL_RenderPresent(renderer);
 }
+/*void Game::RenderNumber(int number, int x, int y, float scale) {
+    if (!numbersTexture) return;
+
+    std::string numStr = std::to_string(number);
+    const int DIGIT_WIDTH = 32;  // Width of each number in your texture
+    const int DIGIT_HEIGHT = 64; // Height of each number
+
+    for (size_t i = 0; i < numStr.size(); ++i) {
+        char c = numStr[i];
+        if (c < '0' || c > '9') continue;
+
+        int digit = c - '0'; // Convert char to 0-9 index
+        SDL_Rect srcRect = {
+            digit * DIGIT_WIDTH,
+            0,
+            DIGIT_WIDTH,
+            DIGIT_HEIGHT
+        };
+
+        SDL_Rect destRect = {
+            x + static_cast<int>(i * DIGIT_WIDTH * scale),
+            y,
+            static_cast<int>(DIGIT_WIDTH * scale),
+            static_cast<int>(DIGIT_HEIGHT * scale)
+        };
+
+        SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
+    }
+}*/
+void Game::RenderNumber(int number, int x, int y, float scale) {
+    if (!numbersTexture) return;
+
+    // Texture dimensions: 160x16 (10 digits, 16x16 each)
+    const int DIGIT_WIDTH = 16;
+    const int DIGIT_HEIGHT = 16;
+    const int SPACING = 2 * scale;  // Space between digits
+
+    std::string numStr = std::to_string(number);
+
+    // Center the number string horizontally
+    float totalWidth = (DIGIT_WIDTH * numStr.length() + SPACING * (numStr.length() - 1)) * scale;
+    x -= totalWidth / 2;
+
+    for (size_t i = 0; i < numStr.size(); ++i) {
+        char c = numStr[i];
+        if (c < '0' || c > '9') continue;
+
+        int digit = c - '0';
+        SDL_Rect srcRect = {
+            digit * DIGIT_WIDTH,  // X position
+            0,                    // Y position (full height)
+            DIGIT_WIDTH,
+            DIGIT_HEIGHT
+        };
+
+        SDL_Rect destRect = {
+            x + static_cast<int>(i * (DIGIT_WIDTH * scale + SPACING)),
+            y,
+            static_cast<int>(DIGIT_WIDTH * scale),
+            static_cast<int>(DIGIT_HEIGHT * scale)
+        };
+
+        SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
+    }
+}
 void Game::SaveGame() {
-    std::string savePath = GetSavePath();
+    CreateGameDirectories();
+    std::string savePath = GetSavePath("save.dat");
+
+    SDL_Log("Saving game to: %s", savePath.c_str());
+
     SDL_Log("Saving to: %s", savePath.c_str());
     std::ofstream saveFile(savePath, std::ios::binary);
-    if (!saveFile.is_open()) {
-        SDL_Log("Failed to save game! Couldn't open file");
+    if (!saveFile) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to save game!");
         return;
     }
     if (!saveFile) {
@@ -1582,12 +1714,12 @@ bool Game::LoadGame() {
     enemies.clear();
     for (auto& p : projectiles) delete p;
     projectiles.clear();
-    std::string savePath = GetSavePath();
-    SDL_Log("Attempting to load from: %s", savePath.c_str());
+    CreateGameDirectories();
+    std::string savePath = GetSavePath("save.dat");
 
     std::ifstream loadFile(savePath, std::ios::binary);
-    if (!loadFile.is_open()) {
-        SDL_Log("Load failed! File not found: %s", savePath.c_str());
+    if (!loadFile) {
+        SDL_Log("No save file found at: %s", savePath.c_str());
         return false;
     }
 
@@ -1695,12 +1827,10 @@ bool Game::LoadGame() {
     return true;
 }
 void Game::SaveHighScores() {
-    std::string path = GetSavePath();
-    size_t lastSlash = path.find_last_of("\\/");
-    std::string directory = path.substr(0, lastSlash);
-    std::string fullPath = directory + "\\highscores.dat";
+    CreateGameDirectories();
+    std::string path = GetSavePath("highscores.dat");
 
-    std::ofstream file(fullPath, std::ios::binary);
+    std::ofstream file(path, std::ios::binary);
     if (file.is_open()) {
         size_t count = highScores.size();
         file.write(reinterpret_cast<char*>(&count), sizeof(size_t));
@@ -1714,12 +1844,10 @@ void Game::SaveHighScores() {
 }
 
 void Game::LoadHighScores() {
-    std::string path = GetSavePath();
-    size_t lastSlash = path.find_last_of("\\/");
-    std::string directory = path.substr(0, lastSlash);
-    std::string fullPath = directory + "\\highscores.dat";
+    CreateGameDirectories();
+    std::string path = GetSavePath("highscores.dat");
 
-    std::ifstream file(fullPath, std::ios::binary);
+    std::ifstream file(path, std::ios::binary);
     highScores.clear();
     if (file.is_open()) {
         size_t count;

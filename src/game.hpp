@@ -130,6 +130,9 @@ private:
     const int LETTER_WIDTH = 16;
     const int LETTER_HEIGHT = 16;
     const int MAX_NAME_LENGTH = 3;
+    std::string GetSaveDirectory();
+    std::string GetSavePath(const std::string& filename);
+    void CreateGameDirectories();
 
 
 public:
@@ -180,6 +183,7 @@ public:
     void LoadHighScores();
     void RenderText(const std::string& text, int x, int y, float scale = 1.0f);
     void HandleHighscoreInput(const SDL_Event& event);
+    void RenderNumber(int number, int, int, float);
 };
 
 #endif //GAME_H

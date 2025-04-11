@@ -360,7 +360,16 @@ void Game::HandleEvents() {
                     HandleMenuClick(event.button.x, event.button.y);
                 }
                 break;
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    // Update internal resolution tracking
+                    windowWidth = event.window.data1;
+                    windowHeight = event.window.data2;
 
+                    // Force redraw of all UI elements
+                    CreateMenuLayout();
+                }
+            break;
             case SDL_KEYDOWN:
                 if (currentState == GameState::GAME_OVER) {
                     if (event.key.keysym.sym == SDLK_r) {
@@ -598,42 +607,67 @@ void Game::Render() {
             SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i].rect);
         }
     }
-    else if(currentState == GameState::HIGHSCORES_DISPLAY) {
-        SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
+else if(currentState == GameState::HIGHSCORES_DISPLAY) {
+    SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
-        // Render scores text
-        int startY = ScaleY(200);
-        RenderText("TOP SCORES", windowWidth/2 - 300, startY, 3.2f);
+    // Title with proper spacing
+    const int TITLE_Y = ScaleY(100);
+    const int TITLE_FONT_SCALE = 3.0f;
+    RenderText("TOP SCORES", windowWidth/2 - ScaleX(300), TITLE_Y, TITLE_FONT_SCALE);
 
-        // Position constants
-        const int POSITION_X = windowWidth/2 - 400;
-        const int NAME_X = windowWidth/2 - 300;
-        const int SCORE_X = windowWidth/2 + 200;
-        const int Y_SPACING = 120;
+    // Column layout constants
+    const int HEADER_Y = TITLE_Y + ScaleY(80);  // Space after title
+    const int ROW_START_Y = HEADER_Y + ScaleY(80); // Space after headers
+    const int COLUMN_SPACING = ScaleX(200);
 
-        for(size_t i = 0; i < highScores.size(); ++i) {
-            int yPos = startY + 100 + i * Y_SPACING;
+    // Calculate column positions based on text widths
+    const int POS_WIDTH = ScaleX(100);  // "99." width
+    const int NAME_WIDTH = ScaleX(200); // Max name width
+    const int SCORE_WIDTH = ScaleX(200);// Score width
 
-            // Render position (1., 2., etc.)
-            RenderNumber(i+1, POSITION_X, yPos, 3.2f);
+    const int POS_X = windowWidth/2 - (NAME_WIDTH/2 + COLUMN_SPACING);
+    const int NAME_X = windowWidth/2 - NAME_WIDTH/2;
+    const int SCORE_X = windowWidth/2 + (COLUMN_SPACING - SCORE_WIDTH/2);
 
-            // Render name
-            RenderText(highScores[i].name, NAME_X, yPos,3.2f);
+    // Column headers with spacing
+    const float HEADER_SCALE = 2.2f;
+    RenderText("POS", POS_X + POS_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
+    RenderText("NAME", NAME_X + NAME_WIDTH/2 - ScaleX(100), HEADER_Y, HEADER_SCALE);
+    RenderText("SCORE", SCORE_X + SCORE_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
 
-            // Render score using numbers texture
-            RenderNumber(highScores[i].score, SCORE_X, yPos, 3.2f);
+    // Scores list with row spacing
+    const float ROW_SCALE = 2.0f;
+    const int ROW_SPACING = ScaleY(80);
+    for(size_t i = 0; i < highScores.size(); ++i) {
+        int yPos = ROW_START_Y + i * ROW_SPACING;
+
+        // Position number (right aligned)
+        RenderNumber(i+1, POS_X + POS_WIDTH - ScaleX(60), yPos, ROW_SCALE);
+
+        // Name (left aligned with max width)
+        std::string displayName = highScores[i].name;
+        if(displayName.length() > 15) {  // Truncate long names
+            displayName = displayName.substr(0, 12) + "...";
         }
+        RenderText(displayName, NAME_X, yPos, ROW_SCALE);
 
-        // Render buttons
-        for(const auto& btn : menuButtons) {
-            std::string texName = btn.id + "_btn";
-            if(hoveredButton == &btn - &menuButtons[0]) {
-                texName += "_hover";
-            }
-            SDL_Texture* tex = texture_manager->GetTexture(texName);
-            if(tex) SDL_RenderCopy(renderer, tex, NULL, &btn.rect);
-        }
+        // Score (left aligned)
+        RenderNumber(highScores[i].score, SCORE_X, yPos, ROW_SCALE);
     }
+
+    // Centered back button with top margin
+    for(const auto& btn : menuButtons) {
+        SDL_Rect centeredBtn = btn.rect;
+        centeredBtn.y = ROW_START_Y + static_cast<int>(highScores.size() * ROW_SPACING) + ScaleY(100);
+        centeredBtn.x = windowWidth/2 - centeredBtn.w/2;
+        std::string texName = btn.id + "_btn";
+        if(hoveredButton == &btn - &menuButtons[0]) {
+            texName += "_hover";
+        }
+        SDL_Texture* tex = texture_manager->GetTexture(texName);
+        if(tex) SDL_RenderCopy(renderer, tex, NULL, &centeredBtn);
+    }
+}
     else if (currentState == GameState::HIGHSCORE_ENTRY) {
         SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
         RenderText("ENTER YOUR NAME: " + currentNameInput, windowWidth/2 - 200, windowHeight/2, 1.5f);
@@ -1204,8 +1238,6 @@ void Game::UpdateEnemies(float deltaTime) {
         if (spawnTimer >= SPAWN_INTERVAL) {
             SpawnEnemy();
             enemiesRemaining--;
-            enemiesKilledTotal++;
-            totalScore+=25;
             spawnTimer = 0.0f;
         }
     }
@@ -1243,6 +1275,8 @@ void Game::UpdateEnemies(float deltaTime) {
         // Odstrani a ne izbriše
         if (!enemy->IsAlive()) {
             it = enemies.erase(it);
+            enemiesKilledTotal++;
+            totalScore+=25;
             enemiesKilledThisWave++;
         } else {
             ++it;
@@ -1614,7 +1648,13 @@ void Game::ChangeResolution(int width, int height) {
     // Reload vsse texture
     ReloadAllTextures();
 
-    // Reload menu
+
+    // Reset text-related cache
+    SDL_DestroyTexture(cachedWaveTexture);
+    cachedWaveTexture = nullptr;
+    cachedWaveNumber = -1;
+
+    // Force UI elements to recalculate positions
     CreateMenuLayout();
 
     // Reset camera and tilemap
@@ -1643,8 +1683,14 @@ void Game::ChangeResolution(int width, int height) {
 void Game::RenderNumber(int number, int x, int y, float scale) {
     if (!numbersTexture) return;
 
-    const int DIGIT_WIDTH = 16 * scale;
-    const int SPACING = 2 * scale;
+    float renderScale = scale * (static_cast<float>(windowWidth) / 1920.0f);
+    const int DIGIT_WIDTH = 16 * renderScale;
+    const int SPACING = 2 * renderScale;
+
+    // Convert coordinates
+    int renderX = ScaleX(x);
+    int renderY = ScaleY(y);
+
     std::string numStr = std::to_string(number);
 
     // Center calculation removed for positional accuracy
@@ -1655,10 +1701,10 @@ void Game::RenderNumber(int number, int x, int y, float scale) {
         int digit = c - '0';
         SDL_Rect srcRect = { digit * 16, 0, 16, 16 };
         SDL_Rect destRect = {
-            x + static_cast<int>(i * (DIGIT_WIDTH + SPACING)),
-            y,
+            renderX + static_cast<int>(i * (DIGIT_WIDTH + SPACING)),
+            renderY,
             static_cast<int>(DIGIT_WIDTH),
-            static_cast<int>(16 * scale)
+            static_cast<int>(16 * renderScale)
         };
         SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
     }
@@ -1898,8 +1944,12 @@ void Game::HandleHighscoreInput(const SDL_Event& event) {
 void Game::RenderText(const std::string& text, int x, int y, float scale) {
     if (!lettersTexture) return;
 
-    int destWidth = LETTER_WIDTH * scale;
-    int destHeight = LETTER_HEIGHT * scale;
+    int renderX = ScaleX(x);
+    int renderY = ScaleY(y);
+    float renderScale = scale * (static_cast<float>(windowWidth) / 1920.0f);
+
+    const int destWidth = LETTER_WIDTH * renderScale;
+    const int destHeight = LETTER_HEIGHT * renderScale;
     for (size_t i = 0; i < text.size(); ++i) {
         char c = text[i];
         int index = toupper(c) - 'A'; // Assuming texture starts with 'A' at index 0
@@ -1907,7 +1957,12 @@ void Game::RenderText(const std::string& text, int x, int y, float scale) {
         if (index < 0 || index >= 26) index = 26; // Assume '?' for invalid
 
         SDL_Rect src = { index * LETTER_WIDTH, 0, LETTER_WIDTH, LETTER_HEIGHT };
-        SDL_Rect dest = { x + static_cast<int>(i * destWidth * 1.2f), y, destWidth, destHeight };
+        SDL_Rect dest = {
+            renderX + static_cast<int>(i * destWidth * 1.2f),
+            renderY,
+            destWidth,
+            destHeight
+        };
         SDL_RenderCopy(renderer, lettersTexture, &src, &dest);
     }
 }

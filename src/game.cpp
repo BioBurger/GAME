@@ -1923,6 +1923,8 @@ void Game::ReloadAllTextures() {
     texture_manager->LoadTexture("assets/textures/menu/load_btn.png", "load_btn");
     texture_manager->LoadTexture("assets/textures/menu/load_btn_hover.png", "load_btn_hover");
 
+    texture_manager->LoadTexture("assets/textures/ui/letters.png", "letters");
+
 
     texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player");
     texture_manager->LoadTexture("assets/textures/Player/ally.png", "ally");

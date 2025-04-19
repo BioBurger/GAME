@@ -1,5 +1,7 @@
 #include <iostream>
 #include <ostream>
+#include <cstdint>
+#include <ctime>
 #include <stdio.h>
 #include <SDL_image.h>
 #include <shlobj.h>
@@ -18,7 +20,7 @@ class Enemy;
 class Projectile;
 class Ally;
 
-enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT, HIGHSCORE_ENTRY, HIGHSCORES_DISPLAY, GAME_OVER };
+enum class GameState { MAIN_MENU, SETTINGS, PLAYING, EXIT, HIGHSCORE_ENTRY, HIGHSCORES_DISPLAY, GAME_OVER, REPLAY };
 
 struct Collectible {
     SDL_Rect rect;
@@ -32,6 +34,23 @@ struct HighScore {
     std::string name;
     int score;
 };
+#pragma pack(push, 1)
+struct ReplayHeader {
+    char magic[4];
+    uint32_t frameCount;
+    float totalTime;
+    int finalScore;
+    int finalWave;
+};
+
+struct ReplayFrame {
+    float timestamp;
+    Vector2f playerPos;
+    uint16_t enemyCount;
+    uint16_t projectileCount;
+    uint16_t collectibleCount;
+};
+#pragma pack(pop)
 
 class Game {
 private:
@@ -136,7 +155,22 @@ private:
     int totalScore=0;
     int enemiesKilledTotal=0;
     int collectiblesCollected=0;
-
+    std::string currentReplayFile;
+    float replayTimer;
+    float replaySpeed = 1.0f;
+    std::ifstream replayFile;
+    uint32_t totalFramesRecorded;
+    uint32_t currentReplayFrame;
+    void StartRecording();
+    void RecordFrame(float deltaTime);
+    void FinalizeRecording();
+    void UpdateReplay(float deltaTime);
+    bool isRecording = false;
+    bool isReplaying = false;
+    float totalRecordedTime = 0.0f;
+    void HandleGameOverInput(const SDL_Event& event);
+    float recordingFrameTimer = 0.0f;
+    const float RECORD_INTERVAL = 1.0f / 60.0f;
 
 public:
     Game();
@@ -187,6 +221,7 @@ public:
     void RenderText(const std::string& text, int x, int y, float scale = 1.0f);
     void HandleHighscoreInput(const SDL_Event& event);
     void RenderNumber(int number, int, int, float);
+    void StartReplay(const std::string& filename);
 };
 
 #endif //GAME_H

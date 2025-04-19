@@ -6,7 +6,7 @@
 #include "Projectile.hpp"
 #include "Enemy.hpp"
 
-Game::Game() :texture_manager(NULL)  {
+Game::Game() : texture_manager(NULL), isRecording(false), isReplaying(false)  {
     texture_manager=NULL;
     player=NULL;
 }
@@ -372,14 +372,7 @@ void Game::HandleEvents() {
             break;
             case SDL_KEYDOWN:
                 if (currentState == GameState::GAME_OVER) {
-                    if (event.key.keysym.sym == SDLK_r) {
-                        RestartGame();
-                        currentState = GameState::PLAYING;
-                    }
-                    else if (event.key.keysym.sym == SDLK_h) {
-                        currentState = GameState::HIGHSCORE_ENTRY;
-                        currentNameInput.clear();
-                    }
+                    HandleGameOverInput(event);
                     break;
                 }
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
@@ -447,33 +440,60 @@ void Game::HandleEvents() {
         }
     }
 }
+void Game::HandleGameOverInput(const SDL_Event& event) {
+    if (event.type == SDL_KEYDOWN) {
+        switch(event.key.keysym.sym) {
+            case SDLK_r:
+                RestartGame();
+                currentState = GameState::PLAYING;
+                break;
+            case SDLK_h:
+                currentState = GameState::HIGHSCORE_ENTRY;
+                currentNameInput.clear();
+                break;
+            case SDLK_p:
+                StartReplay(GetSavePath("last_replay.bin"));
+                break;
+        }
+    }
+}
 
 void Game::Update(float deltaTime) {
+    if(currentState == GameState::REPLAY) {
+        UpdateReplay(deltaTime);
+        return;
+    }
+
+    if (isRecording && currentState == GameState::PLAYING) {
+        recordingFrameTimer += deltaTime;
+        while (recordingFrameTimer >= RECORD_INTERVAL) {
+            RecordFrame(RECORD_INTERVAL);  // Use fixed time step
+            recordingFrameTimer -= RECORD_INTERVAL;
+        }
+    }
     if (currentState != GameState::PLAYING) {
         return;
     }
-    if (gameOver) {
-        currentState = GameState::HIGHSCORE_ENTRY;
-        currentNameInput.clear();
-        gameOver = false;
-    }
-    if (gameOver || !player->IsAlive()) return;
-    if (isChoosingUpgrade) return;
 
-    // Updajtanje dmg cooldowna
-    if (player->GetDamageCooldown() > 0.0f) {
-        player->SetDamageCooldown(player->GetDamageCooldown() - deltaTime);
-    }
+    // Handle game over condition first
     if ((!player->IsAlive() || waveTimeRemaining <= 0) && !gameOver) {
         gameOver = true;
         currentState = GameState::GAME_OVER;
+        return;
     }
+
+    if (gameOver || !player->IsAlive()) return;
+    if (isChoosingUpgrade) return;
+
+    // Update damage cooldown
+    if (player->GetDamageCooldown() > 0.0f) {
+        player->SetDamageCooldown(player->GetDamageCooldown() - deltaTime);
+    }
+
+    // Ally logic
     if (ally && ally->IsAlive()) {
-        // Following player
         const Vector2f targetPos = player->GetCenterPosition() + Vector2f(50, 50);
         const Vector2f allyPos = ally->GetCenterPosition();
-
-        // Movement
         const Vector2f direction = targetPos - allyPos;
         const float distance = direction.x * direction.x + direction.y * direction.y;
 
@@ -485,7 +505,6 @@ void Game::Update(float deltaTime) {
             ally->SetVelocity(0, 0);
         }
 
-        // Shooting
         static float fireTimer = 0.0f;
         fireTimer += deltaTime;
 
@@ -498,28 +517,25 @@ void Game::Update(float deltaTime) {
                 fireTimer >= 1.0f/1.5f) {
                 ShootAllyProjectile(nearest);
                 fireTimer = 0.0f;
-                }
+            }
         }
-
         ally->Update(deltaTime);
     }
 
-    // Updati za objekte
+    // Core game updates
     UpdateWave(deltaTime);
     ProcessInput();
     UpdatePlayer(deltaTime);
     UpdateEnemies(deltaTime);
 
-    // Update metki
+    // Projectile updates
     for (auto it = projectiles.begin(); it != projectiles.end();) {
         (*it)->Update(deltaTime);
-
-        // Check for hits
-        if (CheckCollision((*it)->GetCollisionBox(),(*it)->GetTarget()->GetCollisionBox())) {
+        if (CheckCollision((*it)->GetCollisionBox(), (*it)->GetTarget()->GetCollisionBox())) {
             (*it)->GetTarget()->TakeDamage(PROJECTILE_DAMAGE);
             delete *it;
             it = projectiles.erase(it);
-                          }
+        }
         else if ((*it)->ShouldRemove()) {
             delete *it;
             it = projectiles.erase(it);
@@ -528,10 +544,10 @@ void Game::Update(float deltaTime) {
             ++it;
         }
     }
-    // Update collectible
+
+    // Collectible updates
     for (auto& c : collectibles) {
         if (c.active) {
-            // Ustvari centriran collision box
             const int COLLECTIBLE_HITBOX_SIZE = 24;
             SDL_Rect centeredCollision = {
                 c.rect.x + (c.rect.w - COLLECTIBLE_HITBOX_SIZE)/2,
@@ -544,15 +560,16 @@ void Game::Update(float deltaTime) {
                 c.active = false;
                 collectiblesRemaining--;
                 collectiblesCollected++;
-                totalScore+=100;
+                totalScore += 100;
             }
         }
     }
 
+    // Final game over check
     if (!player->IsAlive()) {
         gameOver = true;
+        currentState = GameState::GAME_OVER;
     }
-
 }
 void Game::ShootAllyProjectile(Enemy* target) {
     Vector2f startPos = ally->GetCenterPosition();
@@ -607,67 +624,89 @@ void Game::Render() {
             SDL_RenderCopy(renderer, tex, NULL, &menuButtons[i].rect);
         }
     }
-else if(currentState == GameState::HIGHSCORES_DISPLAY) {
-    SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
+    else if (currentState == GameState::REPLAY) {
+        SDL_Rect cameraViewport = camera->GetViewport();
+        tileMap->Render(renderer, cameraViewport);
 
-    // Title with proper spacing
-    const int TITLE_Y = ScaleY(100);
-    const int TITLE_FONT_SCALE = 3.0f;
-    RenderText("TOP SCORES", windowWidth/2 - ScaleX(300), TITLE_Y, TITLE_FONT_SCALE);
-
-    // Column layout constants
-    const int HEADER_Y = TITLE_Y + ScaleY(80);  // Space after title
-    const int ROW_START_Y = HEADER_Y + ScaleY(80); // Space after headers
-    const int COLUMN_SPACING = ScaleX(200);
-
-    // Calculate column positions based on text widths
-    const int POS_WIDTH = ScaleX(100);  // "99." width
-    const int NAME_WIDTH = ScaleX(200); // Max name width
-    const int SCORE_WIDTH = ScaleX(200);// Score width
-
-    const int POS_X = windowWidth/2 - (NAME_WIDTH/2 + COLUMN_SPACING);
-    const int NAME_X = windowWidth/2 - NAME_WIDTH/2;
-    const int SCORE_X = windowWidth/2 + (COLUMN_SPACING - SCORE_WIDTH/2);
-
-    // Column headers with spacing
-    const float HEADER_SCALE = 2.2f;
-    RenderText("POS", POS_X + POS_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
-    RenderText("NAME", NAME_X + NAME_WIDTH/2 - ScaleX(100), HEADER_Y, HEADER_SCALE);
-    RenderText("SCORE", SCORE_X + SCORE_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
-
-    // Scores list with row spacing
-    const float ROW_SCALE = 2.0f;
-    const int ROW_SPACING = ScaleY(80);
-    for(size_t i = 0; i < highScores.size(); ++i) {
-        int yPos = ROW_START_Y + i * ROW_SPACING;
-
-        // Position number (right aligned)
-        RenderNumber(i+1, POS_X + POS_WIDTH - ScaleX(60), yPos, ROW_SCALE);
-
-        // Name (left aligned with max width)
-        std::string displayName = highScores[i].name;
-        if(displayName.length() > 15) {  // Truncate long names
-            displayName = displayName.substr(0, 12) + "...";
+        // Render collectibles
+        for (const auto& c : collectibles) {
+            if (c.active) {
+                SDL_Rect destRect = {
+                    c.rect.x - cameraViewport.x,
+                    c.rect.y - cameraViewport.y,
+                    64, 64
+                };
+                SDL_RenderCopy(renderer, collectibleTexture, &collectibleSrcRect, &destRect);
+            }
         }
-        RenderText(displayName, NAME_X, yPos, ROW_SCALE);
 
-        // Score (left aligned)
-        RenderNumber(highScores[i].score, SCORE_X, yPos, ROW_SCALE);
+        // Render entities
+        player->Render(renderer, cameraViewport);
+        if (ally && ally->IsAlive()) ally->Render(renderer, cameraViewport);
+        for (auto& enemy : enemies) enemy->Render(renderer, cameraViewport);
+        for (auto& projectile : projectiles) projectile->Render(renderer, cameraViewport);
     }
+    else if(currentState == GameState::HIGHSCORES_DISPLAY) {
+            SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
-    // Centered back button with top margin
-    for(const auto& btn : menuButtons) {
-        SDL_Rect centeredBtn = btn.rect;
-        centeredBtn.y = ROW_START_Y + static_cast<int>(highScores.size() * ROW_SPACING) + ScaleY(100);
-        centeredBtn.x = windowWidth/2 - centeredBtn.w/2;
-        std::string texName = btn.id + "_btn";
-        if(hoveredButton == &btn - &menuButtons[0]) {
-            texName += "_hover";
+            // Title with proper spacing
+            const int TITLE_Y = ScaleY(100);
+            const int TITLE_FONT_SCALE = 3.0f;
+            RenderText("TOP SCORES", windowWidth/2 - ScaleX(300), TITLE_Y, TITLE_FONT_SCALE);
+
+            // Column layout constants
+            const int HEADER_Y = TITLE_Y + ScaleY(80);  // Space after title
+            const int ROW_START_Y = HEADER_Y + ScaleY(80); // Space after headers
+            const int COLUMN_SPACING = ScaleX(200);
+
+            // Calculate column positions based on text widths
+            const int POS_WIDTH = ScaleX(100);  // "99." width
+            const int NAME_WIDTH = ScaleX(200); // Max name width
+            const int SCORE_WIDTH = ScaleX(200);// Score width
+
+            const int POS_X = windowWidth/2 - (NAME_WIDTH/2 + COLUMN_SPACING);
+            const int NAME_X = windowWidth/2 - NAME_WIDTH/2;
+            const int SCORE_X = windowWidth/2 + (COLUMN_SPACING - SCORE_WIDTH/2);
+
+            // Column headers with spacing
+            const float HEADER_SCALE = 2.2f;
+            RenderText("POS", POS_X + POS_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
+            RenderText("NAME", NAME_X + NAME_WIDTH/2 - ScaleX(100), HEADER_Y, HEADER_SCALE);
+            RenderText("SCORE", SCORE_X + SCORE_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
+
+            // Scores list with row spacing
+            const float ROW_SCALE = 2.0f;
+            const int ROW_SPACING = ScaleY(80);
+            for(size_t i = 0; i < highScores.size(); ++i) {
+                int yPos = ROW_START_Y + i * ROW_SPACING;
+
+                // Position number (right aligned)
+                RenderNumber(i+1, POS_X + POS_WIDTH - ScaleX(60), yPos, ROW_SCALE);
+
+                // Name (left aligned with max width)
+                std::string displayName = highScores[i].name;
+                if(displayName.length() > 15) {  // Truncate long names
+                    displayName = displayName.substr(0, 12) + "...";
+                }
+                RenderText(displayName, NAME_X, yPos, ROW_SCALE);
+
+                // Score (left aligned)
+                RenderNumber(highScores[i].score, SCORE_X, yPos, ROW_SCALE);
+            }
+
+            // Centered back button with top margin
+            for(const auto& btn : menuButtons) {
+                SDL_Rect centeredBtn = btn.rect;
+                centeredBtn.y = ROW_START_Y + static_cast<int>(highScores.size() * ROW_SPACING) + ScaleY(100);
+                centeredBtn.x = windowWidth/2 - centeredBtn.w/2;
+                std::string texName = btn.id + "_btn";
+                if(hoveredButton == &btn - &menuButtons[0]) {
+                    texName += "_hover";
+                }
+                SDL_Texture* tex = texture_manager->GetTexture(texName);
+                if(tex) SDL_RenderCopy(renderer, tex, NULL, &centeredBtn);
+            }
         }
-        SDL_Texture* tex = texture_manager->GetTexture(texName);
-        if(tex) SDL_RenderCopy(renderer, tex, NULL, &centeredBtn);
-    }
-}
     else if (currentState == GameState::HIGHSCORE_ENTRY) {
         SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
         RenderText("ENTER YOUR NAME: " + currentNameInput, windowWidth/2 - 200, windowHeight/2, 1.5f);
@@ -723,6 +762,7 @@ else if(currentState == GameState::HIGHSCORES_DISPLAY) {
 
         RenderText("PRESS R TO RESTART", windowWidth/2 - 300, BASE_Y + Y_SPACING*4, 1.5f);
         RenderText("PRESS H FOR HIGHSCORE", windowWidth/2 - 350, BASE_Y + Y_SPACING*5, 1.5f);
+        RenderText("PRESS P TO REPLAY LAST GAME", windowWidth/2 - 400, BASE_Y + Y_SPACING*6, 1.5f);
     }
     else if (currentState == GameState::PLAYING) {
         // Render game
@@ -988,6 +1028,9 @@ bool Game::Running() {
 }
 
 void Game::Clean() {
+    if(isRecording) {
+        FinalizeRecording();
+    }
     delete player;
     delete texture_manager;
     delete ally;
@@ -1069,6 +1112,8 @@ void Game::RestartGame() {
             PLAYER_SPAWN_Y
         );
     }
+    if(isRecording) FinalizeRecording();
+    StartRecording();
 
     totalScore = 0;
     enemiesKilledTotal = 0;
@@ -1205,7 +1250,7 @@ void Game::UpdateWave(float deltaTime) {
         // Če je zajebu
         if (waveTimeRemaining <= 0.0f) {
             gameOver = true;
-            GameState::GAME_OVER;
+            currentState=GameState::GAME_OVER;
             return;
         }
 
@@ -1964,6 +2009,220 @@ void Game::RenderText(const std::string& text, int x, int y, float scale) {
             destHeight
         };
         SDL_RenderCopy(renderer, lettersTexture, &src, &dest);
+    }
+}
+void Game::StartRecording() {
+    currentReplayFrame = 0;
+    totalRecordedTime = 0.0f;
+    currentReplayFile = GetSavePath("last_replay.bin");
+    std::ofstream file(currentReplayFile, std::ios::binary);
+
+    ReplayHeader header;
+    strncpy(header.magic, "RPLY", 4); // Add this line
+    header.frameCount = 0;
+    header.totalTime = 0.0f;
+    header.finalScore = 0;
+    header.finalWave = 0;
+
+    file.write(reinterpret_cast<char*>(&header), sizeof(ReplayHeader));
+    file.close();
+    isRecording = true;
+}
+
+void Game::RecordFrame(float deltaTime) {
+    SDL_Log("Recording frame %d", currentReplayFrame);
+    std::ofstream file(currentReplayFile, std::ios::binary | std::ios::app);
+
+    ReplayFrame frame;
+    frame.timestamp = totalRecordedTime;
+    totalRecordedTime += deltaTime;
+    frame.playerPos = player->GetCenterPosition();
+
+    // Record enemies
+    frame.enemyCount = 0;
+    std::vector<std::pair<Vector2f, int>> liveEnemies;
+    for (auto& e : enemies) {
+        if (e->IsAlive()) {
+            // Convert SDL_Rect to Vector2f
+            SDL_Rect enemyPos = e->GetPosition();
+            liveEnemies.emplace_back(
+                Vector2f(enemyPos.x, enemyPos.y), // Explicit conversion
+                e->GetLevel()
+            );
+        }
+    }
+    frame.enemyCount = liveEnemies.size();
+
+    // Record projectiles
+    frame.projectileCount = projectiles.size();
+
+    // Record collectibles
+    frame.collectibleCount = 0;
+    std::vector<Vector2f> activeCollectibles;
+    for (auto& c : collectibles) {
+        if (c.active) {
+            // Store as Vector2f directly
+            activeCollectibles.emplace_back(c.rect.x, c.rect.y);
+        }
+    }
+    frame.collectibleCount = activeCollectibles.size();
+
+    // Write frame header
+    file.write(reinterpret_cast<char*>(&frame), sizeof(ReplayFrame));
+
+    // Write enemy data
+    for(auto& [pos, lvl] : liveEnemies) {
+        file.write(reinterpret_cast<char*>(&pos), sizeof(Vector2f));
+        file.write(reinterpret_cast<char*>(&lvl), sizeof(int));
+    }
+
+    // Write projectile positions
+    for (auto& p : projectiles) {
+        // Convert SDL_Rect to Vector2f
+        SDL_Rect projectileRect = p->GetPosition();
+        Vector2f pos(projectileRect.x, projectileRect.y);
+        file.write(reinterpret_cast<char*>(&pos), sizeof(Vector2f));
+    }
+
+    // Write collectibles
+    for(auto& pos : activeCollectibles) {
+        file.write(reinterpret_cast<char*>(&pos), sizeof(Vector2f));
+    }
+    currentReplayFrame++;
+
+    file.close();
+}
+
+void Game::FinalizeRecording() {
+    if (!isRecording) return;
+    isRecording = false;
+
+    std::fstream file(currentReplayFile, std::ios::in | std::ios::out | std::ios::binary);
+    ReplayHeader header;
+    file.read(reinterpret_cast<char*>(&header), sizeof(ReplayHeader));
+
+    header.totalTime = totalRecordedTime;
+    header.finalScore = totalScore;
+    header.finalWave = currentWave;
+    header.frameCount = currentReplayFrame;
+
+    file.seekp(0);
+    file.write(reinterpret_cast<char*>(&header), sizeof(ReplayHeader));
+    file.close();
+}
+void Game::StartReplay(const std::string& filename) {
+    replayFile.open(filename, std::ios::binary);
+    if (!replayFile) {
+        SDL_Log("Failed to open replay file: %s", filename.c_str());
+        return;
+    }
+
+    ReplayHeader header;
+    replayFile.read(reinterpret_cast<char*>(&header), sizeof(ReplayHeader));
+
+    if (memcmp(header.magic, "RPLY", 4) != 0) {
+        SDL_Log("Invalid replay file format");
+        replayFile.close();
+        return;
+    }
+
+    // Reset camera to the first frame's player position
+    ReplayFrame firstFrame;
+    replayFile.read(reinterpret_cast<char*>(&firstFrame), sizeof(ReplayFrame));
+    camera->Reset(firstFrame.playerPos.x, firstFrame.playerPos.y);
+    replayFile.seekg(sizeof(ReplayHeader)); // Rewind to start after header
+
+    currentState = GameState::REPLAY;
+    isReplaying = true;
+    replayTimer = 0.0f;
+}
+
+void Game::UpdateReplay(float deltaTime) {
+    if (!isReplaying) return;
+
+    replayTimer += deltaTime * replaySpeed;
+
+    while (true) {
+        ReplayFrame frame;
+        if (!replayFile.read(reinterpret_cast<char*>(&frame), sizeof(ReplayFrame))) {
+            if (replayFile.eof()) {
+                isReplaying = false;
+                currentState = GameState::MAIN_MENU;
+                replayFile.close();
+            }
+            break;
+        }
+
+        if (frame.timestamp > replayTimer) {
+            replayFile.seekg(-static_cast<int>(sizeof(ReplayFrame)), std::ios::cur);
+            break;
+        }
+
+        // Update player and camera
+        player->SetPosition(frame.playerPos.x, frame.playerPos.y);
+        camera->Reset(frame.playerPos.x, frame.playerPos.y);
+
+        // Clear old entities
+        enemies.clear();
+        for (auto& p : projectiles) delete p;
+        projectiles.clear();
+        collectibles.clear();
+
+        // Restore enemies
+        for (uint16_t i = 0; i < frame.enemyCount; i++) {
+            Vector2f pos;
+            int level;
+            if (!replayFile.read(reinterpret_cast<char*>(&pos), sizeof(Vector2f)) ||
+                !replayFile.read(reinterpret_cast<char*>(&level), sizeof(int))) {
+                SDL_Log("Replay file corrupted!");
+                isReplaying = false;
+                replayFile.close();
+                break;
+            }
+            Enemy* e = GetPooledEnemy();
+            if (e) {
+                e->Revive(pos.x, pos.y, level);
+                enemies.push_back(e);
+            }
+        }
+        if (!isReplaying) break;
+
+        // Restore projectiles with valid targets
+        for (uint16_t i = 0; i < frame.projectileCount; i++) {
+            Vector2f pos;
+            if (!replayFile.read(reinterpret_cast<char*>(&pos), sizeof(Vector2f))) {
+                SDL_Log("Replay file corrupted!");
+                isReplaying = false;
+                replayFile.close();
+                break;
+            }
+            Enemy* nearest = FindNearestEnemy();
+            if (nearest) {
+                projectiles.push_back(new Projectile(
+                    *texture_manager,
+                    nearest,
+                    pos.x,
+                    pos.y,
+                    600.0f,
+                    30,
+                    500.0f
+                ));
+            }
+        }
+        if (!isReplaying) break;
+
+        // Restore collectibles
+        for (uint16_t i = 0; i < frame.collectibleCount; i++) {
+            Vector2f pos;
+            if (!replayFile.read(reinterpret_cast<char*>(&pos), sizeof(Vector2f))) {
+                SDL_Log("Replay file corrupted!");
+                isReplaying = false;
+                replayFile.close();
+                break;
+            }
+            collectibles.push_back({{static_cast<int>(pos.x), static_cast<int>(pos.y), 32, 32}, true});
+        }
+        if (!isReplaying) break;
     }
 }
 

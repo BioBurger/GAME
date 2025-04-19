@@ -103,6 +103,9 @@ CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
 //Flags used by the linker during RELWITHDEBINFO builds.
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
+//Enable/Disable output of build database during the build.
+CMAKE_EXPORT_BUILD_DATABASE:BOOL=
+
 //Enable/Disable output of compile commands during generation.
 CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 
@@ -341,9 +344,9 @@ CMAKE_CACHEFILE_DIR:INTERNAL=c:/Users/bostj/CLionProjects/GAME/cmake-build-debug
 //Major version of cmake used to create the current loaded cache
 CMAKE_CACHE_MAJOR_VERSION:INTERNAL=3
 //Minor version of cmake used to create the current loaded cache
-CMAKE_CACHE_MINOR_VERSION:INTERNAL=30
+CMAKE_CACHE_MINOR_VERSION:INTERNAL=31
 //Patch version of cmake used to create the current loaded cache
-CMAKE_CACHE_PATCH_VERSION:INTERNAL=5
+CMAKE_CACHE_PATCH_VERSION:INTERNAL=6
 //Path to CMake executable.
 CMAKE_COMMAND:INTERNAL=C:/Program Files/JetBrains/CLion 2024.3.2/bin/cmake/win/x64/bin/cmake.exe
 //Path to cpack program executable.
@@ -400,6 +403,8 @@ CMAKE_EXE_LINKER_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
 CMAKE_EXE_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_EXPORT_BUILD_DATABASE
+CMAKE_EXPORT_BUILD_DATABASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_EXPORT_COMPILE_COMMANDS
 CMAKE_EXPORT_COMPILE_COMMANDS-ADVANCED:INTERNAL=1
 //Name of external makefile project generator.
@@ -457,7 +462,7 @@ CMAKE_RC_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_READELF
 CMAKE_READELF-ADVANCED:INTERNAL=1
 //Path to CMake installation.
-CMAKE_ROOT:INTERNAL=C:/Program Files/JetBrains/CLion 2024.3.2/bin/cmake/win/x64/share/cmake-3.30
+CMAKE_ROOT:INTERNAL=C:/Program Files/JetBrains/CLion 2024.3.2/bin/cmake/win/x64/share/cmake-3.31
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS
 CMAKE_SHARED_LINKER_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS_DEBUG
@@ -506,7 +511,7 @@ PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
 SDL2_IMAGE_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: SDL2_IMAGE_LIBRARY
 SDL2_IMAGE_LIBRARY-ADVANCED:INTERNAL=1
-SDL2_LIBRARY_TEMP:INTERNAL=mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a
+SDL2_LIBRARY_TEMP:INTERNAL=mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a
 //Install the dependencies listed in your manifest:
 //\n    If this is off, you will have to manually install your dependencies.
 //\n    See https://github.com/microsoft/vcpkg/tree/master/docs/specifications/manifests.md
@@ -521,6 +526,10 @@ Z_VCPKG_CHECK_MANIFEST_MODE:INTERNAL=OFF
 Z_VCPKG_POWERSHELL_PATH:INTERNAL=C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
 //Vcpkg root directory
 Z_VCPKG_ROOT_DIR:INTERNAL=C:/Users/bostj/.vcpkg-clion/vcpkg
+//linker supports push/pop state
+_CMAKE_CXX_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
+//linker supports push/pop state
+_CMAKE_C_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 //linker supports push/pop state
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 

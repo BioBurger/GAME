@@ -9,6 +9,7 @@ public:
     void ResetAnimation();
     enum class State { IDLE, MOVING };
 
+
 private:
     State currentState = State::IDLE;
     State previousState = State::IDLE;

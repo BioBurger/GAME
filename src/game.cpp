@@ -2143,6 +2143,7 @@ void Game::UpdateReplay(float deltaTime) {
     replayTimer += deltaTime * replaySpeed;
 
     while (true) {
+        tileMap->Update(deltaTime);
         ReplayFrame frame;
         if (!replayFile.read(reinterpret_cast<char*>(&frame), sizeof(ReplayFrame))) {
             if (replayFile.eof()) {
@@ -2160,7 +2161,18 @@ void Game::UpdateReplay(float deltaTime) {
 
         // Update player and camera
         player->SetPosition(frame.playerPos.x, frame.playerPos.y);
+
         camera->Reset(frame.playerPos.x, frame.playerPos.y);
+
+        player->SetVelocity(0,0);
+        player->Update(deltaTime);
+
+        ally->Revive(frame.playerPos.x + 100, frame.playerPos.y, /*health=*/100);
+
+        if (ally) {
+            ally->SetPosition(frame.playerPos.x + 100, frame.playerPos.y);
+            ally->Update(deltaTime);
+        }
 
         // Clear old entities
         enemies.clear();

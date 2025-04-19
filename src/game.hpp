@@ -46,10 +46,14 @@ struct ReplayHeader {
 struct ReplayFrame {
     float timestamp;
     Vector2f playerPos;
+    Vector2f playerVelocity; // ADD
+    int playerFrameIndex;    // ADD
     uint16_t enemyCount;
     uint16_t projectileCount;
     uint16_t collectibleCount;
     Vector2f allyPos;
+    Vector2f allyVelocity;   // ADD
+    int allyFrameIndex;      // ADD
     bool allyActive;
 };
 #pragma pack(pop)

@@ -2037,6 +2037,16 @@ void Game::RecordFrame(float deltaTime) {
     frame.timestamp = totalRecordedTime;
     totalRecordedTime += deltaTime;
     frame.playerPos = player->GetCenterPosition();
+    frame.playerVelocity = player->GetVelocity(); // ADD
+    frame.playerFrameIndex = player->GetCurrentFrameIndex(); // ADD
+
+
+    if(ally) {
+        frame.allyPos = ally->GetCenterPosition();
+        frame.allyVelocity = ally->GetVelocity(); // ADD
+        frame.allyFrameIndex = ally->GetCurrentFrameIndex(); // ADD
+        frame.allyActive = ally->IsAlive();
+    }
 
     // Record enemies
     frame.enemyCount = 0;
@@ -2164,15 +2174,18 @@ void Game::UpdateReplay(float deltaTime) {
 
         camera->Reset(frame.playerPos.x, frame.playerPos.y);
 
-        player->SetVelocity(0,0);
+        player->SetVelocity(frame.playerVelocity.x, frame.playerVelocity.y); // ADD
+        player->SetCurrentFrameIndex(frame.playerFrameIndex); // ADD
         player->Update(deltaTime);
 
         ally->Revive(frame.playerPos.x + 100, frame.playerPos.y, /*health=*/100);
 
-        if (ally) {
-            ally->SetPosition(frame.playerPos.x + 100, frame.playerPos.y);
-            ally->Update(deltaTime);
-        }
+    if(ally) {
+        ally->SetPosition(frame.allyPos.x, frame.allyPos.y);
+        ally->SetVelocity(frame.allyVelocity.x, frame.allyVelocity.y); // ADD
+        ally->SetCurrentFrameIndex(frame.allyFrameIndex); // ADD
+        ally->Update(deltaTime);
+    }
 
         // Clear old entities
         enemies.clear();

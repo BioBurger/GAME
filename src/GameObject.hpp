@@ -9,7 +9,7 @@ class GameObject {
 public:
     GameObject(Texture_Manager& manager, const std::string& textureID, int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed, int startHealth = 100);
     ~GameObject();
-    enum class State {IDLE, MOVING, DEAD};//stanja animacije + ani je mrtev
+    enum class State {IDLE, MOVING};//stanja animacije + ani je mrtev
     enum class Direction {LEFT, RIGHT, UP, DOWN};
     virtual void Update(float deltaTime);
     virtual void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport);
@@ -21,7 +21,6 @@ public:
     int GetHealth() const{return health;}
     void TakeDamage(int damage);
     bool IsAlive() const { return health > 0; }
-    void PlayDeathAnimation();
     SDL_Rect GetCollisionBox() const;
     int GetMaxHealth() const {return maxHealth;}
     void SetSpeedMultiplier(float mult) { speedMultiplier = mult; }
@@ -38,6 +37,9 @@ public:
     int GetHeight() const { return height; }
     void SetActive(bool active) { isActive = active; }
     bool IsActive() const { return isActive; }
+    Vector2f GetVelocity() const { return Vector2f(velocityX, velocityY); }
+    int GetCurrentFrameIndex() const { return currentFrameIndex; }
+    void SetCurrentFrameIndex(int index) { currentFrameIndex = index; }
 protected:
     bool isActive = true;
     int health;

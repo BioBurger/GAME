@@ -29,8 +29,6 @@ GameObject::GameObject(Texture_Manager& manager, const std::string& texture_name
 GameObject::~GameObject() {}
 void GameObject::Update(float deltaTime) {
     if (!IsAlive()) {
-        currentState = State::DEAD;
-        PlayDeathAnimation();
         return;
     }
     // Posodobi pozicijo
@@ -131,15 +129,6 @@ GameObject::Direction GameObject::GetDirection()const {
 void GameObject::TakeDamage(int damage) {
     health -= damage;
     if (health < 0) health = 0;
-}
-void GameObject::PlayDeathAnimation() {
-    isAnimated = true;
-    totalFrames = 1;
-    animationRow = 0;
-    animationSpeed = 0.15f;
-    currentFrameIndex = 0;
-    velocityX = 0;
-    velocityY = 0;
 }
 SDL_Rect GameObject::GetCollisionBox() const {
     return {

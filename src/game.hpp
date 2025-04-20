@@ -60,62 +60,90 @@ struct ReplayFrame {
 
 class Game {
 private:
-    Ally* ally;
+
     GameState currentState = GameState::MAIN_MENU;
     Texture_Manager *texture_manager;
     bool isRunning;
     SDL_Window *window;
     SDL_Renderer *renderer;
-    SDL_Texture *heartTexture;
-    GameObject *player;
-    Camera *camera;
-    TileMap *tileMap;
-    std::vector<Enemy*> enemies;
-    float spawnTimer = 0.0f;
-    const float SPAWN_INTERVAL = 0.5f;
     bool gameOver = false;
     SDL_Texture* gameOverTexture;
+    bool debugMode = false;
+
+    //Player
+    GameObject *player;
     int playerWidth = 80;
     int playerHeight = 80;
     int frameWidth = 16;
     int frameHeight = 16;
     int totalFrames = 8;
     float animationSpeed = 0.1f;
+    const int PLAYER_SPAWN_X = 5000;
+    const int PLAYER_SPAWN_Y = 5000;
+    //Camera
+    Camera *camera;
+    //Map
+    TileMap *tileMap;
+
+    //Enemies
+    std::vector<Enemy*> enemies;
+    float spawnTimer = 0.0f;
+    const float SPAWN_INTERVAL = 0.5f;
+    int enemiesPerWave = 20;
+    int enemiesRemaining = 0;
+    std::vector<Enemy*> enemyPool;
+    int enemiesKilledThisWave = 0;
+
+    //Health
+    SDL_Texture *heartTexture;
     int srcHeartSize = 16;
     int destHeartSize = 64;
     int maxHearts = 4;
     static constexpr int HEART_PHASES = 7;
     static constexpr int HEALTH_PER_HEART = 25;
-    const int PLAYER_SPAWN_X = 5000;
-    const int PLAYER_SPAWN_Y = 5000;
+    int CalculateHeartPhase(int index, int currentHealth) const;
+
+    //Numbers+Text+Wave
     SDL_Texture* waveTextTexture = nullptr;
     SDL_Texture* numbersTexture = nullptr;
+    SDL_Texture* cachedWaveTexture = nullptr;
     const int NUMBER_WIDTH = 16;
     const int NUMBER_HEIGHT = 16;
     int currentWave = 0;
-    int enemiesPerWave = 20;
-    int enemiesRemaining = 0;
     float waveTimer = 0.0f;
     float waveStartDelay = 5.0f;
     bool betweenWaves = true;
-    std::vector<Enemy*> enemyPool;
-    SDL_Texture* cachedWaveTexture = nullptr;
     int cachedWaveNumber = -1;
-    bool debugMode = false;
+    const float WAVE_SCALE = 2.0f;
+    const float NUMBER_SCALE = 2.0f;
+    float waveTimeRemaining;
+    float waveTimeElapsed = 0.0f;
+    const float WAVE_TIME_LIMIT = 30.0f;
+
+
+    //Ally
+    Ally* ally;
     const int SPAWN_OFFSET = 200;
+
+    //Projectiles
     std::vector<Projectile*> projectiles;
     float fireTimer = 0.0f;
     float FIRE_RATE = 1.0f;  // Shots per second
     float PISTOL_RANGE = 700.0f;
     const float PROJECTILE_SPEED = 800.0f;
     int PROJECTILE_DAMAGE = 50;
-    int enemiesKilledThisWave = 0;
+
+    //Upgrade
     bool isChoosingUpgrade = false;
     int selectedUpgrade = 0;
     SDL_Texture* upgradeMenuTexture = nullptr;
     SDL_Texture* upgradeFireTexture;
     SDL_Texture* upgradeDamageTexture;
     SDL_Texture* upgradeRangeTexture;
+
+    //Menu
+    SDL_Texture* lettersTexture;
+    SDL_Rect letterSrcRect;
     SDL_Texture* menuBackground = nullptr;
     SDL_Texture* buttonTexture = nullptr;
     SDL_Texture* buttonHoverTexture = nullptr;
@@ -132,35 +160,35 @@ private:
     void HandleMenuClick(int mouseX, int mouseY);
     void CreateMenuLayout();
     void ChangeResolution(int width, int height);
-    int CalculateHeartPhase(int index, int currentHealth) const;
     int ScaleX(int original) const;
     int ScaleY(int original) const;
-    const float WAVE_SCALE = 2.0f;
-    const float NUMBER_SCALE = 2.0f;
-    std::vector<Collectible> collectibles;
-    float waveTimeRemaining;
-    float waveTimeElapsed = 0.0f;
+    const int LETTER_WIDTH = 16;
+    const int LETTER_HEIGHT = 16;
+    const int MAX_NAME_LENGTH = 3;
+    int totalScore=0;
+    int enemiesKilledTotal=0;
+    int collectiblesCollected=0;
+
+    //Collectibles
     SDL_Texture* collectibleTexture;
-    const float WAVE_TIME_LIMIT = 30.0f;
+    std::vector<Collectible> collectibles;
     int collectiblesRemaining;
     SDL_Rect collectibleSrcRect;const int BASE_COLLECTIBLES = 3;
     const int COLLECTIBLES_PER_WAVE = 1;
     const int MIN_SPAWN_DISTANCE = 600;
     const int MAX_SPAWN_DISTANCE = 1000;
+
+
+
     std::vector<HighScore> highScores;
     std::string currentNameInput;
     bool isEnteringName;
-    SDL_Texture* lettersTexture;
-    SDL_Rect letterSrcRect;
-    const int LETTER_WIDTH = 16;
-    const int LETTER_HEIGHT = 16;
-    const int MAX_NAME_LENGTH = 3;
+
+
+    //Load+Replay
     std::string GetSaveDirectory();
     std::string GetSavePath(const std::string& filename);
     void CreateGameDirectories();
-    int totalScore=0;
-    int enemiesKilledTotal=0;
-    int collectiblesCollected=0;
     std::string currentReplayFile;
     float replayTimer;
     float replaySpeed = 1.0f;
@@ -211,7 +239,7 @@ public:
     void ShootAllyProjectile(Enemy* target);
     void SaveGame();
     bool LoadGame();
-    std::string GetSavePath() {
+    static std::string GetSavePath() {
         char path[MAX_PATH];
         if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, path))) {
             std::string fullPath = std::string(path) + "\\GAME\\";

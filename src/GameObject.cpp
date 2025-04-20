@@ -31,15 +31,14 @@ void GameObject::Update(float deltaTime) {
     if (!IsAlive()) {
         return;
     }
-    // Posodobi pozicijo
+    // Update location
     positionX += velocityX * deltaTime * speedMultiplier;
     positionY += velocityY * deltaTime * speedMultiplier;
 
-    // Posodobi SDL_Rect za renderiranje
     positionrect.x = static_cast<int>(positionX);
     positionrect.y = static_cast<int>(positionY);
 
-    // Določi stanje in smer glede na hitrost
+    // State and speed
     if (velocityX != 0 || velocityY != 0) {
         currentState = State::MOVING;
 
@@ -52,31 +51,30 @@ void GameObject::Update(float deltaTime) {
         currentState = State::IDLE;
     }
 
-    // Nastavi animacijsko vrstico in število frame-ov
     switch (currentState) {
         case State::IDLE:
             if (currentDirection == Direction::LEFT) {
-                animationRow = 1;  // Uporabi idle right + flip
+                animationRow = 1;
                 flipType = SDL_FLIP_HORIZONTAL;
             } else {
                 animationRow = static_cast<int>(currentDirection);
                 flipType = SDL_FLIP_NONE;
             }
-        totalFrames = 5; // Število frame-ov za idle
+        totalFrames = 5;
         break;
 
         case State::MOVING:
             if (currentDirection == Direction::DOWN) {
-                animationRow = 3;  // Premik dol je v vrstici 3
+                animationRow = 3;
             } else if (currentDirection == Direction::UP) {
-                animationRow = 5;  // Premik gor je v vrstici 5
+                animationRow = 5;
             } else if (currentDirection == Direction::RIGHT) {
-                animationRow = 4;  // Premik desno je v vrstici 4
-            } else {  // LEFT
-                animationRow = 4; // Uporabi premik desno + flip
+                animationRow = 4;
+            } else {
+                animationRow = 4;
                 flipType = SDL_FLIP_HORIZONTAL;
             }
-        totalFrames = 8; // Število frame-ov za premikanje
+        totalFrames = 8;
         break;
     }
 
@@ -85,23 +83,22 @@ void GameObject::Update(float deltaTime) {
     if (isAnimated) {
         animationTimer += deltaTime;
         if (animationTimer >= actualSpeed) {
-            currentFrameIndex = (currentFrameIndex + 1) % totalFrames;  // Premik na naslednji frame
-            currentFrame.x = currentFrameIndex * frameWidth;  // Spreminjanje X glede na frame index
-            currentFrame.y = animationRow * frameHeight;  // Spreminjanje Y glede na vrstico animacije
+            currentFrameIndex = (currentFrameIndex + 1) % totalFrames;
+            currentFrame.x = currentFrameIndex * frameWidth;
+            currentFrame.y = animationRow * frameHeight;
 
-            animationTimer = 0.0f;  // Resetiraj timer
+            animationTimer = 0.0f;
         }
     }
 }
 
 void GameObject::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
     SDL_Rect destRect = {
-        positionrect.x - cameraViewport.x, // Korekcija za kamero
+        positionrect.x - cameraViewport.x,
         positionrect.y - cameraViewport.y,
         positionrect.w,
         positionrect.h
     };
-    //Za death animacijo
     if (!IsAlive()) {
         currentFrame.y = animationRow * frameHeight;
     }

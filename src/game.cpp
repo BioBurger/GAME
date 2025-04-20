@@ -32,47 +32,15 @@ Game::~Game() {
 std::string Game::GetSavePath(const std::string& filename) {
     return GetSaveDirectory() + filename;
 }
-
-/*void Game::CreateGameDirectories() {
-    char* basePathPtr = SDL_GetBasePath();
-    std::string basePath(basePathPtr);
-    SDL_free(basePathPtr);
-
-    // Create directories in sequence
-    std::vector<std::string> directories = {"GAME", "saves"};
-    std::string currentPath = basePath;
-
-    for (const auto& dir : directories) {
-        currentPath += dir + "/";  // Append directory name
-
-#if defined(_WIN32)
-        // Windows: Use CreateDirectoryW for Unicode support
-        if (!CreateDirectoryA(currentPath.c_str(), NULL)) {
-            DWORD error = GetLastError();
-            if (error != ERROR_ALREADY_EXISTS) {
-                SDL_Log("Failed to create directory: %s (Error: %lu)", currentPath.c_str(), error);
-            }
-        }
-#else
-        // Linux/macOS: Create with proper permissions
-        if (mkdir(currentPath.c_str(), 0755) != 0) {
-            if (errno != EEXIST) {
-                SDL_Log("Failed to create directory: %s (Error: %s)", currentPath.c_str(), strerror(errno));
-            }
-        }
-#endif
-    }
-}*/
 void Game::CreateGameDirectories() {
     std::filesystem::create_directories(GetSaveDirectory());
 }
 
-// Keep the existing GetSaveDirectory implementation
 std::string Game::GetSaveDirectory() {
     char* basePath = SDL_GetBasePath();
     std::string path(basePath);
     SDL_free(basePath);
-    path += "GAME/saves/";  // Forward slashes work cross-platform
+    path += "GAME/saves/";
     return path;
 }
 
@@ -96,83 +64,83 @@ void Game::Init(const char* title, bool fullscreen) {
             // Menu
             if (!texture_manager->HasTexture("menu_bg")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/background.png", "menu_bg")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("play_btn")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/play_btn.png", "play_btn")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("play_btn_hover")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/play_btn_hover.png", "play_btn_hover")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("settings_btn")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/settings_btn.png", "settings_btn")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("load_btn")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/load_btn.png", "load_btn")) {
-                    SDL_Log("Missing load button texture!");
+                    SDL_Log("No menu texture!");
                 }
             }
             if (!texture_manager->HasTexture("load_btn_hover")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/load_btn_hover.png", "load_btn_hover")) {
-                    SDL_Log("Missing load button hover texture!");
+                    SDL_Log("No menu texture!");
                 }
             }
             if (!texture_manager->HasTexture("settings_btn_hove")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/settings_btn_hover.png", "settings_btn_hover")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("quit_btn")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/quit_btn.png", "quit_btn")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("quit_btn_hover")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/quit_btn_hover.png", "quit_btn_hover")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("scores_btn")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/scores_btn.png", "scores_btn")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("scores_btn_hover")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/scores_btn_hover.png", "scores_btn_hover")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("back_btn")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/back_btn.png", "back_btn")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("back_btn_hover")) {
                 if (!texture_manager->LoadTexture("assets/textures/menu/back_btn_hover.png", "back_btn_hover")) {
-                    SDL_Log("NI menu texture!");
+                    SDL_Log("No menu texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("letters")) {
                 if(!texture_manager->LoadTexture("assets/textures/ui/letters.png", "letters")) {
-                    SDL_Log("Missing letters texture!");
+                    SDL_Log("Letters texture!");
                 }
             }
             lettersTexture = texture_manager->GetTexture("letters");
@@ -205,96 +173,120 @@ void Game::Init(const char* title, bool fullscreen) {
             // Player
             if (!texture_manager->HasTexture("player")) {
                 if(!texture_manager->LoadTexture("assets/textures/Player/Turtle-Wick.png", "player")) {
-                    SDL_Log("NAPACNA POT DO PLAYER TEKSTURE!");
+                    SDL_Log("No player texture");
                     exit(1);
                 }
             }
             // Ally
             if (!texture_manager->HasTexture("ally")) {
                 if(!texture_manager->LoadTexture("assets/textures/Player/ally.png", "ally")) {
-                    SDL_Log("Failed to load ally texture!");
+                    SDL_Log("No ally texture!");
                     exit(1);
                 }
             }
 
             // Water
             if (!texture_manager->HasTexture("water")) {
-                texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water");
+                if(!texture_manager->LoadTexture("assets/textures/Tiles/water_sheet.png", "water")) {
+                    SDL_Log("No water texture!");
+                    exit(1);
+                }
+
             }
             // Enemys
             if (!texture_manager->HasTexture("enemy1")) {
                 if (!texture_manager->LoadTexture("assets/textures/Enemys/test.png", "enemy1")) {
-                    SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE!");
+                    SDL_Log("No enemy texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("enemy2")) {
                 if (!texture_manager->LoadTexture("assets/textures/Enemys/newenemy2.png", "enemy2")) {
-                    SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE 2!");
+                    SDL_Log("No enemy texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("enemy3")) {
                 if (!texture_manager->LoadTexture("assets/textures/Enemys/newenemy3.png", "enemy3")) {
-                    SDL_Log("NAPACNA POT DO ENEMYJA TEKSTURE 3!");
+                    SDL_Log("No enemy texture!");
                     exit(1);
                 }
             }
             // Game Over
             if (!texture_manager->HasTexture("game_over")) {
                 if(!texture_manager->LoadTexture("assets/textures/ui/GameOver.png", "game_over")) {
-                    SDL_Log("MANJKA GAME OVER TEKSTURA!");
+                    SDL_Log("No game over texture!");
                     exit(1);
                 }
             }
             // UI elementi
             if (!texture_manager->HasTexture("heart")) {
                 if(!texture_manager->LoadTexture("assets/textures/ui/Heart.png", "heart")) {
-                    SDL_Log("MANJKA HEART TEKSTURA!");
+                    SDL_Log("No heart texture!");
                     exit(1);
                 }
             }// Bullet
             if (!texture_manager->HasTexture("bullet")) {
                 if (!texture_manager->LoadTexture("assets/textures/Weapons/bullet.png", "bullet")) {
-                    SDL_Log("MANJKA METEK TEKSTURA!");
+                    SDL_Log("No bullet texture!");
                     exit(1);
                 }
             }
             // Števile za wave
             if (!texture_manager->HasTexture("numbers")) {
                 if(!texture_manager->LoadTexture("assets/textures/ui/numbers.png", "numbers")) {
-                    SDL_Log("MANJKA NUMBER TEKSTURA!");
+                    SDL_Log("No numbers texture!");
                     exit(1);
                 }
             }
             // Wave napis
             if (!texture_manager->HasTexture("wave_text")) {
                 if(!texture_manager->LoadTexture("assets/textures/ui/wave.png", "wave_text")) {
-                    SDL_Log("MANJKA WAVE TEKSTURA!");
+                    SDL_Log("No wave texture!");
                     exit(1);
                 }
             }
             if (!texture_manager->HasTexture("collectible")) {
                 if(!texture_manager->LoadTexture("assets/textures/collectible2.png", "collectible")) {
-                    SDL_Log("Missing collectible texture!");
+                    SDL_Log("No collectible texture!");
                     exit(1);
                 }
             }
             // Upgradi
             if (!texture_manager->HasTexture("upgrade_menu")) {
-                texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu");
+                if(!texture_manager->LoadTexture("assets/textures/ui/upgrade_menu.png", "upgrade_menu")) {
+                    SDL_Log("No upgrade_menu texture!");
+                    exit(1);
+                }
+
             }
             if (!texture_manager->HasTexture("upgrade_fire_rate")) {
-                texture_manager->LoadTexture("assets/textures/ui/upgrade_fire.png", "upgrade_fire_rate");
+                if(!texture_manager->LoadTexture("assets/textures/ui/upgrade_fire.png", "upgrade_fire_rate")) {
+                    SDL_Log("No upgrade_fire texture!");
+                    exit(1);
+                }
+
             }
             if (!texture_manager->HasTexture("upgrade_damage")) {
-                texture_manager->LoadTexture("assets/textures/ui/upgrade_damage.png", "upgrade_damage");
+                if(!texture_manager->LoadTexture("assets/textures/ui/upgrade_damage.png", "upgrade_damage")) {
+                    SDL_Log("No upgrade_damage texture!");
+                    exit(1);
+                }
+
             }
             if (!texture_manager->HasTexture("upgrade_range")) {
-                texture_manager->LoadTexture("assets/textures/ui/upgrade_range.png", "upgrade_range");
+                if(!texture_manager->LoadTexture("assets/textures/ui/upgrade_range.png", "upgrade_range")) {
+                    SDL_Log("No upgrade_range texture!");
+                    exit(1);
+                }
+
             }
             if (!texture_manager->HasTexture("arrow")) {
-                texture_manager->LoadTexture("assets/textures/ui/arrow.png", "arrow");
+                if(!texture_manager->LoadTexture("assets/textures/ui/arrow.png", "arrow")) {
+                    SDL_Log("No arrow texture!");
+                    exit(1);
+                }
+
             }
             // Reference v mapi
             upgradeMenuTexture = texture_manager->GetTexture("upgrade_menu");
@@ -315,21 +307,22 @@ void Game::Init(const char* title, bool fullscreen) {
             SDL_SetWindowSize(window, windowWidth, windowHeight);
             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
-            betweenWaves = true;  // settingi za wave
+            betweenWaves = true;
             waveTimer = 0.0f;
             currentWave = 0;
 
 
-            // Player ustvarjen
+            // Player declare
             player = new GameObject(*texture_manager,"player",PLAYER_SPAWN_X, PLAYER_SPAWN_Y,playerWidth, playerHeight,frameWidth, frameHeight,totalFrames, animationSpeed);
             ally = new Ally(*texture_manager, "ally", PLAYER_SPAWN_X + 100, PLAYER_SPAWN_Y);
-            // Komponente
+
+
             camera = new Camera(1920, 1080);
             camera->Reset(PLAYER_SPAWN_X + playerWidth/2, PLAYER_SPAWN_Y + playerHeight/2);
             camera->SetMapBounds(20000, 20000);
             tileMap = new TileMap(*texture_manager, *camera);
 
-            InitializeEnemyPool(20);//Koliko enemijev na wave
+            InitializeEnemyPool(20);//Enemys per wave at 1
             isRunning = true;
             CreateMenuLayout();
             SDL_SetWindowSize(window, windowWidth, windowHeight);
@@ -362,11 +355,9 @@ void Game::HandleEvents() {
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    // Update internal resolution tracking
                     windowWidth = event.window.data1;
                     windowHeight = event.window.data2;
 
-                    // Force redraw of all UI elements
                     CreateMenuLayout();
                 }
             break;
@@ -380,16 +371,15 @@ void Game::HandleEvents() {
                         currentState == GameState::SETTINGS ||
                         currentState == GameState::HIGHSCORES_DISPLAY) {
                         currentState = GameState::MAIN_MENU;
+                        SaveGame();
                         CreateMenuLayout();
                         }
                 }
-                // Handle high score name entry first
+
                 if (currentState == GameState::HIGHSCORE_ENTRY) {
                     HandleHighscoreInput(event);
-                    break; // Skip other key processing
+                    break;
                 }
-
-                // Upgrade selection handling
                 if (isChoosingUpgrade) {
                     switch(event.key.keysym.sym) {
                         case SDLK_LEFT:
@@ -405,7 +395,6 @@ void Game::HandleEvents() {
                     }
                 }
 
-                // General key handling
                 switch(event.key.keysym.sym) {
                     case SDLK_F1:
                         debugMode = !debugMode;
@@ -467,7 +456,7 @@ void Game::Update(float deltaTime) {
     if (isRecording && currentState == GameState::PLAYING) {
         recordingFrameTimer += deltaTime;
         while (recordingFrameTimer >= RECORD_INTERVAL) {
-            RecordFrame(RECORD_INTERVAL);  // Use fixed time step
+            RecordFrame(RECORD_INTERVAL);  // JUst 60fps
             recordingFrameTimer -= RECORD_INTERVAL;
         }
     }
@@ -475,7 +464,7 @@ void Game::Update(float deltaTime) {
         return;
     }
 
-    // Handle game over condition first
+    // If gameover
     if ((!player->IsAlive() || waveTimeRemaining <= 0) && !gameOver) {
         gameOver = true;
         currentState = GameState::GAME_OVER;
@@ -490,7 +479,7 @@ void Game::Update(float deltaTime) {
         player->SetDamageCooldown(player->GetDamageCooldown() - deltaTime);
     }
 
-    // Ally logic
+    // Ally
     if (ally && ally->IsAlive()) {
         const Vector2f targetPos = player->GetCenterPosition() + Vector2f(50, 50);
         const Vector2f allyPos = ally->GetCenterPosition();
@@ -522,7 +511,7 @@ void Game::Update(float deltaTime) {
         ally->Update(deltaTime);
     }
 
-    // Core game updates
+    // Updates
     UpdateWave(deltaTime);
     ProcessInput();
     UpdatePlayer(deltaTime);
@@ -565,7 +554,7 @@ void Game::Update(float deltaTime) {
         }
     }
 
-    // Final game over check
+    // If gameover mid update
     if (!player->IsAlive()) {
         gameOver = true;
         currentState = GameState::GAME_OVER;
@@ -649,52 +638,52 @@ void Game::Render() {
     else if(currentState == GameState::HIGHSCORES_DISPLAY) {
             SDL_RenderCopy(renderer, menuBackground, NULL, NULL);
 
-            // Title with proper spacing
+            // Title
             const int TITLE_Y = ScaleY(100);
             const int TITLE_FONT_SCALE = 3.0f;
             RenderText("TOP SCORES", windowWidth/2 - ScaleX(300), TITLE_Y, TITLE_FONT_SCALE);
 
-            // Column layout constants
+            // Column
             const int HEADER_Y = TITLE_Y + ScaleY(80);  // Space after title
             const int ROW_START_Y = HEADER_Y + ScaleY(80); // Space after headers
             const int COLUMN_SPACING = ScaleX(200);
 
-            // Calculate column positions based on text widths
-            const int POS_WIDTH = ScaleX(100);  // "99." width
-            const int NAME_WIDTH = ScaleX(200); // Max name width
-            const int SCORE_WIDTH = ScaleX(200);// Score width
+            // Colum size
+            const int POS_WIDTH = ScaleX(100);
+            const int NAME_WIDTH = ScaleX(200);
+            const int SCORE_WIDTH = ScaleX(200);
 
             const int POS_X = windowWidth/2 - (NAME_WIDTH/2 + COLUMN_SPACING);
             const int NAME_X = windowWidth/2 - NAME_WIDTH/2;
             const int SCORE_X = windowWidth/2 + (COLUMN_SPACING - SCORE_WIDTH/2);
 
-            // Column headers with spacing
+            // Column headers
             const float HEADER_SCALE = 2.2f;
             RenderText("POS", POS_X + POS_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
             RenderText("NAME", NAME_X + NAME_WIDTH/2 - ScaleX(100), HEADER_Y, HEADER_SCALE);
             RenderText("SCORE", SCORE_X + SCORE_WIDTH/2 - ScaleX(60), HEADER_Y, HEADER_SCALE);
 
-            // Scores list with row spacing
+            // Scores list
             const float ROW_SCALE = 2.0f;
             const int ROW_SPACING = ScaleY(80);
             for(size_t i = 0; i < highScores.size(); ++i) {
                 int yPos = ROW_START_Y + i * ROW_SPACING;
 
-                // Position number (right aligned)
+                // Position number
                 RenderNumber(i+1, POS_X + POS_WIDTH - ScaleX(60), yPos, ROW_SCALE);
 
-                // Name (left aligned with max width)
+                // Name
                 std::string displayName = highScores[i].name;
-                if(displayName.length() > 15) {  // Truncate long names
+                if(displayName.length() > 15) {  // Long name fix
                     displayName = displayName.substr(0, 12) + "...";
                 }
                 RenderText(displayName, NAME_X, yPos, ROW_SCALE);
 
-                // Score (left aligned)
+                // Score
                 RenderNumber(highScores[i].score, SCORE_X, yPos, ROW_SCALE);
             }
 
-            // Centered back button with top margin
+            // Centered back
             for(const auto& btn : menuButtons) {
                 SDL_Rect centeredBtn = btn.rect;
                 centeredBtn.y = ROW_START_Y + static_cast<int>(highScores.size() * ROW_SPACING) + ScaleY(100);
@@ -718,7 +707,6 @@ void Game::Render() {
             std::string texName;
 
             if (menuButtons[i].id != "back") {
-                // Z id-jem vlecemo 720,1080,1440
                 texName = "resolution_btn_" + menuButtons[i].id;
                 if (hoveredButton == static_cast<int>(i)) {
                     texName = "resolution_btn_hover_" + menuButtons[i].id;
@@ -738,11 +726,11 @@ void Game::Render() {
         }
     }
     else if (currentState == GameState::GAME_OVER) {
-        // Game over screen background
+        // Game over
         SDL_Rect screenRect = {0, 0, windowWidth, windowHeight};
         SDL_RenderCopy(renderer, gameOverTexture, NULL, &screenRect);
 
-        // Position constants
+        // Position
         const int LABEL_X = windowWidth/2 - 200;
         const int NUMBER_X = windowWidth/2 + 200;
         const int BASE_Y = ScaleY(300);
@@ -794,7 +782,7 @@ void Game::Render() {
                 enemy->Render(renderer, cameraViewport);
             }
 
-            // Render metkni
+            // Render bullets
             for(auto& projectile : projectiles) {
                 projectile->Render(renderer, cameraViewport);
             }
@@ -807,7 +795,7 @@ void Game::Render() {
     SDL_Rect overlay = {0, 0, windowWidth, windowHeight};
     SDL_RenderCopy(renderer, upgradeMenuTexture, NULL, &overlay);
 
-    // Zračuna mere
+    // Scales
     const int OPTION_WIDTH = ScaleX(300);
     const int OPTION_HEIGHT = ScaleY(400);
     const int SPACING = ScaleX(80);
@@ -816,7 +804,7 @@ void Game::Render() {
     const int START_X = (windowWidth - TOTAL_WIDTH) / 2;
 
 
-    // Pop up effect za upgrade
+    // Pop up effect
     const int HOVER_OFFSET = ScaleY(15);
     const int HOVER_SIZE_INCREASE = ScaleY(30);
 
@@ -990,10 +978,10 @@ void Game::RenderTimer() {
         int digit = c - '0';
         SDL_Rect srcRect = { digit * NUMBER_WIDTH, 0, NUMBER_WIDTH, NUMBER_HEIGHT };
         SDL_Rect destRect = {
-            static_cast<int>(startX + (digitWidth + spacing) * static_cast<int>(i)),
-            static_cast<int>(startY),
-            static_cast<int>(digitWidth),
-            static_cast<int>(digitHeight)
+            (startX + (digitWidth + spacing) * static_cast<int>(i)),
+            (startY),
+            (digitWidth),
+            (digitHeight)
         };
         SDL_RenderCopy(renderer, numbersTexture, &srcRect, &destRect);
     }
@@ -1049,18 +1037,18 @@ void Game::SpawnEnemy() {
 
     SDL_Rect playerPos = player->GetPosition();
 
-    // Generiraj naključno spawn pozicijo
+    // Random distance
     float angle = static_cast<float>(rand() % 360) * (M_PI / 180.0f);
     float distance = MIN_SPAWN_DISTANCE + static_cast<float>(rand()) / RAND_MAX * (MAX_SPAWN_DISTANCE - MIN_SPAWN_DISTANCE);
 
     int spawnX = playerPos.x + static_cast<int>(cos(angle) * distance);
     int spawnY = playerPos.y + static_cast<int>(sin(angle) * distance);
 
-    // Omeji na meje mape
+    // Map bounds
     spawnX = std::clamp(spawnX, 0, 20000);
     spawnY = std::clamp(spawnY, 0, 20000);
 
-    // Določi nivo sovražnika glede na val
+    // Lvl of enemy
     int level = 1;
     if(currentWave >= 5) {
         level = 3;
@@ -1074,12 +1062,12 @@ void Game::SpawnEnemy() {
 
     Enemy* e = GetPooledEnemy();
     if (e) {
-        // Update ustvarjene pooled enemy
+        // Update pool enemy
         e->Revive(spawnX, spawnY, level);
-        // Parametri za animacijo
+        // Animation
         e->ReloadTexture(*texture_manager, "enemy" + std::to_string(level));
     } else {
-        // Nov enemy
+        // New enemy
         e = new Enemy(
             *texture_manager,
             "enemy" + std::to_string(level),
@@ -1105,10 +1093,10 @@ void Game::RestartGame() {
                            frameWidth, frameHeight,
                            totalFrames, animationSpeed);
 
-    // Reset ally blizu playerja
+    // Reset ally
     if (ally) {
         ally->SetPosition(
-            PLAYER_SPAWN_X + 100,  // Offset na 100px
+            PLAYER_SPAWN_X + 100,  // Offset on 100px
             PLAYER_SPAWN_Y
         );
     }
@@ -1145,7 +1133,7 @@ void Game::RestartGame() {
 }
 void Game::StartNewWave(int wave) {
     if (wave == -1) {
-        waveTimeRemaining = WAVE_TIME_LIMIT; // Če je nov wave nocmo da je gameover
+        waveTimeRemaining = WAVE_TIME_LIMIT; // Wave gameover
         currentWave++;
     }
     else currentWave = wave;
@@ -1153,7 +1141,7 @@ void Game::StartNewWave(int wave) {
     betweenWaves = false;
     waveTimeRemaining = WAVE_TIME_LIMIT;
 
-    // Clear enemy če je nov round
+    // Clear enemy on new round
     if (wave == -1) {
         for (auto& e : enemyPool) {
             e->Revive(-1000, -1000, 1);
@@ -1161,13 +1149,11 @@ void Game::StartNewWave(int wave) {
         enemies.clear();
     }
 
-    // Spawn collectible če nov round
+    // Spawn collectible on new round
     if (wave == -1) {
         SpawnCollectibles();
     }
 
-    SDL_Log("Wave %d %s", currentWave,
-          (wave == -1) ? "started" : "reloaded");
 }
 void Game::RenderWaveNumber() {
     if(!waveTextTexture || !numbersTexture) return;
@@ -1192,7 +1178,7 @@ void Game::RenderWaveNumber() {
         SDL_RenderCopy(renderer, cachedWaveTexture, NULL, &destRect);
     }
 }
-// Shranjevanje nasprotnikov
+// Pool
 void Game::InitializeEnemyPool(int initialSize) {
 
     for (int i = 0; i < initialSize; ++i) {
@@ -1211,7 +1197,7 @@ void Game::InitializeEnemyPool(int initialSize) {
         enemyPool.push_back(e);
     }
 }
-// Vzemanje iz poola
+// Pool pull
 Enemy* Game::GetPooledEnemy() {
     for (auto& e : enemyPool) {
         if (!e->IsAlive()) {
@@ -1247,18 +1233,18 @@ void Game::UpdateWave(float deltaTime) {
     } else {
         waveTimeRemaining -= deltaTime;
 
-        // Če je zajebu
+        // Game over check
         if (waveTimeRemaining <= 0.0f) {
             gameOver = true;
             currentState=GameState::GAME_OVER;
             return;
         }
 
-        // Če je zmagu
+        // Win check
         if (collectiblesRemaining <= 0) {
             // Clear enemies
             for (auto& enemy : enemies) {
-                enemy->Revive(-1000, -1000, 1); // Reset pozicija off-screen
+                enemy->Revive(-1000, -1000, 1); // Reset
             }
             enemies.clear();
 
@@ -1267,7 +1253,7 @@ void Game::UpdateWave(float deltaTime) {
             selectedUpgrade = 0;
         }
         else {
-            // Spawn v neskončnost
+            // Spawn infinetly
             spawnTimer += deltaTime;
             if (spawnTimer >= SPAWN_INTERVAL) {
                 SpawnEnemy();
@@ -1277,7 +1263,7 @@ void Game::UpdateWave(float deltaTime) {
     }
 }
 void Game::UpdateEnemies(float deltaTime) {
-    // Enemy se ne spawna med wavi
+    // Enemy check between wave
     if (!betweenWaves && enemiesRemaining > 0) {
         spawnTimer += deltaTime;
         if (spawnTimer >= SPAWN_INTERVAL) {
@@ -1287,12 +1273,12 @@ void Game::UpdateEnemies(float deltaTime) {
         }
     }
 
-    // Enemy update + collisioni
+    // Enemy update + collisions
     for (auto it = enemies.begin(); it != enemies.end();) {
         Enemy* enemy = *it;
         enemy->Update(deltaTime);
 
-        // Ali imata iste kordinate hit box
+        // Hit check
         if (CheckCollision(enemy->GetCollisionBox(), player->GetCollisionBox())) {
             // Damage player
             if (player->GetDamageCooldown() <= 0.0f) {
@@ -1317,7 +1303,7 @@ void Game::UpdateEnemies(float deltaTime) {
             enemy->TakeDamage(50);
         }
 
-        // Odstrani a ne izbriše
+        // Pool enemy
         if (!enemy->IsAlive()) {
             it = enemies.erase(it);
             enemiesKilledTotal++;
@@ -1343,23 +1329,23 @@ void Game::UpdateEnemies(float deltaTime) {
 }
 void Game::UpdatePlayer(float deltaTime) {
     if (player) {
-        // Posodobi pozicijo igralca
+        // Update location
         player->Update(deltaTime);
 
-        // Pridobi trenutno pozicijo igralca
+        // Get location
         SDL_Rect playerPos = player->GetPosition();
 
-        // zračunaj središče igralca
+        // Center
         int playerCenterX = playerPos.x + playerPos.w / 2;
         int playerCenterY = playerPos.y + playerPos.h / 2;
 
-        // Posodobi kamero na središče igralca
+        // Camera update
         camera->Update(playerCenterX, playerCenterY);
 
-        // Posodobi tilemapo
+        // Map update
         tileMap->Update(deltaTime);
 
-        // Streljanje
+        // Projectiles
         fireTimer += deltaTime;
         if (fireTimer >= 1.0f/FIRE_RATE) {
             Enemy* nearest = FindNearestEnemy();
@@ -1375,7 +1361,7 @@ Enemy* Game::FindNearestEnemy() {
     float minDistance = FLT_MAX;
     Vector2f playerPos = player->GetCenterPosition();
 
-
+    //check for all
     for (auto& enemy : enemies) {
         Vector2f enemyPos = enemy->GetCenterPosition();
         float distance = sqrt(pow(enemyPos.x - playerPos.x, 2) +
@@ -1405,13 +1391,13 @@ void Game::ShootProjectile(Enemy* target) {
 }
 
 
-// Premikanje
+// Movment
 void Game::ProcessInput() {
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
-    float hitrost = 400.0f;// Hitrost px
+    float hitrost = 400.0f;// Speed
     float vx = 0, vy = 0;
     if (SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LSHIFT]) {
-        hitrost *= 1.5f; //Šprint
+        hitrost *= 1.5f; // Run
     }
 
     if (keystate[SDL_SCANCODE_W]) vy = -hitrost;
@@ -1452,7 +1438,7 @@ SDL_Texture* Game::CreateWaveNumberTexture() {
 
     SDL_BlitScaled(waveSurface, NULL, scaledWave, NULL);
 
-    // Skupek textur
+    // Scale
     int numberWidth = NUMBER_WIDTH * NUMBER_SCALE;
     int numberHeight = NUMBER_HEIGHT * NUMBER_SCALE;
 
@@ -1484,7 +1470,7 @@ SDL_Texture* Game::CreateWaveNumberTexture() {
         xOffset += numberWidth + 2;
     }
 
-    // Finalna textura
+    // Final textura
     SDL_Texture* result = SDL_CreateTextureFromSurface(renderer, combinedSurface);
 
     // Clean
@@ -1596,7 +1582,7 @@ void Game::UpdateButtonHover(int mouseX, int mouseY) {
 }
 
 void Game::HandleMenuClick(int mouseX, int mouseY) {
-    // Scale mouse coordinates to match rendering resolution
+    // Scale mouse location
     int winW, winH;
     SDL_GetWindowSize(window, &winW, &winH);
     float scaleX = static_cast<float>(windowWidth) / winW;
@@ -1610,7 +1596,6 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
     // Check all menu buttons
     for(size_t i = 0; i < menuButtons.size(); i++) {
         if(SDL_PointInRect(&mousePos, &menuButtons[i].rect)) {
-            // Handle MAIN_MENU state first
             if(currentState == GameState::MAIN_MENU) {
                 if(menuButtons[i].id == "play") {
                     RestartGame();
@@ -1635,9 +1620,8 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
                 else if(menuButtons[i].id == "quit") {
                     isRunning = false;
                 }
-                return; // Exit after handling main menu click
+                return;
             }
-            // Handle SETTINGS state
             else if(currentState == GameState::SETTINGS) {
                 if(menuButtons[i].id.find('x') != std::string::npos) {
                     // Handle resolution change
@@ -1650,59 +1634,57 @@ void Game::HandleMenuClick(int mouseX, int mouseY) {
                     currentState = GameState::MAIN_MENU;
                     CreateMenuLayout();
                 }
-                return; // Exit after handling settings click
+                return;
             }
-            // Handle HIGHSCORES_DISPLAY state
+
             else if(currentState == GameState::HIGHSCORES_DISPLAY) {
                 if(menuButtons[i].id == "back") {
                     currentState = GameState::MAIN_MENU;
                     CreateMenuLayout();
-                    return; // Explicit return for state transition
+                    return;
                 }
             }
         }
         if(menuButtons[i].id == "back") {
-            SDL_Log("BACK BUTTON CLICKED"); // Debug output
+            SDL_Log("BACK BUTTON CLICKED");
             currentState = GameState::MAIN_MENU;
             CreateMenuLayout();
             return;
         }
 
-        // In CreateMenuLayout():
-        SDL_Log("Creating menu for state: %d", static_cast<int>(currentState));
     }
 }
 
 
 
 void Game::ChangeResolution(int width, int height) {
-    // Destroy stare texture
+    // Destroy old texture
     SDL_DestroyRenderer(renderer);
     texture_manager->ClearTextures();
 
-    // Posodobi velikost windowa
+    // Get window size
     windowWidth = width;
     windowHeight = height;
     SDL_SetWindowSize(window, width, height);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
-    // Na novo render
+    // New render
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture_manager->UpdateRenderer(renderer);
 
-    // Reload vsse texture
+    // Reload all texture
     ReloadAllTextures();
 
 
-    // Reset text-related cache
+    // Reset
     SDL_DestroyTexture(cachedWaveTexture);
     cachedWaveTexture = nullptr;
     cachedWaveNumber = -1;
 
-    // Force UI elements to recalculate positions
+    // Force UI elements
     CreateMenuLayout();
 
-    // Reset camera and tilemap
+    // Reset camera + tilemap
     delete camera;
     camera = new Camera(windowWidth, windowHeight);
     camera->SetMapBounds(20000, 20000);
@@ -1710,11 +1692,11 @@ void Game::ChangeResolution(int width, int height) {
     delete tileMap;
     tileMap = new TileMap(*texture_manager, *camera);
 
-    // Reset na playerja
+    // Reset on player
     Vector2f playerPos = player->GetCenterPosition();
     camera->Reset(playerPos.x, playerPos.y);
 
-    // Na novo collectible
+    // New collectibles
     if (!betweenWaves) {
         SpawnCollectibles();
     }
@@ -1738,7 +1720,6 @@ void Game::RenderNumber(int number, int x, int y, float scale) {
 
     std::string numStr = std::to_string(number);
 
-    // Center calculation removed for positional accuracy
     for (size_t i = 0; i < numStr.size(); ++i) {
         char c = numStr[i];
         if (c < '0' || c > '9') continue;
@@ -1997,9 +1978,9 @@ void Game::RenderText(const std::string& text, int x, int y, float scale) {
     const int destHeight = LETTER_HEIGHT * renderScale;
     for (size_t i = 0; i < text.size(); ++i) {
         char c = text[i];
-        int index = toupper(c) - 'A'; // Assuming texture starts with 'A' at index 0
+        int index = toupper(c) - 'A';
         if (c == ' ') continue;
-        if (index < 0 || index >= 26) index = 26; // Assume '?' for invalid
+        if (index < 0 || index >= 26) index = 26;
 
         SDL_Rect src = { index * LETTER_WIDTH, 0, LETTER_WIDTH, LETTER_HEIGHT };
         SDL_Rect dest = {
@@ -2018,7 +1999,7 @@ void Game::StartRecording() {
     std::ofstream file(currentReplayFile, std::ios::binary);
 
     ReplayHeader header;
-    strncpy(header.magic, "RPLY", 4); // Add this line
+    strncpy(header.magic, "RPLY", 4);
     header.frameCount = 0;
     header.totalTime = 0.0f;
     header.finalScore = 0;
@@ -2037,14 +2018,14 @@ void Game::RecordFrame(float deltaTime) {
     frame.timestamp = totalRecordedTime;
     totalRecordedTime += deltaTime;
     frame.playerPos = player->GetCenterPosition();
-    frame.playerVelocity = player->GetVelocity(); // ADD
-    frame.playerFrameIndex = player->GetCurrentFrameIndex(); // ADD
+    frame.playerVelocity = player->GetVelocity();
+    frame.playerFrameIndex = player->GetCurrentFrameIndex();
 
 
     if(ally) {
         frame.allyPos = ally->GetCenterPosition();
-        frame.allyVelocity = ally->GetVelocity(); // ADD
-        frame.allyFrameIndex = ally->GetCurrentFrameIndex(); // ADD
+        frame.allyVelocity = ally->GetVelocity();
+        frame.allyFrameIndex = ally->GetCurrentFrameIndex();
         frame.allyActive = ally->IsAlive();
     }
 
@@ -2053,10 +2034,9 @@ void Game::RecordFrame(float deltaTime) {
     std::vector<std::pair<Vector2f, int>> liveEnemies;
     for (auto& e : enemies) {
         if (e->IsAlive()) {
-            // Convert SDL_Rect to Vector2f
             SDL_Rect enemyPos = e->GetPosition();
             liveEnemies.emplace_back(
-                Vector2f(enemyPos.x, enemyPos.y), // Explicit conversion
+                Vector2f(enemyPos.x, enemyPos.y),
                 e->GetLevel()
             );
         }
@@ -2071,7 +2051,6 @@ void Game::RecordFrame(float deltaTime) {
     std::vector<Vector2f> activeCollectibles;
     for (auto& c : collectibles) {
         if (c.active) {
-            // Store as Vector2f directly
             activeCollectibles.emplace_back(c.rect.x, c.rect.y);
         }
     }
@@ -2088,7 +2067,6 @@ void Game::RecordFrame(float deltaTime) {
 
     // Write projectile positions
     for (auto& p : projectiles) {
-        // Convert SDL_Rect to Vector2f
         SDL_Rect projectileRect = p->GetPosition();
         Vector2f pos(projectileRect.x, projectileRect.y);
         file.write(reinterpret_cast<char*>(&pos), sizeof(Vector2f));
@@ -2136,11 +2114,11 @@ void Game::StartReplay(const std::string& filename) {
         return;
     }
 
-    // Reset camera to the first frame's player position
+
     ReplayFrame firstFrame;
     replayFile.read(reinterpret_cast<char*>(&firstFrame), sizeof(ReplayFrame));
     camera->Reset(firstFrame.playerPos.x, firstFrame.playerPos.y);
-    replayFile.seekg(sizeof(ReplayHeader)); // Rewind to start after header
+    replayFile.seekg(sizeof(ReplayHeader));
 
     currentState = GameState::REPLAY;
     isReplaying = true;
@@ -2174,16 +2152,16 @@ void Game::UpdateReplay(float deltaTime) {
 
         camera->Reset(frame.playerPos.x, frame.playerPos.y);
 
-        player->SetVelocity(frame.playerVelocity.x, frame.playerVelocity.y); // ADD
-        player->SetCurrentFrameIndex(frame.playerFrameIndex); // ADD
+        player->SetVelocity(frame.playerVelocity.x, frame.playerVelocity.y);
+        player->SetCurrentFrameIndex(frame.playerFrameIndex);
         player->Update(deltaTime);
 
-        ally->Revive(frame.playerPos.x + 100, frame.playerPos.y, /*health=*/100);
+        ally->Revive(frame.playerPos.x + 100, frame.playerPos.y,100);
 
     if(ally) {
         ally->SetPosition(frame.allyPos.x, frame.allyPos.y);
-        ally->SetVelocity(frame.allyVelocity.x, frame.allyVelocity.y); // ADD
-        ally->SetCurrentFrameIndex(frame.allyFrameIndex); // ADD
+        ally->SetVelocity(frame.allyVelocity.x, frame.allyVelocity.y);
+        ally->SetCurrentFrameIndex(frame.allyFrameIndex);
         ally->Update(deltaTime);
     }
 
@@ -2212,7 +2190,7 @@ void Game::UpdateReplay(float deltaTime) {
         }
         if (!isReplaying) break;
 
-        // Restore projectiles with valid targets
+        // Restore projectiles
         for (uint16_t i = 0; i < frame.projectileCount; i++) {
             Vector2f pos;
             if (!replayFile.read(reinterpret_cast<char*>(&pos), sizeof(Vector2f))) {
@@ -2247,7 +2225,9 @@ void Game::UpdateReplay(float deltaTime) {
             }
             collectibles.push_back({{static_cast<int>(pos.x), static_cast<int>(pos.y), 32, 32}, true});
         }
-        if (!isReplaying) break;
+        if (!isReplaying) {
+            break;
+        }
     }
 }
 

@@ -10,7 +10,7 @@ maxDistance(maxDistance),
 startPosition(x, y){}
 
 void Projectile::Update(float deltaTime) {
-    if (!target || !target->IsAlive()) return;  // Ali je živ
+    if (!target || !target->IsAlive()) return;  // Alive check
 
     float dx = target->GetPosition().x - positionrect.x;
     float dy = target->GetPosition().y - positionrect.y;
@@ -26,7 +26,7 @@ void Projectile::Update(float deltaTime) {
 
 
 bool Projectile::ShouldRemove() const {
-    // Dolžina premika
+    // Check out of range
     float traveled = sqrt(pow(positionrect.x - positionrect.x, 2) + pow(positionrect.y - positionrect.y, 2));
     return traveled > maxDistance || !target->IsAlive();
 }

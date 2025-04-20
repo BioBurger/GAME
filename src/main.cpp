@@ -6,7 +6,7 @@
 Game *game = nullptr;
 
 int main(int argc, char* args[]) {
-    srand(static_cast<unsigned>(time(nullptr))); // Zagon random generatorja
+    srand(static_cast<unsigned>(time(nullptr)));
 
     game = new Game();
     game->Init("GAME", false);
@@ -25,12 +25,12 @@ int main(int argc, char* args[]) {
     game->Clean();
     return 0;
 }
-//    F1: Vključi debug način
+//    F1: Debug
 
-//    F2: Nov wave
+//    F2: New wave
 
-//    KP+: Povecanje hitrosti
+//    KP+: Speed +
 
-//    KP-: Zmanšanje hitrosti
+//    KP-: Speed-
 
 

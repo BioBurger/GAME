@@ -5,7 +5,7 @@
 
 class Camera {
     SDL_Rect viewport;
-    float x, y;         // Decimalke za smoothh
+    float x, y;
     int mapWidth = INT_MAX;
     int mapHeight = INT_MAX;
     GameObject* target = nullptr;

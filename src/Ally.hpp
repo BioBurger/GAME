@@ -13,7 +13,7 @@ public:
 private:
     State currentState = State::IDLE;
     State previousState = State::IDLE;
-    GameObject::Direction DetermineDirection();
+    Direction DetermineDirection();
 };
 #ifndef ALLY_H
 #define ALLY_H

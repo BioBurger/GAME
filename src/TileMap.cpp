@@ -9,13 +9,13 @@ void TileMap::Update(float deltaTime) {
     globalAnimationTimer += deltaTime;
     SDL_Rect viewport = camera.GetViewport();
 
-    // Določi območje tile-ov glede na kamero v gridu
+    // Put tile offset
     int startCol = (viewport.x / tileSize) - 1;
     int endCol = (viewport.x + viewport.w) / tileSize + 1;
     int startRow = (viewport.y / tileSize) - 1;
     int endRow = (viewport.y + viewport.h) / tileSize + 1;
 
-    // Naloži nove tile-e v vidnem območju
+    // New tiles
     for (int row = startRow; row <= endRow; ++row) {
         for (int col = startCol; col <= endCol; ++col) {
             int x = col * tileSize;
@@ -34,7 +34,7 @@ void TileMap::Update(float deltaTime) {
         }
     }
 
-    // Odstrani tile-e izven vidnega območja
+    // Destroy tiles
     auto it = loadedTiles.begin();
     while (it != loadedTiles.end()) {
         SDL_Rect pos = it->second->GetPosition();
@@ -50,7 +50,7 @@ void TileMap::Update(float deltaTime) {
             }
     }
 
-    // Posodobi animacije za vse tile-e
+    // Update tiles
     for (auto& pair : loadedTiles) {
         pair.second->Update(globalAnimationTimer);
     }
@@ -60,7 +60,7 @@ void TileMap::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
     for (auto& pair : loadedTiles) {
         SDL_Rect tilePos = pair.second->GetPosition();
 
-        // Preveri če je tile viden
+        // Check if tile in window
         if (tilePos.x + tilePos.w < cameraViewport.x ||
             tilePos.x > cameraViewport.x + cameraViewport.w ||
             tilePos.y + tilePos.h < cameraViewport.y ||

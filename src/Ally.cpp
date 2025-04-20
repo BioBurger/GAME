@@ -24,7 +24,7 @@ void Ally::ResetAnimation() {
 }
 
 void Ally::Update(float deltaTime) {
-    // Prejšni state
+    // Previus state
     static State previousState = currentState;
     static Direction lastDirection = Direction::DOWN; // Default
 

@@ -4,7 +4,7 @@
 
 class Enemy : public GameObject {
 private:
-    GameObject* target;//na playerja
+    GameObject* target;// Default player
     float moveSpeed = 100.0f;
     bool isActive = false;
     int level;

@@ -79,7 +79,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "30"
+			"value" : "31"
 		},
 		{
 			"name" : "CMAKE_CACHE_PATCH_VERSION",
@@ -91,7 +91,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "5"
+			"value" : "6"
 		},
 		{
 			"name" : "CMAKE_COLOR_DIAGNOSTICS",
@@ -535,6 +535,22 @@
 				}
 			],
 			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_EXPORT_BUILD_DATABASE",
+			"properties" : 
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable/Disable output of build database during the build."
+				}
+			],
+			"type" : "BOOL",
 			"value" : ""
 		},
 		{
@@ -1039,7 +1055,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Program Files/JetBrains/CLion 2024.3.2/bin/cmake/win/x64/share/cmake-3.30"
+			"value" : "C:/Program Files/JetBrains/CLion 2024.3.2/bin/cmake/win/x64/share/cmake-3.31"
 		},
 		{
 			"name" : "CMAKE_SHARED_LINKER_FLAGS",
@@ -1503,7 +1519,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a"
+			"value" : "mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;mingw32;-mwindows;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2main.a;C:/Users/bostj/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/lib/libSDL2.dll.a"
 		},
 		{
 			"name" : "VCPKG_APPLOCAL_DEPS",
@@ -1712,6 +1728,30 @@
 			],
 			"type" : "INTERNAL",
 			"value" : "C:/Users/bostj/.vcpkg-clion/vcpkg"
+		},
+		{
+			"name" : "_CMAKE_CXX_LINKER_PUSHPOP_STATE_SUPPORTED",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "linker supports push/pop state"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "TRUE"
+		},
+		{
+			"name" : "_CMAKE_C_LINKER_PUSHPOP_STATE_SUPPORTED",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "linker supports push/pop state"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "TRUE"
 		},
 		{
 			"name" : "_CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED",

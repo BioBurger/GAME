@@ -3,7 +3,7 @@
 #include "Texture_Manager.hpp"
 
 class Tile {
-    SDL_Rect position;//world cordinate
+    SDL_Rect position;//World cordinates
     SDL_Texture* texture;
     SDL_Rect currentFrame;
     int frameWidth;

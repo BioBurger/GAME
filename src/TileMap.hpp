@@ -5,11 +5,11 @@
 #include "Camera.hpp"
 
 class TileMap {
-    std::unordered_map<std::string, Tile*> loadedTiles;//naložen tile
+    std::unordered_map<std::string, Tile*> loadedTiles;// Tile
     Texture_Manager& textureManager;
     Camera& camera;
     float globalAnimationTimer = 0.0f;
-    int tileSize = 64;//velikost
+    int tileSize = 64;// Size
     std::vector<std::vector<Tile*>> tileGrid;
 public:
     TileMap(Texture_Manager& tm, Camera& cam);

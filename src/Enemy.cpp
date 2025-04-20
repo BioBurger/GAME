@@ -12,10 +12,10 @@ Enemy::Enemy(Texture_Manager& manager,
              int health)
     : GameObject(manager, textureName,
                  x, y,
-                 128, 128,  // Render veči kot je
-                 32, 32,    // Originalna velikost
-                 5,         // Total frames
-                 0.15f,     // Animation hitrost
+                 128, 128,
+                 32, 32,
+                 5,
+                 0.15f,
                  health),
       target(target)
 {
@@ -55,7 +55,6 @@ void Enemy::Update(float deltaTime) {
     // Force horizontal animation
     currentFrame.y = 0;  // Lock to first row
 
-    // Ensure proper frame wrapping for 5-frame animation
     currentFrameIndex = currentFrameIndex % 5;
 }
 
@@ -101,7 +100,7 @@ void Enemy::Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport) {
         128
     };
 
-    // Source frame from texture (32x32)
+
     SDL_Rect sourceRect = {
         currentFrameIndex * 32,
         0,

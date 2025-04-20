@@ -18,7 +18,6 @@ void Camera::SetTarget(GameObject* newTarget) {
 }
 
 void Camera::Update(float targetCenterX, float targetCenterY) {
-    // Original implementation using floats
     const float SMOOTHING_FACTOR = 0.1f;
     float targetX = targetCenterX - viewport.w/2.0f;
     float targetY = targetCenterY - viewport.h/2.0f;

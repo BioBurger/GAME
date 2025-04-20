@@ -9,7 +9,7 @@ class GameObject {
 public:
     GameObject(Texture_Manager& manager, const std::string& textureID, int x, int y, int w, int h, int frameWidth, int frameHeight, int totalFrames, float animationSpeed, int startHealth = 100);
     ~GameObject();
-    enum class State {IDLE, MOVING};//stanja animacije + ani je mrtev
+    enum class State {IDLE, MOVING};// States
     enum class Direction {LEFT, RIGHT, UP, DOWN};
     virtual void Update(float deltaTime);
     virtual void Render(SDL_Renderer* renderer, const SDL_Rect& cameraViewport);
@@ -49,11 +49,11 @@ protected:
     SDL_Rect positionrect;
     float velocityX;
     float velocityY;
-    Texture_Manager& manager;//texture
+    Texture_Manager& manager;
     SDL_Texture* texture;
-    float positionX;//lokacija
+    float positionX;
     float positionY;
-    SDL_Rect currentFrame;//animacija
+    SDL_Rect currentFrame;
     int frameWidth;
     int frameHeight;
     int currentFrameIndex;
@@ -63,11 +63,11 @@ protected:
     bool isAnimated;
     State currentState;
     Direction currentDirection;
-    SDL_RendererFlip flipType;//za levo(i hate not fliped sprites)
-    int animationRow;//1. idle front||2. idle right||3. idle front(ignoreamo)||4. idle back||5. moving front||6. moving back||7. moving right ||8. death
+    SDL_RendererFlip flipType;
+    int animationRow;
     float idleAnimationSpeed;
     float moveAnimationSpeed;
-    int collisionOffsetX = 16;//za sredinski hit box
+    int collisionOffsetX = 16;
     int collisionOffsetY = 16;
     int collisionWidth = 48;
     int collisionHeight = 48;

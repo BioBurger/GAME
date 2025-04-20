@@ -2136,7 +2136,8 @@ void Game::UpdateReplay(float deltaTime) {
         if (!replayFile.read(reinterpret_cast<char*>(&frame), sizeof(ReplayFrame))) {
             if (replayFile.eof()) {
                 isReplaying = false;
-                currentState = GameState::MAIN_MENU;
+                currentState = GameState::GAME_OVER;
+                gameOver = true;
                 replayFile.close();
             }
             break;
